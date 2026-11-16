@@ -849,6 +849,9 @@
                     <button onclick="switchCmsTab('products')" data-cmstab="products" class="cms-tab-btn active px-4 py-2 rounded-xl bg-sage-700 text-white text-xs sm:text-sm font-bold whitespace-nowrap cursor-pointer">
                         🧴 Produits (<span id="cmsTabProdCount">0</span>)
                     </button>
+                    <button onclick="switchCmsTab('bulk')" data-cmstab="bulk" class="cms-tab-btn px-4 py-2 rounded-xl bg-amber-100 text-amber-950 hover:bg-amber-200 text-xs sm:text-sm font-extrabold whitespace-nowrap cursor-pointer">
+                        ⚡ Import en Masse & Extraction Web
+                    </button>
                     <button onclick="switchCmsTab('slides')" data-cmstab="slides" class="cms-tab-btn px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs sm:text-sm font-bold whitespace-nowrap cursor-pointer">
                         🖼️ Carrousel / Bannières (<span id="cmsTabSlideCount">0</span>)
                     </button>
@@ -970,6 +973,149 @@
 
                     <!-- Liste des produits -->
                     <div id="cmsProductsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+
+                <!-- ONGLET 1B : IMPORT EN MASSE & EXTRACTION DEPUIS UN AUTRE SITE WEB -->
+                <div id="cmsPanel-bulk" class="cms-panel hidden space-y-6">
+                    <div class="bg-gradient-to-r from-sage-900 to-sage-800 text-white p-5 sm:p-6 rounded-3xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <span class="inline-block px-2.5 py-0.5 rounded-full bg-amber-400 text-[#0D1310] text-[10px] font-extrabold uppercase tracking-wider">Gain de temps maximal</span>
+                            <h3 class="font-display font-extrabold text-lg sm:text-2xl mt-1">Import en Masse & Extraction Web</h3>
+                            <p class="text-xs sm:text-sm text-sage-100/90 mt-0.5">Importez des dizaines de produits depuis Excel/CSV, par copier-coller ou directement depuis un autre site web.</p>
+                        </div>
+                        <button type="button" onclick="downloadCsvTemplate()" class="px-4 py-2.5 rounded-xl bg-white hover:bg-sage-50 text-sage-900 font-extrabold text-xs shadow-sm transition cursor-pointer shrink-0">
+                            📄 Télécharger modèle Excel (.csv)
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                        <!-- BLOC 1 : IMPORT FICHIER EXCEL / CSV -->
+                        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 space-y-4">
+                            <div class="flex items-center gap-2.5">
+                                <span class="w-9 h-9 rounded-xl bg-sage-100 text-sage-800 flex items-center justify-center font-bold text-base">📊</span>
+                                <div>
+                                    <h4 class="font-display font-bold text-base text-slate-900">1. Importer un fichier Excel / CSV</h4>
+                                    <p class="text-xs text-slate-500">Colonnes : <code>brand;name;price;oldPrice;category;image;badge;description</code></p>
+                                </div>
+                            </div>
+
+                            <label class="block border-2 border-dashed border-sage-300 hover:border-sage-600 bg-sage-50/40 rounded-2xl p-5 text-center cursor-pointer transition">
+                                <input type="file" id="bulkCsvFileInput" accept=".csv,.txt" class="hidden" onchange="handleBulkCsvUpload(event)">
+                                <p class="font-bold text-xs sm:text-sm text-sage-900">Cliquez ou glissez votre fichier .CSV ici</p>
+                                <p class="text-[11px] text-slate-500 mt-1">Compatible Excel (séparateur point-virgule <code>;</code> ou virgule <code>,</code>)</p>
+                            </label>
+                        </div>
+
+                        <!-- BLOC 2 : COPIER-COLLER MULTI-LIGNES DEPUIS EXCEL -->
+                        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 space-y-3">
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-base">📋</span>
+                                    <div>
+                                        <h4 class="font-display font-bold text-base text-slate-900">2. Copier-Coller rapide (Excel / Texte)</h4>
+                                        <p class="text-xs text-slate-500">1 ligne par produit : <code>Marque | Nom | Prix | AncienPrix | Rayon | URL Photo</code></p>
+                                    </div>
+                                </div>
+                                <span id="bulkPasteCounter" class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold">0 détecté</span>
+                            </div>
+
+                            <textarea id="bulkPasteTextarea" oninput="previewBulkPasteLines()" rows="4" placeholder="Exemples :&#10;CeraVe | Gel Moussant 473ml | 165 | 195 | Visage | https://...&#10;La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps | https://..." class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-xs font-mono focus:outline-none focus:border-sage-600"></textarea>
+
+                            <div class="flex justify-end">
+                                <button type="button" onclick="loadBulkPasteIntoStaging()" class="px-4 py-2 rounded-xl bg-sage-700 hover:bg-sage-800 text-white text-xs font-bold cursor-pointer">
+                                    Prévisualiser ces lignes ↓
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BLOC 3 : EXTRAIRE DEPUIS UN AUTRE SITE WEB (URL OU CODE HTML / JSON) -->
+                    <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 space-y-5">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                            <div class="flex items-center gap-2.5">
+                                <span class="w-9 h-9 rounded-xl bg-coral-50 text-coral-600 flex items-center justify-center font-bold text-base">🌐</span>
+                                <div>
+                                    <h4 class="font-display font-bold text-base text-slate-900">3. Importer depuis un autre site web</h4>
+                                    <p class="text-xs text-slate-500">Récupérez automatiquement les noms, marques, prix, descriptions et photos depuis un lien ou une page catalogue.</p>
+                                </div>
+                            </div>
+                            <select id="bulkDefaultRayonSelect" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-sage-900 bg-sage-50">
+                                <option value="Visage">Rayon par défaut : Visage</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                            <!-- Mode A : Par Lien URL -->
+                            <div class="lg:col-span-5 bg-sand-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                                <span class="text-[11px] font-extrabold uppercase tracking-wider text-sage-700 block">Mode A • Par Lien URL (Fiche produit ou page)</span>
+                                <input type="url" id="scrapeUrlInput" placeholder="https://exemple-parapharmacie.ma/produit..." class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs focus:outline-none focus:border-sage-600">
+                                <button type="button" onclick="extractFromExternalUrl()" id="scrapeUrlBtn" class="w-full py-2.5 px-4 rounded-xl bg-sage-900 hover:bg-black text-white font-bold text-xs transition cursor-pointer">
+                                    🔍 Extraire depuis ce lien URL
+                                </button>
+                                <p id="scrapeUrlStatus" class="text-[11px] text-slate-500 leading-relaxed">
+                                    Astuce : Pour importer toute une catégorie (20 à 100 produits d'un coup), utilisez le <strong>Mode B</strong> ci-contre.
+                                </p>
+                            </div>
+
+                            <!-- Mode B : Par Code Source HTML ou Flux JSON (100% fiable pour des pages entières) -->
+                            <div class="lg:col-span-7 bg-sand-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-coral-600">Mode B • Extraction massive (Page catalogue entière)</span>
+                                    <span class="text-[10.5px] font-semibold text-slate-500">100% Fiable</span>
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-relaxed">
+                                    Sur l'autre site web, faites <strong>Ctrl + U</strong> (Afficher le code source), puis <strong>Ctrl + A</strong> et <strong>Ctrl + C</strong>, puis collez ici (ou collez un flux JSON <code>/products.json</code>) :
+                                </p>
+                                <textarea id="scrapeHtmlSourceInput" rows="3" placeholder="Collez ici le code source HTML de la page catalogue ou le JSON produits..." class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-mono focus:outline-none focus:border-sage-600"></textarea>
+                                <div class="flex justify-end">
+                                    <button type="button" onclick="extractProductsFromPastedSource()" class="px-4 py-2 rounded-xl bg-coral-500 hover:bg-coral-600 text-white font-bold text-xs transition cursor-pointer">
+                                        ⚡ Analyser et extraire tous les produits
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TABLEAU DE PRÉVISUALISATION & VALIDATION AVANT IMPORTATION -->
+                    <div id="bulkStagingBox" class="hidden bg-white p-5 sm:p-6 rounded-3xl border-2 border-sage-500 shadow-lg space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                            <div>
+                                <h4 class="font-display font-bold text-base sm:text-lg text-sage-900">
+                                    Produits prêts à importer (<span id="bulkStagingSelectedCount">0</span> / <span id="bulkStagingTotalCount">0</span> sélectionnés)
+                                </h4>
+                                <p class="text-xs text-slate-500">Vérifiez ou ajustez les noms, prix et rayons avant de valider.</p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <select id="bulkImportModeSelect" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-sand-50">
+                                    <option value="append">Ajouter au catalogue existant</option>
+                                    <option value="replace">Remplacer tout le catalogue</option>
+                                </select>
+                                <button type="button" onclick="commitBulkStagedProducts()" class="px-5 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#1fb858] text-white font-extrabold text-xs shadow-sm cursor-pointer">
+                                    ✓ Importer la sélection
+                                </button>
+                                <button type="button" onclick="clearBulkStaging()" class="px-3 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold cursor-pointer">
+                                    Annuler
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto max-h-[420px] overflow-y-auto border border-slate-100 rounded-2xl">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead class="bg-sage-50 text-sage-900 sticky top-0 z-10">
+                                    <tr>
+                                        <th class="p-2.5 w-8"><input type="checkbox" checked onchange="toggleAllBulkStaged(this.checked)" class="accent-sage-700"></th>
+                                        <th class="p-2.5">Photo</th>
+                                        <th class="p-2.5">Marque</th>
+                                        <th class="p-2.5">Nom du soin</th>
+                                        <th class="p-2.5 w-24">Prix (DH)</th>
+                                        <th class="p-2.5 w-24">Ancien</th>
+                                        <th class="p-2.5">Rayon</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bulkStagingTableBody" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- ONGLET 2 : CARROUSEL / BANNIÈRES HERO -->
@@ -3075,6 +3221,11 @@
             document.getElementById('cmsTabSlideCount').textContent = SITE_DATA.slides.length;
             document.getElementById('cmsTabRayonCount').textContent = SITE_DATA.rayons.length;
 
+            const bulkRayonSel = document.getElementById('bulkDefaultRayonSelect');
+            if (bulkRayonSel) {
+                bulkRayonSel.innerHTML = SITE_DATA.rayons.filter(r => !r.isBudget).map(r => `<option value="${r.name}">Rayon par défaut : ${r.name}</option>`).join('');
+            }
+
             renderCmsProductsList();
             renderCmsSlidesList();
             renderCmsRayonsList();
@@ -3632,6 +3783,456 @@
             renderProducts();
             refreshAllCmsPanels();
             showToast("Données d'usine restaurées.");
+        }
+
+        // =====================================================================
+        // MOTEUR D'IMPORTATION EN MASSE & EXTRACTION WEB (CSV / EXCEL / URL)
+        // =====================================================================
+        let bulkStagedProducts = [];
+
+        function getValidRayonName(rawCat) {
+            const validRayons = SITE_DATA.rayons.filter(r => !r.isBudget).map(r => r.name);
+            const fallback = document.getElementById('bulkDefaultRayonSelect')?.value || validRayons[0] || "Visage";
+            if (!rawCat) return fallback;
+            const clean = rawCat.trim().toLowerCase();
+            const found = validRayons.find(r => r.toLowerCase() === clean || r.toLowerCase().includes(clean) || clean.includes(r.toLowerCase()));
+            return found || fallback;
+        }
+
+        function parsePriceNumber(val) {
+            if (typeof val === 'number') return Math.round(val);
+            if (!val) return 0;
+            const cleaned = String(val).replace(/[^\d.,]/g, '').replace(',', '.');
+            const num = parseFloat(cleaned);
+            return isNaN(num) ? 0 : Math.round(num);
+        }
+
+        function downloadCsvTemplate() {
+            const headers = "brand;name;price;oldPrice;category;image;badge;description";
+            const sampleRows = [
+                "La Roche-Posay;Cicaplast Baume B5+ Réparateur 100ml;179;215;Corps;;-17%;Baume ultra-réparateur apaisant pour peaux fragilisées.",
+                "CeraVe;Gel Moussant Nettoyant 473ml;165;;Visage;;Best-seller;Nettoie et purifie sans altérer la barrière cutanée.",
+                "ISDIN;FotoUltra 100 Spot Prevent Fusion Fluid SPF50+;245;290;Solaires;;Promo;Très haute protection solaire prévenant les taches pigmentaires."
+            ];
+            const csvContent = "\uFEFF" + [headers, ...sampleRows].join("\n");
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "modele-produits-parateams.csv";
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast("Modèle CSV téléchargé ! Ouvrez-le avec Excel.");
+        }
+
+        function parseDelimitedLine(line, delimiter) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const ch = line[i];
+                if (ch === '"') {
+                    inQuotes = !inQuotes;
+                } else if (ch === delimiter && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += ch;
+                }
+            }
+            result.push(current.trim());
+            return result;
+        }
+
+        function handleBulkCsvUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result || '';
+                const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+                if (lines.length === 0) {
+                    showToast("Fichier CSV vide.");
+                    return;
+                }
+                const delimiter = (lines[0].match(/;/g) || []).length >= (lines[0].match(/,/g) || []).length ? ';' : ',';
+                const firstCols = parseDelimitedLine(lines[0], delimiter).map(c => c.toLowerCase());
+                const hasHeader = firstCols.includes('name') || firstCols.includes('nom') || firstCols.includes('price') || firstCols.includes('prix');
+                const startIdx = hasHeader ? 1 : 0;
+
+                const parsed = [];
+                for (let i = startIdx; i < lines.length; i++) {
+                    const cols = parseDelimitedLine(lines[i], delimiter);
+                    if (cols.length < 2) continue;
+                    const brand = cols[0] || "Parateams";
+                    const name = cols[1] || "";
+                    const price = parsePriceNumber(cols[2]) || 120;
+                    const oldPrice = parsePriceNumber(cols[3]) || null;
+                    const category = getValidRayonName(cols[4]);
+                    const imageUrl = cols[5] || "";
+                    const badge = cols[6] || (oldPrice && oldPrice > price ? `-${Math.round((1 - price / oldPrice) * 100)}%` : "");
+                    const description = cols[7] || `${brand} — ${name}`;
+                    if (name) {
+                        parsed.push({ selected: true, brand, name, price, oldPrice, category, imageUrl, badge, description });
+                    }
+                }
+                setBulkStagedProducts(parsed);
+                event.target.value = '';
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        function parseRawLinesToProducts(rawText) {
+            const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+            const items = [];
+            lines.forEach(line => {
+                let sep = '|';
+                if (line.includes('\t')) sep = '\t';
+                else if (line.includes(';')) sep = ';';
+                const parts = line.split(sep).map(s => s.trim());
+                if (parts.length >= 2) {
+                    const brand = parts[0] || "Parateams";
+                    const name = parts[1];
+                    const price = parsePriceNumber(parts[2]) || 120;
+                    const oldPrice = parsePriceNumber(parts[3]) || null;
+                    const category = getValidRayonName(parts[4]);
+                    const imageUrl = parts[5] || "";
+                    if (name) {
+                        items.push({
+                            selected: true,
+                            brand,
+                            name,
+                            price,
+                            oldPrice,
+                            category,
+                            imageUrl,
+                            badge: oldPrice && oldPrice > price ? `-${Math.round((1 - price / oldPrice) * 100)}%` : "",
+                            description: `${brand} — ${name}`
+                        });
+                    }
+                }
+            });
+            return items;
+        }
+
+        function previewBulkPasteLines() {
+            const val = document.getElementById('bulkPasteTextarea').value;
+            const count = parseRawLinesToProducts(val).length;
+            document.getElementById('bulkPasteCounter').textContent = `${count} détecté${count > 1 ? 's' : ''}`;
+        }
+
+        function loadBulkPasteIntoStaging() {
+            const val = document.getElementById('bulkPasteTextarea').value;
+            const items = parseRawLinesToProducts(val);
+            if (items.length === 0) {
+                showToast("Aucune ligne valide détectée. Format : Marque | Nom | Prix");
+                return;
+            }
+            setBulkStagedProducts(items);
+        }
+
+        // EXTRACTION DEPUIS UN AUTRE SITE WEB (JSON-LD, SHOPIFY, OPENGRAPH, CARTES HTML)
+        function parseProductsFromHtmlOrJson(rawContent, sourceUrl = '') {
+            const trimmed = rawContent.trim();
+            const extracted = [];
+            const seenNames = new Set();
+
+            const pushUnique = (item) => {
+                if (!item || !item.name) return;
+                const cleanName = item.name.replace(/\s+/g, ' ').trim();
+                if (cleanName.length < 3 || seenNames.has(cleanName.toLowerCase())) return;
+                seenNames.add(cleanName.toLowerCase());
+                let img = (item.imageUrl || '').trim();
+                if (img && sourceUrl && img.startsWith('/')) {
+                    try { img = new URL(img, sourceUrl).href; } catch (e) {}
+                }
+                const price = parsePriceNumber(item.price) || 150;
+                const oldPrice = parsePriceNumber(item.oldPrice) || null;
+                extracted.push({
+                    selected: true,
+                    brand: (item.brand || 'Parateams').trim(),
+                    name: cleanName,
+                    price,
+                    oldPrice: oldPrice && oldPrice > price ? oldPrice : null,
+                    category: getValidRayonName(item.category),
+                    imageUrl: img,
+                    badge: oldPrice && oldPrice > price ? `-${Math.round((1 - price / oldPrice) * 100)}%` : 'Nouveau',
+                    description: (item.description || cleanName).replace(/\s+/g, ' ').trim().slice(0, 260)
+                });
+            };
+
+            // 1. Cas JSON brut (ex: Shopify /products.json ou tableau JSON)
+            if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+                try {
+                    const data = JSON.parse(trimmed);
+                    const arr = Array.isArray(data) ? data : (data.products || data.items || [data]);
+                    arr.forEach(p => {
+                        const variant = Array.isArray(p.variants) && p.variants[0] ? p.variants[0] : {};
+                        const img = Array.isArray(p.images) && p.images[0] ? (p.images[0].src || p.images[0]) : (p.image?.src || p.image || p.imageUrl || '');
+                        pushUnique({
+                            brand: p.vendor || p.brand || 'Parateams',
+                            name: p.title || p.name,
+                            price: variant.price || p.price,
+                            oldPrice: variant.compare_at_price || p.oldPrice,
+                            category: p.product_type || p.category,
+                            imageUrl: img,
+                            description: p.body_html ? p.body_html.replace(/<[^>]+>/g, ' ') : (p.description || '')
+                        });
+                    });
+                    if (extracted.length > 0) return extracted;
+                } catch (e) {}
+            }
+
+            // 2. Analyse DOM HTML (JSON-LD Schema.org, Meta OpenGraph & Cartes Produits)
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(trimmed, 'text/html');
+
+            // 2a. Scripts JSON-LD Schema.org/Product
+            doc.querySelectorAll('script[type="application/ld+json"]').forEach(sc => {
+                try {
+                    const json = JSON.parse(sc.textContent);
+                    const nodes = Array.isArray(json) ? json : (json['@graph'] ? json['@graph'] : [json]);
+                    nodes.forEach(node => {
+                        if (node['@type'] === 'Product') {
+                            const offer = Array.isArray(node.offers) ? node.offers[0] : (node.offers || {});
+                            const img = Array.isArray(node.image) ? node.image[0] : (node.image?.url || node.image || '');
+                            const brandName = typeof node.brand === 'object' ? node.brand?.name : node.brand;
+                            pushUnique({
+                                brand: brandName || 'Parateams',
+                                name: node.name,
+                                price: offer.price || offer.lowPrice,
+                                oldPrice: offer.highPrice,
+                                category: node.category,
+                                imageUrl: img,
+                                description: node.description
+                            });
+                        } else if (node['@type'] === 'ItemList' && Array.isArray(node.itemListElement)) {
+                            node.itemListElement.forEach(el => {
+                                const prod = el.item || el;
+                                if (prod && prod.name) {
+                                    const offer = Array.isArray(prod.offers) ? prod.offers[0] : (prod.offers || {});
+                                    pushUnique({
+                                        brand: typeof prod.brand === 'object' ? prod.brand?.name : (prod.brand || 'Parateams'),
+                                        name: prod.name,
+                                        price: offer.price,
+                                        imageUrl: Array.isArray(prod.image) ? prod.image[0] : prod.image,
+                                        description: prod.description
+                                    });
+                                }
+                            });
+                        }
+                    });
+                } catch (e) {}
+            });
+
+            // 2b. Cartes produits e-commerce (WooCommerce, Shopify, PrestaShop)
+            const cardSelectors = '.product, .product-card, .product-item, .grid-product, .product-miniature, li.product, [data-product-id]';
+            doc.querySelectorAll(cardSelectors).forEach(card => {
+                const titleEl = card.querySelector('h2, h3, h4, .product-title, .woocommerce-loop-product__title, .card__heading, .product-card__title, a[title]');
+                const priceEl = card.querySelector('.price ins .amount, .price .amount, .price, .product-price, .money, [data-price]');
+                const oldPriceEl = card.querySelector('.price del .amount, .regular-price, .compare-at-price, del');
+                const imgEl = card.querySelector('img');
+                const brandEl = card.querySelector('.brand, .product-brand, .vendor');
+
+                const name = titleEl ? (titleEl.textContent || titleEl.getAttribute('title') || '') : '';
+                const price = priceEl ? priceEl.textContent : '';
+                const oldPrice = oldPriceEl ? oldPriceEl.textContent : '';
+                const img = imgEl ? (imgEl.getAttribute('data-src') || imgEl.getAttribute('src') || '') : '';
+                const brand = brandEl ? brandEl.textContent : (name.split(' ')[0] || 'Parateams');
+
+                if (name.trim().length > 3 && parsePriceNumber(price) > 0) {
+                    pushUnique({ brand, name, price, oldPrice, imageUrl: img });
+                }
+            });
+
+            // 2c. Secours fiche produit unique via balises OpenGraph (og:title, og:image)
+            if (extracted.length === 0) {
+                const ogTitle = doc.querySelector('meta[property="og:title"]')?.getAttribute('content') || doc.querySelector('h1')?.textContent || '';
+                const ogImg = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || '';
+                const ogDesc = doc.querySelector('meta[property="og:description"]')?.getAttribute('content') || '';
+                const ogPrice = doc.querySelector('meta[property="product:price:amount"], meta[property="og:price:amount"]')?.getAttribute('content') || '';
+                if (ogTitle.trim()) {
+                    pushUnique({
+                        brand: ogTitle.split('-')[0]?.trim() || 'Parateams',
+                        name: ogTitle,
+                        price: ogPrice || 150,
+                        imageUrl: ogImg,
+                        description: ogDesc
+                    });
+                }
+            }
+
+            return extracted;
+        }
+
+        async function extractFromExternalUrl() {
+            const urlInput = document.getElementById('scrapeUrlInput');
+            const statusEl = document.getElementById('scrapeUrlStatus');
+            const btn = document.getElementById('scrapeUrlBtn');
+            const targetUrl = (urlInput.value || '').trim();
+
+            if (!targetUrl || !targetUrl.startsWith('http')) {
+                statusEl.className = "text-[11px] font-bold text-coral-600";
+                statusEl.textContent = "⚠️ Veuillez entrer une adresse URL valide commençant par https://";
+                return;
+            }
+
+            btn.disabled = true;
+            btn.classList.add('opacity-60');
+            statusEl.className = "text-[11px] font-semibold text-sage-800";
+            statusEl.textContent = "⏳ Récupération et analyse de la page en cours...";
+
+            try {
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+                const res = await fetch(proxyUrl);
+                if (!res.ok) throw new Error("Accès bloqué par le site distant");
+                const data = await res.json();
+                if (!data || !data.contents) throw new Error("Contenu vide");
+
+                const found = parseProductsFromHtmlOrJson(data.contents, targetUrl);
+                if (found.length === 0) {
+                    throw new Error("Aucun produit détecté automatiquement sur ce lien");
+                }
+
+                setBulkStagedProducts(found);
+                statusEl.className = "text-[11px] font-bold text-[#166534]";
+                statusEl.textContent = `✅ ${found.length} produit(s) extrait(s) ! Vérifiez le tableau ci-dessous.`;
+            } catch (err) {
+                statusEl.className = "text-[11px] font-semibold text-coral-600 leading-relaxed";
+                statusEl.innerHTML = `⚠️ Ce site protège son accès direct (${err.message}). <strong>Solution rapide :</strong> ouvrez la page dans votre navigateur, faites <strong>Ctrl+U</strong> → <strong>Ctrl+A</strong> → <strong>Ctrl+C</strong> et collez dans le <strong>Mode B</strong> à droite.`;
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-60');
+            }
+        }
+
+        function extractProductsFromPastedSource() {
+            const raw = document.getElementById('scrapeHtmlSourceInput').value;
+            if (!raw || raw.trim().length < 10) {
+                showToast("Collez d'abord le code source HTML ou JSON de la page.");
+                return;
+            }
+            const found = parseProductsFromHtmlOrJson(raw);
+            if (found.length === 0) {
+                showToast("Aucun produit reconnu. Vérifiez que vous avez bien copié toute la page (Ctrl+U puis Ctrl+A).");
+                return;
+            }
+            setBulkStagedProducts(found);
+        }
+
+        function setBulkStagedProducts(items) {
+            bulkStagedProducts = items;
+            const box = document.getElementById('bulkStagingBox');
+            box.classList.remove('hidden');
+            renderBulkStagingTable();
+            box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            showToast(`${items.length} produit(s) prêt(s) à être importé(s) !`);
+        }
+
+        function clearBulkStaging() {
+            bulkStagedProducts = [];
+            document.getElementById('bulkStagingBox').classList.add('hidden');
+        }
+
+        function toggleAllBulkStaged(checked) {
+            bulkStagedProducts.forEach(p => p.selected = checked);
+            renderBulkStagingTable();
+        }
+
+        function updateBulkStagedField(idx, field, val) {
+            if (!bulkStagedProducts[idx]) return;
+            if (field === 'price' || field === 'oldPrice') {
+                bulkStagedProducts[idx][field] = parsePriceNumber(val) || (field === 'price' ? 100 : null);
+            } else {
+                bulkStagedProducts[idx][field] = val;
+            }
+            const selectedCount = bulkStagedProducts.filter(p => p.selected).length;
+            document.getElementById('bulkStagingSelectedCount').textContent = selectedCount;
+        }
+
+        function renderBulkStagingTable() {
+            const tbody = document.getElementById('bulkStagingTableBody');
+            const validRayons = SITE_DATA.rayons.filter(r => !r.isBudget).map(r => r.name);
+            const selectedCount = bulkStagedProducts.filter(p => p.selected).length;
+
+            document.getElementById('bulkStagingSelectedCount').textContent = selectedCount;
+            document.getElementById('bulkStagingTotalCount').textContent = bulkStagedProducts.length;
+
+            tbody.innerHTML = bulkStagedProducts.map((p, idx) => `
+                <tr class="${p.selected ? 'bg-white' : 'bg-slate-50 opacity-55'}">
+                    <td class="p-2.5">
+                        <input type="checkbox" ${p.selected ? 'checked' : ''} onchange="updateBulkStagedField(${idx}, 'selected', this.checked)" class="accent-sage-700">
+                    </td>
+                    <td class="p-2.5">
+                        <div class="w-10 h-10 rounded-lg bg-sage-50 border border-slate-200 flex items-center justify-center overflow-hidden">
+                            ${p.imageUrl ? `<img src="${p.imageUrl}" class="max-h-full max-w-full object-contain" onerror="this.style.display='none'">` : `<span class="text-[10px] font-bold text-sage-700">IMG</span>`}
+                        </div>
+                    </td>
+                    <td class="p-2.5">
+                        <input type="text" value="${p.brand.replace(/"/g, '&quot;')}" onchange="updateBulkStagedField(${idx}, 'brand', this.value)" class="w-28 px-2 py-1 rounded border border-slate-200 text-xs font-semibold">
+                    </td>
+                    <td class="p-2.5">
+                        <input type="text" value="${p.name.replace(/"/g, '&quot;')}" onchange="updateBulkStagedField(${idx}, 'name', this.value)" class="w-full min-w-[180px] px-2 py-1 rounded border border-slate-200 text-xs">
+                    </td>
+                    <td class="p-2.5">
+                        <input type="number" value="${p.price}" onchange="updateBulkStagedField(${idx}, 'price', this.value)" class="w-20 px-2 py-1 rounded border border-slate-200 text-xs font-bold text-sage-900">
+                    </td>
+                    <td class="p-2.5">
+                        <input type="number" value="${p.oldPrice || ''}" placeholder="-" onchange="updateBulkStagedField(${idx}, 'oldPrice', this.value)" class="w-20 px-2 py-1 rounded border border-slate-200 text-xs text-slate-500">
+                    </td>
+                    <td class="p-2.5">
+                        <select onchange="updateBulkStagedField(${idx}, 'category', this.value)" class="px-2 py-1 rounded border border-slate-200 text-xs bg-white">
+                            ${validRayons.map(r => `<option value="${r}" ${p.category === r ? 'selected' : ''}>${r}</option>`).join('')}
+                        </select>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function commitBulkStagedProducts() {
+            const chosen = bulkStagedProducts.filter(p => p.selected && p.name.trim() !== '');
+            if (chosen.length === 0) {
+                showToast("Sélectionnez au moins un produit à importer.");
+                return;
+            }
+            const mode = document.getElementById('bulkImportModeSelect').value;
+            let nextId = mode === 'replace' ? 1 : (Math.max(0, ...SITE_DATA.products.map(p => p.id)) + 1);
+
+            const formatted = chosen.map(item => ({
+                id: nextId++,
+                brand: item.brand || "Parateams",
+                name: item.name,
+                category: item.category || "Visage",
+                concern: "Hydratation",
+                skinType: "Tous types",
+                benefit: item.badge || "Soin dermo-cosmétique",
+                price: Number(item.price) || 120,
+                oldPrice: item.oldPrice ? Number(item.oldPrice) : null,
+                badge: item.badge || (item.oldPrice ? "Promo" : "Nouveau"),
+                badgeType: item.oldPrice ? "promo" : "new",
+                isNew: true,
+                stockStatus: "good",
+                rating: 4.9,
+                reviewsCount: 12,
+                volume: "",
+                color: "#5D9C2A",
+                shape: "bottle",
+                imageUrl: item.imageUrl || "",
+                description: item.description || `${item.brand} — ${item.name}`,
+                usage: "Appliquer selon les recommandations de votre pharmacien Parateams.",
+                ingredients: ""
+            }));
+
+            if (mode === 'replace') {
+                SITE_DATA.products = formatted;
+            } else {
+                SITE_DATA.products = [...formatted, ...SITE_DATA.products];
+            }
+
+            clearBulkStaging();
+            saveCmsToLocalPreview();
+            switchCmsTab('products');
+            showToast(`🎉 ${formatted.length} produit(s) importé(s) avec succès !`);
         }
 
         // INITIALISATION AU CHARGEMENT
