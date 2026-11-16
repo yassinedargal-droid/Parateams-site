@@ -322,6 +322,12 @@
                     Nouveautés
                 </button>
 
+                <select id="perPageSelect" onchange="changeCatalogItemsPerPage(this.value)" aria-label="Produits par page" class="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full bg-white border border-slate-200 text-xs sm:text-sm font-medium text-slate-700 focus:outline-none focus:border-sage-500 cursor-pointer">
+                    <option value="20" selected>20 / page</option>
+                    <option value="12">12 / page</option>
+                    <option value="8">8 / page</option>
+                </select>
+
                 <select id="sortSelect" onchange="renderProducts()" class="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full bg-sage-50 border border-slate-200 text-xs sm:text-sm font-medium text-slate-700 focus:outline-none focus:border-sage-500 cursor-pointer">
                     <option value="featured">Trier : Meilleures ventes</option>
                     <option value="rating">Mieux notés (★)</option>
@@ -332,6 +338,9 @@
         </div>
 
         <div id="productsGrid" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mt-5 sm:mt-8"></div>
+
+        <!-- Pagination épurée (← 1 (2) 3 ... 7 →) -->
+        <div id="catalogPagination" class="mt-8 sm:mt-10 flex items-center justify-center"></div>
 
         <div id="emptyState" class="hidden text-center py-12 px-4 bg-sage-50/50 rounded-3xl mt-6 border border-dashed border-sage-200">
             <h3 class="font-display text-lg font-bold text-sage-900">Aucun soin trouvé pour cette sélection</h3>
@@ -829,6 +838,17 @@
                     </div>
 
                     <div class="flex flex-wrap items-center gap-2">
+                        <div class="flex items-center gap-1 bg-white/10 p-1 rounded-xl border border-white/15">
+                            <button type="button" id="cmsUndoBtn" onclick="undoCmsAction()" disabled title="Annuler la dernière modification (Ctrl+Z)" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-35 disabled:pointer-events-none text-white text-xs font-bold transition cursor-pointer flex items-center gap-1">
+                                <span>↩️</span>
+                                <span>Annuler (Ctrl+Z)</span>
+                                <span id="cmsUndoCountBadge" class="hidden px-1.5 py-0.2 rounded-full bg-amber-400 text-[#0D1310] text-[10px] font-extrabold">0</span>
+                            </button>
+                            <button type="button" id="cmsRedoBtn" onclick="redoCmsAction()" disabled title="Rétablir la modification annulée (Ctrl+Y)" class="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-35 disabled:pointer-events-none text-white text-xs font-bold transition cursor-pointer flex items-center gap-1">
+                                <span>↪️</span>
+                                <span class="hidden sm:inline">Rétablir</span>
+                            </button>
+                        </div>
                         <button onclick="saveCmsToLocalPreview()" class="px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold transition cursor-pointer">
                             👁️ Aperçu immédiat
                         </button>
@@ -875,7 +895,7 @@
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200">
                         <div>
                             <h3 class="font-display font-bold text-lg text-slate-900">Gestion du Catalogue Produits</h3>
-                            <p class="text-xs text-slate-500">Ajoutez de nouveaux soins, importez vos photos depuis votre appareil, modifiez les prix ou supprimez des articles.</p>
+                            <p class="text-xs text-slate-500">Ajoutez de nouveaux soins, importez vos photos, sélectionnez plusieurs articles pour les supprimer ou faites <kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-300 rounded text-[10px] font-bold">Ctrl+Z</kbd> pour annuler.</p>
                         </div>
                         <div class="flex items-center gap-2">
                             <input type="text" id="cmsProdSearch" oninput="renderCmsProductsList()" placeholder="Filtrer un produit..." class="px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-sage-600">
@@ -883,6 +903,26 @@
                                 + Nouveau produit
                             </button>
                         </div>
+                    </div>
+
+                    <!-- Barre d'actions groupées (Sélection multiple / Tout sélectionner / Supprimer) -->
+                    <div class="flex flex-wrap items-center justify-between gap-2.5 bg-white px-4 py-3 rounded-2xl border border-slate-200 shadow-2xs">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button type="button" onclick="selectAllFilteredCmsProducts()" class="px-3 py-1.5 rounded-xl bg-sage-50 hover:bg-sage-100 text-sage-900 border border-sage-200 text-xs font-bold transition cursor-pointer">
+                                ☑️ Tout sélectionner (filtrés)
+                            </button>
+                            <button type="button" onclick="deselectAllCmsProducts()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
+                                Tout désélectionner
+                            </button>
+                            <span id="cmsSelectedProdBadge" class="px-2.5 py-1 rounded-full bg-sage-100 text-sage-900 text-xs font-extrabold">
+                                0 sélectionné
+                            </span>
+                        </div>
+
+                        <button type="button" id="cmsBulkDeleteBtn" onclick="deleteSelectedCmsProducts()" disabled class="px-4 py-2 rounded-xl bg-coral-500 hover:bg-coral-600 disabled:opacity-40 disabled:pointer-events-none text-white text-xs font-extrabold shadow-xs transition cursor-pointer flex items-center gap-1.5">
+                            <span>🗑️</span>
+                            <span>Supprimer la sélection (<span id="cmsBulkDeleteCount">0</span>)</span>
+                        </button>
                     </div>
 
                     <!-- Formulaire Ajout / Édition Produit (repliable) -->
@@ -973,6 +1013,9 @@
 
                     <!-- Liste des produits -->
                     <div id="cmsProductsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+                    <!-- Pagination CMS (← 1 (2) 3 ... 7 →) -->
+                    <div id="cmsProductsPagination" class="mt-6 flex items-center justify-center"></div>
                 </div>
 
                 <!-- ONGLET 1B : IMPORT EN MASSE & EXTRACTION DEPUIS UN AUTRE SITE WEB -->
@@ -2032,6 +2075,8 @@
             budget99Only: false,
             newOnly: false,
             concernFilter: null,
+            currentPage: 1,
+            itemsPerPage: 20,
             cart: [],
             wishlist: [1, 3],
             selectedCity: 'Casablanca',
@@ -2308,6 +2353,7 @@
         function renderProducts() {
             const grid = document.getElementById('productsGrid');
             const emptyState = document.getElementById('emptyState');
+            const paginationEl = document.getElementById('catalogPagination');
             const countText = document.getElementById('productCountText');
             const titleEl = document.getElementById('catalogTitle');
             const resetBadgeBtn = document.getElementById('resetBadgeBtn');
@@ -2330,17 +2376,29 @@
             else if (state.category !== 'all') titleEl.textContent = `Rayon ${state.category}`;
             else titleEl.textContent = "Meilleures Ventes & Nouveautés";
 
-            countText.textContent = `${filtered.length} soin${filtered.length > 1 ? 's' : ''} disponible${filtered.length > 1 ? 's' : ''}`;
             renderRayons();
 
             if (filtered.length === 0) {
                 grid.innerHTML = '';
+                if (paginationEl) paginationEl.innerHTML = '';
+                countText.textContent = '0 soin disponible';
                 emptyState.classList.remove('hidden');
                 return;
             }
             emptyState.classList.add('hidden');
 
-            grid.innerHTML = filtered.map(product => {
+            const totalPages = Math.max(1, Math.ceil(filtered.length / state.itemsPerPage));
+            if (state.currentPage > totalPages) state.currentPage = totalPages;
+            if (state.currentPage < 1) state.currentPage = 1;
+
+            const startIdx = (state.currentPage - 1) * state.itemsPerPage;
+            const paginatedItems = filtered.slice(startIdx, startIdx + state.itemsPerPage);
+
+            countText.textContent = filtered.length > state.itemsPerPage
+                ? `Affichage de ${startIdx + 1}–${Math.min(startIdx + state.itemsPerPage, filtered.length)} sur ${filtered.length} soins`
+                : `${filtered.length} soin${filtered.length > 1 ? 's' : ''} disponible${filtered.length > 1 ? 's' : ''}`;
+
+            grid.innerHTML = paginatedItems.map(product => {
                 let badgeColorClass = 'bg-sage-100 text-sage-800';
                 if (product.badgeType === 'promo' || (product.oldPrice && product.oldPrice > product.price)) badgeColorClass = 'bg-coral-500 text-white';
                 if (product.badgeType === 'new' || product.isNew) badgeColorClass = 'bg-sage-700 text-white';
@@ -2414,6 +2472,76 @@
                 </article>
                 `;
             }).join('');
+
+            if (paginationEl) {
+                paginationEl.innerHTML = buildMinimalCirclePaginationHTML(state.currentPage, totalPages, 'goToCatalogPage');
+            }
+        }
+
+        function buildMinimalCirclePaginationHTML(currentPage, totalPages, fnName) {
+            if (totalPages < 1) return '';
+
+            const pages = [];
+            if (totalPages <= 5) {
+                for (let i = 1; i <= totalPages; i++) pages.push(i);
+            } else if (currentPage <= 3) {
+                pages.push(1, 2, 3, '...', totalPages);
+            } else if (currentPage >= totalPages - 2) {
+                pages.push(1, '...', totalPages - 2, totalPages - 1, totalPages);
+            } else {
+                pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+            }
+
+            const prevDisabled = currentPage <= 1;
+            const nextDisabled = currentPage >= totalPages;
+
+            const prevBtn = `
+                <button onclick="${fnName}(${currentPage - 1})" ${prevDisabled ? 'disabled' : ''} aria-label="Page précédente" class="w-10 h-10 flex items-center justify-center rounded-full text-slate-900 hover:bg-slate-100 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                </button>
+            `;
+
+            const nextBtn = `
+                <button onclick="${fnName}(${currentPage + 1})" ${nextDisabled ? 'disabled' : ''} aria-label="Page suivante" class="w-10 h-10 flex items-center justify-center rounded-full text-slate-900 hover:bg-slate-100 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                    </svg>
+                </button>
+            `;
+
+            const itemsHTML = pages.map(p => {
+                if (p === '...') {
+                    return `<span class="px-1.5 text-slate-800 font-bold tracking-widest select-none">…</span>`;
+                }
+                const isActive = p === currentPage;
+                if (isActive) {
+                    return `<button onclick="${fnName}(${p})" aria-current="page" class="w-11 h-11 rounded-full border-2 border-[#34C77B] text-slate-950 font-display font-bold text-base flex items-center justify-center bg-white shadow-2xs transition cursor-pointer">${p}</button>`;
+                }
+                return `<button onclick="${fnName}(${p})" class="w-10 h-10 rounded-full text-slate-900 hover:bg-slate-100 font-display font-semibold text-base flex items-center justify-center transition cursor-pointer">${p}</button>`;
+            }).join('');
+
+            return `
+                <nav aria-label="Pagination" class="inline-flex items-center gap-1.5 sm:gap-2.5 py-2">
+                    ${prevBtn}
+                    ${itemsHTML}
+                    ${nextBtn}
+                </nav>
+            `;
+        }
+
+        function changeCatalogItemsPerPage(val) {
+            state.itemsPerPage = Math.max(1, Number(val) || 20);
+            state.currentPage = 1;
+            renderProducts();
+        }
+
+        function goToCatalogPage(page) {
+            state.currentPage = page;
+            renderProducts();
+            const catEl = document.getElementById('catalogue');
+            if (catEl) catEl.scrollIntoView({ behavior: 'smooth' });
         }
 
         // FILTRES, RECHERCHE & FAVORIS
@@ -2421,6 +2549,7 @@
             state.category = cat;
             state.concernFilter = null;
             state.budget99Only = false;
+            state.currentPage = 1;
             document.getElementById('budget99Btn').classList.remove('bg-sage-100', 'border-sage-600', 'text-sage-900', 'font-semibold');
             renderProducts();
             if (shouldScroll) document.getElementById('catalogue').scrollIntoView({ behavior: 'smooth' });
@@ -2429,12 +2558,14 @@
         function filterByBrand(brand) {
             state.brand = brand;
             state.concernFilter = null;
+            state.currentPage = 1;
             renderProducts();
             document.getElementById('catalogue').scrollIntoView({ behavior: 'smooth' });
         }
 
         function togglePromoFilter() {
             state.promoOnly = !state.promoOnly;
+            state.currentPage = 1;
             const btn = document.getElementById('promoOnlyBtn');
             btn.classList.toggle('bg-coral-50', state.promoOnly);
             btn.classList.toggle('border-coral-500', state.promoOnly);
@@ -2445,6 +2576,7 @@
 
         function toggleBudget99Filter() {
             state.budget99Only = !state.budget99Only;
+            state.currentPage = 1;
             const btn = document.getElementById('budget99Btn');
             btn.classList.toggle('bg-sage-100', state.budget99Only);
             btn.classList.toggle('border-sage-600', state.budget99Only);
@@ -2459,6 +2591,7 @@
             state.promoOnly = false;
             state.newOnly = false;
             state.budget99Only = true;
+            state.currentPage = 1;
             document.getElementById('budget99Btn').classList.add('bg-sage-100', 'border-sage-600', 'text-sage-900', 'font-semibold');
             document.getElementById('promoOnlyBtn').classList.remove('bg-coral-50', 'border-coral-500', 'text-coral-600', 'font-semibold');
             document.getElementById('newOnlyBtn').classList.remove('bg-sage-100', 'border-sage-600', 'text-sage-900', 'font-semibold');
@@ -2468,6 +2601,7 @@
 
         function toggleNewOnlyFilter() {
             state.newOnly = !state.newOnly;
+            state.currentPage = 1;
             const btn = document.getElementById('newOnlyBtn');
             btn.classList.toggle('bg-sage-100', state.newOnly);
             btn.classList.toggle('border-sage-600', state.newOnly);
@@ -2532,6 +2666,7 @@
 
         function handleSearchChange(val) {
             state.search = val;
+            state.currentPage = 1;
             if (searchInput && searchInput.value !== val) searchInput.value = val;
             if (mobileSearchInput && mobileSearchInput.value !== val) mobileSearchInput.value = val;
             clearSearchBtn.classList.toggle('hidden', state.search.length === 0);
@@ -2568,6 +2703,7 @@
             state.budget99Only = false;
             state.newOnly = false;
             state.concernFilter = null;
+            state.currentPage = 1;
             if (searchInput) searchInput.value = '';
             if (mobileSearchInput) mobileSearchInput.value = '';
             clearSearchBtn.classList.add('hidden');
@@ -3164,6 +3300,77 @@
         // MOTEUR MINI-CMS PARATEAMS STUDIO (ÉDITION COMPLÈTE + API GITHUB)
         // =====================================================================
         let isCmsAuthenticated = false;
+        let cmsUndoStack = [];
+        let cmsRedoStack = [];
+        let selectedCmsProductIds = new Set();
+        let cmsProductsCurrentPage = 1;
+        const CMS_PRODUCTS_PER_PAGE = 20;
+        const MAX_CMS_HISTORY = 40;
+
+        function pushCmsUndoSnapshot() {
+            cmsUndoStack.push(JSON.stringify(SITE_DATA));
+            if (cmsUndoStack.length > MAX_CMS_HISTORY) cmsUndoStack.shift();
+            cmsRedoStack = [];
+            updateCmsHistoryButtons();
+        }
+
+        function updateCmsHistoryButtons() {
+            const undoBtn = document.getElementById('cmsUndoBtn');
+            const redoBtn = document.getElementById('cmsRedoBtn');
+            const badge = document.getElementById('cmsUndoCountBadge');
+            if (undoBtn) undoBtn.disabled = cmsUndoStack.length === 0;
+            if (redoBtn) redoBtn.disabled = cmsRedoStack.length === 0;
+            if (badge) {
+                badge.textContent = cmsUndoStack.length;
+                badge.classList.toggle('hidden', cmsUndoStack.length === 0);
+            }
+        }
+
+        function goToCmsProductsPage(page) {
+            cmsProductsCurrentPage = page;
+            renderCmsProductsList();
+            const panel = document.getElementById('cmsPanel-products');
+            if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function undoCmsAction() {
+            if (cmsUndoStack.length === 0) return;
+            cmsRedoStack.push(JSON.stringify(SITE_DATA));
+            const previousState = cmsUndoStack.pop();
+            SITE_DATA = JSON.parse(previousState);
+            selectedCmsProductIds.clear();
+            saveCmsToLocalPreview(true);
+            updateCmsHistoryButtons();
+            showToast("↩️ Action annulée (Ctrl+Z)");
+        }
+
+        function redoCmsAction() {
+            if (cmsRedoStack.length === 0) return;
+            cmsUndoStack.push(JSON.stringify(SITE_DATA));
+            const nextState = cmsRedoStack.pop();
+            SITE_DATA = JSON.parse(nextState);
+            selectedCmsProductIds.clear();
+            saveCmsToLocalPreview(true);
+            updateCmsHistoryButtons();
+            showToast("↪️ Action rétablie (Ctrl+Y)");
+        }
+
+        // Raccourcis clavier globaux Ctrl+Z / Cmd+Z et Ctrl+Y / Cmd+Shift+Z dans le CMS
+        document.addEventListener('keydown', function(e) {
+            const overlay = document.getElementById('adminCmsOverlay');
+            if (!isCmsAuthenticated || !overlay || overlay.classList.contains('hidden')) return;
+            const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : '';
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+            const isMod = e.ctrlKey || e.metaKey;
+            if (isMod && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                undoCmsAction();
+            } else if ((isMod && e.key.toLowerCase() === 'y') || (isMod && e.shiftKey && e.key.toLowerCase() === 'z')) {
+                e.preventDefault();
+                redoCmsAction();
+            }
+        });
 
         function openAdminCMS() {
             const overlay = document.getElementById('adminCmsOverlay');
@@ -3172,6 +3379,7 @@
                 document.getElementById('cmsLoginScreen').classList.add('hidden');
                 document.getElementById('cmsDashboardScreen').classList.remove('hidden');
                 refreshAllCmsPanels();
+                updateCmsHistoryButtons();
             } else {
                 document.getElementById('cmsLoginScreen').classList.remove('hidden');
                 document.getElementById('cmsDashboardScreen').classList.add('hidden');
@@ -3188,6 +3396,119 @@
             }
         }
 
+        function saveCmsToLocalPreview(silent = false) {
+            try {
+                localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(SITE_DATA));
+            } catch (err) {
+                console.warn("Quota localStorage atteint", err);
+            }
+            document.getElementById('cmsPreviewBanner').classList.remove('hidden');
+            applyStoreSettingsToUI();
+            renderHeroSlides();
+            renderProducts();
+            updateDeliverySimulator(state.selectedCity);
+            refreshAllCmsPanels();
+            updateCmsHistoryButtons();
+            if (!silent) showToast("Modifications appliquées sur la boutique !");
+        }
+
+        // --- CMS ONGLET 1 : PRODUITS ---
+        function getFilteredCmsProducts() {
+            const q = (document.getElementById('cmsProdSearch')?.value || '').trim().toLowerCase();
+            return SITE_DATA.products.filter(p => !q || p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
+        }
+
+        function updateCmsBulkSelectionUI() {
+            const validIds = new Set(SITE_DATA.products.map(p => p.id));
+            selectedCmsProductIds.forEach(id => {
+                if (!validIds.has(id)) selectedCmsProductIds.delete(id);
+            });
+            const count = selectedCmsProductIds.size;
+            const badge = document.getElementById('cmsSelectedProdBadge');
+            const delBtn = document.getElementById('cmsBulkDeleteBtn');
+            const delCount = document.getElementById('cmsBulkDeleteCount');
+            if (badge) badge.textContent = `${count} sélectionné${count > 1 ? 's' : ''}`;
+            if (delCount) delCount.textContent = count;
+            if (delBtn) delBtn.disabled = count === 0;
+        }
+
+        function toggleCmsProductSelection(id, checked) {
+            if (checked) selectedCmsProductIds.add(id);
+            else selectedCmsProductIds.delete(id);
+            renderCmsProductsList();
+        }
+
+        function selectAllFilteredCmsProducts() {
+            const list = getFilteredCmsProducts();
+            list.forEach(p => selectedCmsProductIds.add(p.id));
+            renderCmsProductsList();
+            showToast(`${list.length} produit(s) sélectionné(s)`);
+        }
+
+        function deselectAllCmsProducts() {
+            selectedCmsProductIds.clear();
+            renderCmsProductsList();
+        }
+
+        function deleteSelectedCmsProducts() {
+            const count = selectedCmsProductIds.size;
+            if (count === 0) return;
+            pushCmsUndoSnapshot();
+            SITE_DATA.products = SITE_DATA.products.filter(p => !selectedCmsProductIds.has(p.id));
+            selectedCmsProductIds.clear();
+            saveCmsToLocalPreview(true);
+            showToast(`🗑️ ${count} produit(s) supprimé(s) — Ctrl+Z pour annuler`);
+        }
+
+        function renderCmsProductsList() {
+            const container = document.getElementById('cmsProductsList');
+            const paginationEl = document.getElementById('cmsProductsPagination');
+            const list = getFilteredCmsProducts();
+            updateCmsBulkSelectionUI();
+
+            const totalPages = Math.max(1, Math.ceil(list.length / CMS_PRODUCTS_PER_PAGE));
+            if (cmsProductsCurrentPage > totalPages) cmsProductsCurrentPage = totalPages;
+            if (cmsProductsCurrentPage < 1) cmsProductsCurrentPage = 1;
+
+            const startIdx = (cmsProductsCurrentPage - 1) * CMS_PRODUCTS_PER_PAGE;
+            const paginated = list.slice(startIdx, startIdx + CMS_PRODUCTS_PER_PAGE);
+
+            container.innerHTML = paginated.map(p => {
+                const isSelected = selectedCmsProductIds.has(p.id);
+                return `
+                <div class="bg-white rounded-2xl border-2 ${isSelected ? 'border-sage-600 bg-sage-50/35 shadow-sm' : 'border-slate-200'} p-4 flex flex-col justify-between gap-3 transition">
+                    <div class="flex items-start gap-3">
+                        <label class="pt-0.5 cursor-pointer shrink-0 flex items-center" title="Sélectionner ce produit">
+                            <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleCmsProductSelection(${p.id}, this.checked)" class="w-4 h-4 rounded accent-sage-700 cursor-pointer">
+                        </label>
+                        <div class="w-16 h-16 rounded-xl bg-sage-50 border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden p-1">
+                            ${p.imageUrl ? `<img src="${p.imageUrl}" class="max-h-full max-w-full object-contain">` : `<span class="text-xs font-extrabold text-sage-700">${p.brand.slice(0, 4)}</span>`}
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center justify-between gap-1">
+                                <span class="text-[10px] font-bold uppercase text-sage-600">${p.brand} • ${p.category}</span>
+                                ${p.badge ? `<span class="px-2 py-0.5 rounded-full bg-coral-50 text-coral-600 text-[10px] font-bold">${p.badge}</span>` : ''}
+                            </div>
+                            <h4 class="font-bold text-xs sm:text-sm text-slate-900 line-clamp-2 mt-0.5">${p.name}</h4>
+                            <p class="font-display font-extrabold text-sm text-sage-900 mt-1">
+                                ${p.price} DH ${p.oldPrice ? `<span class="text-xs font-normal text-slate-400 line-through">${p.oldPrice} DH</span>` : ''}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                        <button onclick="openCmsProductEditor(${p.id})" class="px-3 py-1.5 rounded-lg bg-sage-50 hover:bg-sage-100 text-sage-800 text-xs font-bold cursor-pointer">✏️ Modifier</button>
+                        <button onclick="duplicateCmsProduct(${p.id})" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer" title="Dupliquer">📋</button>
+                        <button onclick="deleteCmsProduct(${p.id})" class="px-3 py-1.5 rounded-lg bg-coral-50 hover:bg-coral-100 text-coral-600 text-xs font-bold cursor-pointer">🗑️</button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            if (paginationEl) {
+                paginationEl.innerHTML = buildMinimalCirclePaginationHTML(cmsProductsCurrentPage, totalPages, 'goToCmsProductsPage');
+            }
+        }
+
         function submitCmsLogin(e) {
             e.preventDefault();
             const entered = document.getElementById('cmsPasswordInput').value;
@@ -3197,6 +3518,7 @@
                 document.getElementById('cmsLoginScreen').classList.add('hidden');
                 document.getElementById('cmsDashboardScreen').classList.remove('hidden');
                 refreshAllCmsPanels();
+                updateCmsHistoryButtons();
                 showToast("Bienvenue dans Parateams Studio CMS !");
             } else {
                 document.getElementById('cmsLoginError').classList.remove('hidden');
@@ -3241,39 +3563,8 @@
             renderProducts();
             updateDeliverySimulator(state.selectedCity);
             refreshAllCmsPanels();
-            showToast("Modifications appliquées sur la boutique !");
-        }
-
-        // --- CMS ONGLET 1 : PRODUITS ---
-        function renderCmsProductsList() {
-            const container = document.getElementById('cmsProductsList');
-            const q = (document.getElementById('cmsProdSearch')?.value || '').trim().toLowerCase();
-            const list = SITE_DATA.products.filter(p => !q || p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q));
-
-            container.innerHTML = list.map(p => `
-                <div class="bg-white rounded-2xl border border-slate-200 p-4 flex flex-col justify-between gap-3 shadow-2xs">
-                    <div class="flex items-start gap-3">
-                        <div class="w-16 h-16 rounded-xl bg-sage-50 border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden p-1">
-                            ${p.imageUrl ? `<img src="${p.imageUrl}" class="max-h-full max-w-full object-contain">` : `<span class="text-xs font-extrabold text-sage-700">${p.brand.slice(0, 4)}</span>`}
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <div class="flex items-center justify-between gap-1">
-                                <span class="text-[10px] font-bold uppercase text-sage-600">${p.brand} • ${p.category}</span>
-                                ${p.badge ? `<span class="px-2 py-0.5 rounded-full bg-coral-50 text-coral-600 text-[10px] font-bold">${p.badge}</span>` : ''}
-                            </div>
-                            <h4 class="font-bold text-xs sm:text-sm text-slate-900 line-clamp-2 mt-0.5">${p.name}</h4>
-                            <p class="font-display font-extrabold text-sm text-sage-900 mt-1">
-                                ${p.price} DH ${p.oldPrice ? `<span class="text-xs font-normal text-slate-400 line-through">${p.oldPrice} DH</span>` : ''}
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-                        <button onclick="openCmsProductEditor(${p.id})" class="px-3 py-1.5 rounded-lg bg-sage-50 hover:bg-sage-100 text-sage-800 text-xs font-bold cursor-pointer">✏️ Modifier</button>
-                        <button onclick="duplicateCmsProduct(${p.id})" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer" title="Dupliquer">📋</button>
-                        <button onclick="deleteCmsProduct(${p.id})" class="px-3 py-1.5 rounded-lg bg-coral-50 hover:bg-coral-100 text-coral-600 text-xs font-bold cursor-pointer">🗑️</button>
-                    </div>
-                </div>
-            `).join('');
+            updateCmsHistoryButtons();
+            if (!silent) showToast("Modifications appliquées sur la boutique !");
         }
 
         function openCmsProductEditor(productId) {
@@ -3378,6 +3669,7 @@
 
         function saveCmsProduct(e) {
             e.preventDefault();
+            pushCmsUndoSnapshot();
             const idVal = document.getElementById('editProdId').value;
             const oldPriceVal = document.getElementById('editProdOldPrice').value;
             const badgeVal = document.getElementById('editProdBadge').value.trim();
@@ -3420,6 +3712,7 @@
         function duplicateCmsProduct(id) {
             const orig = SITE_DATA.products.find(p => p.id === id);
             if (!orig) return;
+            pushCmsUndoSnapshot();
             const copy = {
                 ...orig,
                 id: Math.max(0, ...SITE_DATA.products.map(p => p.id)) + 1,
@@ -3430,8 +3723,11 @@
         }
 
         function deleteCmsProduct(id) {
+            pushCmsUndoSnapshot();
+            selectedCmsProductIds.delete(id);
             SITE_DATA.products = SITE_DATA.products.filter(p => p.id !== id);
-            saveCmsToLocalPreview();
+            saveCmsToLocalPreview(true);
+            showToast("Produit supprimé (Ctrl+Z pour annuler)");
         }
 
         // --- CMS ONGLET 2 : SLIDES CARROUSEL ---
@@ -3488,6 +3784,7 @@
 
         function updateCmsSlideField(idx, field, val) {
             if (!SITE_DATA.slides[idx]) return;
+            pushCmsUndoSnapshot();
             SITE_DATA.slides[idx][field] = val;
             saveCmsToLocalPreview();
         }
@@ -3496,17 +3793,20 @@
             const file = event.target.files && event.target.files[0];
             if (!file) return;
             compressImageToDataURL(file, 680, (dataUrl) => {
+                pushCmsUndoSnapshot();
                 SITE_DATA.slides[idx].imageUrl = dataUrl;
                 saveCmsToLocalPreview();
             });
         }
 
         function clearCmsSlideImage(idx) {
+            pushCmsUndoSnapshot();
             SITE_DATA.slides[idx].imageUrl = '';
             saveCmsToLocalPreview();
         }
 
         function addCmsSlide() {
+            pushCmsUndoSnapshot();
             SITE_DATA.slides.push({
                 id: Date.now(),
                 badge: "✨ Offre Spéciale",
@@ -3523,6 +3823,7 @@
 
         function deleteCmsSlide(idx) {
             if (SITE_DATA.slides.length <= 1) return;
+            pushCmsUndoSnapshot();
             SITE_DATA.slides.splice(idx, 1);
             saveCmsToLocalPreview();
         }
@@ -3546,17 +3847,20 @@
             const icon = document.getElementById('newRayonIcon').value.trim() || "🌿";
             const name = document.getElementById('newRayonName').value.trim();
             if (!name) return;
+            pushCmsUndoSnapshot();
             SITE_DATA.rayons.splice(SITE_DATA.rayons.length - 1, 0, { name, icon });
             document.getElementById('newRayonName').value = '';
             saveCmsToLocalPreview();
         }
 
         function updateCmsRayon(idx, field, val) {
+            pushCmsUndoSnapshot();
             SITE_DATA.rayons[idx][field] = val;
             saveCmsToLocalPreview();
         }
 
         function deleteCmsRayon(idx) {
+            pushCmsUndoSnapshot();
             SITE_DATA.rayons.splice(idx, 1);
             saveCmsToLocalPreview();
         }
@@ -3586,6 +3890,7 @@
 
         function saveCmsGeneralSettings(e) {
             e.preventDefault();
+            pushCmsUndoSnapshot();
             const s = SITE_DATA.settings;
             s.brandName = document.getElementById('setBrandName').value.trim();
             s.brandSubtitle = document.getElementById('setBrandSubtitle').value.trim();
@@ -3763,7 +4068,9 @@
                 try {
                     const imported = JSON.parse(e.target.result);
                     if (imported && imported.products && imported.settings) {
+                        pushCmsUndoSnapshot();
                         SITE_DATA = imported;
+                        selectedCmsProductIds.clear();
                         saveCmsToLocalPreview();
                         showToast("Sauvegarde restaurée avec succès !");
                     }
@@ -3775,14 +4082,16 @@
         }
 
         function resetCmsToDefaults() {
+            pushCmsUndoSnapshot();
             localStorage.removeItem(CMS_STORAGE_KEY);
             SITE_DATA = JSON.parse(document.getElementById('parateams-site-data').textContent);
+            selectedCmsProductIds.clear();
             document.getElementById('cmsPreviewBanner').classList.add('hidden');
             applyStoreSettingsToUI();
             renderHeroSlides();
             renderProducts();
             refreshAllCmsPanels();
-            showToast("Données d'usine restaurées.");
+            showToast("Données d'usine restaurées (Ctrl+Z pour annuler).");
         }
 
         // =====================================================================
@@ -4195,6 +4504,7 @@
                 showToast("Sélectionnez au moins un produit à importer.");
                 return;
             }
+            pushCmsUndoSnapshot();
             const mode = document.getElementById('bulkImportModeSelect').value;
             let nextId = mode === 'replace' ? 1 : (Math.max(0, ...SITE_DATA.products.map(p => p.id)) + 1);
 
