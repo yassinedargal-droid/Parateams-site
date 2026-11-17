@@ -914,23 +914,41 @@
 
                     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200">
                         <div>
-                            <h3 class="font-display font-bold text-lg text-slate-900">Contrôle du Stock & Catalogue</h3>
-                            <p class="text-xs text-slate-500">Saisissez simplement le nombre d'unités que vous avez sur chaque produit : le statut (En stock / Stock limité / Rupture) s'ajuste tout seul.</p>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h3 class="font-display font-bold text-lg text-slate-900">Tableau d'Inventaire & Contrôle du Stock</h3>
+                                <div class="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200">
+                                    <button type="button" id="cmsViewModeTableBtn" onclick="setCmsProductsViewMode('table')" class="px-3 py-1 rounded-lg bg-sage-700 text-white text-xs font-extrabold transition cursor-pointer">
+                                        📋 Tableau Complet (Saisie Stock)
+                                    </button>
+                                    <button type="button" id="cmsViewModeCardsBtn" onclick="setCmsProductsViewMode('cards')" class="px-3 py-1 rounded-lg text-slate-700 hover:text-slate-900 text-xs font-bold transition cursor-pointer">
+                                        🗂️ Vue Cartes
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">Tapez la quantité dans la colonne <strong>« Mon Stock »</strong> puis appuyez sur <strong>Entrée ↵</strong> pour descendre automatiquement à l'article suivant.</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
+                            <button type="button" onclick="resetAllProductsStockToZero()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-coral-50 text-slate-700 hover:text-coral-600 border border-slate-200 text-xs font-bold whitespace-nowrap cursor-pointer" title="Mettre tous les stocks à 0 pour saisir uniquement ce que vous avez">
+                                🔄 Tout remettre à 0
+                            </button>
                             <button type="button" onclick="recategorizeAllExistingProducts()" class="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-[#0D1310] text-xs font-extrabold shadow-xs whitespace-nowrap cursor-pointer">
                                 ✨ Auto-catégoriser tout
                             </button>
                             <select id="cmsProdStockFilter" onchange="cmsProductsCurrentPage=1; renderCmsProductsList()" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold bg-sage-50 text-sage-900">
                                 <option value="all">Tous les stocks</option>
-                                <option value="out">🔴 Quantité à 0 (Rupture)</option>
+                                <option value="out">🔴 Quantité à 0 (À remplir)</option>
                                 <option value="low">🟠 Stock faible (1 à 3)</option>
                                 <option value="in">🟢 En stock (4 et +)</option>
                             </select>
                             <select id="cmsProdRayonFilter" onchange="cmsProductsCurrentPage=1; renderCmsProductsList()" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold bg-sand-50">
                                 <option value="all">Tous les rayons</option>
                             </select>
-                            <input type="text" id="cmsProdSearch" oninput="cmsProductsCurrentPage=1; renderCmsProductsList()" placeholder="Rechercher un produit..." class="px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-sage-600">
+                            <select id="cmsProdPerPageSelect" onchange="changeCmsProductsPerPage(this.value)" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold bg-white text-slate-800">
+                                <option value="9999" selected>Tout afficher (1 seul tableau)</option>
+                                <option value="50">50 / page</option>
+                                <option value="20">20 / page</option>
+                            </select>
+                            <input type="text" id="cmsProdSearch" oninput="cmsProductsCurrentPage=1; renderCmsProductsList()" placeholder="Rechercher marque ou article..." class="px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-sage-600">
                             <button onclick="openCmsProductEditor(null)" class="px-4 py-2 rounded-xl bg-sage-700 hover:bg-sage-800 text-white text-xs font-bold whitespace-nowrap cursor-pointer">
                                 + Nouveau produit
                             </button>
@@ -1056,7 +1074,30 @@
                     </div>
 
                     <!-- Liste des produits -->
-                    <div id="cmsProductsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                    <div id="cmsInventoryTableWrapper" class="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+                        <div class="overflow-x-auto max-h-[650px] overflow-y-auto">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead class="bg-[#0D1310] text-white sticky top-0 z-10">
+                                    <tr>
+                                        <th class="p-3 w-9 text-center">
+                                            <input type="checkbox" onchange="if(this.checked) selectAllFilteredCmsProducts(); else deselectAllCmsProducts();" class="accent-sage-500 w-4 h-4 cursor-pointer">
+                                        </th>
+                                        <th class="p-3 w-14">Photo</th>
+                                        <th class="p-3 w-36">Marque</th>
+                                        <th class="p-3 min-w-[220px]">Nom de l'article</th>
+                                        <th class="p-3 w-40">Rayon</th>
+                                        <th class="p-3 w-28">Prix (DH)</th>
+                                        <th class="p-3 w-44 bg-sage-800 text-amber-300 font-extrabold text-center">📦 Mon Stock (Quantité)</th>
+                                        <th class="p-3 w-28 text-center">Statut Site</th>
+                                        <th class="p-3 w-24 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cmsInventoryTableBody" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="cmsProductsList" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 
                     <!-- Pagination CMS -->
                     <div id="cmsProductsPagination" class="mt-6 flex items-center justify-center"></div>
@@ -1066,14 +1107,14 @@
                 <div id="cmsPanel-bulk" class="cms-panel hidden space-y-6">
                     <div class="bg-gradient-to-r from-sage-900 to-sage-800 text-white p-5 sm:p-6 rounded-3xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <span class="inline-block px-2.5 py-0.5 rounded-full bg-amber-400 text-[#0D1310] text-[10px] font-extrabold uppercase tracking-wider">Catégorisation & Stock Intelligents</span>
-                            <h3 class="font-display font-extrabold text-lg sm:text-2xl mt-1">Insérer tout votre catalogue & gérer vos quantités</h3>
-                            <p class="text-xs sm:text-sm text-sage-100/90 mt-0.5">Importez tous vos produits d'un coup (avec un stock initial au choix, ex: 10 ou 0), puis ajustez simplement vos quantités dans l'onglet Produits.</p>
+                            <span class="inline-block px-2.5 py-0.5 rounded-full bg-amber-400 text-[#0D1310] text-[10px] font-extrabold uppercase tracking-wider">Spécial Palmarosa Shop & BeautyMarket</span>
+                            <h3 class="font-display font-extrabold text-lg sm:text-2xl mt-1">Insérer tous les produits & remplir vos quantités après</h3>
+                            <p class="text-xs sm:text-sm text-sage-100/90 mt-0.5">Le stock initial est réglé sur <strong>0</strong> par défaut : importez tout le catalogue d'un coup, puis saisissez vos quantités réelles dans le Tableau d'Inventaire.</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2 shrink-0">
                             <div class="bg-white/10 border border-white/20 rounded-xl px-3 py-1.5 flex items-center gap-2">
-                                <label for="bulkDefaultStockInput" class="text-[11px] font-bold text-sage-100">Stock initial par défaut :</label>
-                                <input type="number" id="bulkDefaultStockInput" min="0" value="10" class="w-16 px-2 py-1 rounded-lg bg-white text-sage-900 font-extrabold text-xs text-center">
+                                <label for="bulkDefaultStockInput" class="text-[11px] font-bold text-sage-100">Stock initial à l'import :</label>
+                                <input type="number" id="bulkDefaultStockInput" min="0" value="0" class="w-16 px-2 py-1 rounded-lg bg-white text-sage-900 font-extrabold text-xs text-center">
                             </div>
                             <button type="button" onclick="downloadCsvTemplate()" class="px-4 py-2.5 rounded-xl bg-white hover:bg-sage-50 text-sage-900 font-extrabold text-xs shadow-sm transition cursor-pointer">
                                 📄 Modèle Excel (.csv)
@@ -1153,15 +1194,15 @@
                             <!-- Mode B : Par Code Source HTML ou Flux JSON -->
                             <div class="lg:col-span-7 bg-sand-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
                                 <div class="flex flex-wrap items-center justify-between gap-2">
-                                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-coral-600">Mode B • Extraction massive (Page catalogue entière)</span>
-                                    <button type="button" onclick="copyUniversalConsoleExtractor()" class="px-2.5 py-1 rounded-lg bg-[#0D1310] hover:bg-black text-amber-300 text-[10.5px] font-bold transition cursor-pointer">
-                                        📋 Copier le script Console (Bouton Vert)
+                                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-coral-600">Mode B • Extracteur Spécial Palmarosa Shop & BeautyMarket</span>
+                                    <button type="button" onclick="copyUniversalConsoleExtractor()" class="px-3 py-1.5 rounded-lg bg-[#e11d48] hover:bg-[#be123c] text-white text-xs font-extrabold shadow-xs transition cursor-pointer">
+                                        🌸 Copier le Script Palmarosa Shop (Auto-Scroll + Copier)
                                     </button>
                                 </div>
                                 <p class="text-[11px] text-slate-600 leading-relaxed">
-                                    Ouvrez la catégorie sur l'autre site, faites <strong>Clic droit → Inspecter → Console</strong>, collez le script copié ci-dessus, cliquez sur le bouton vert, puis faites <strong>Ctrl + V</strong> ici :
+                                    <strong>Sur palmarosashop.com :</strong> Ouvrez la catégorie (Visage, Maquillage, Cheveux...), faites <strong>Clic droit → Inspecter → Console</strong>, collez le script rose ci-dessus et appuyez sur <strong>Entrée</strong>. Une barre s'affiche en haut de Palmarosa pour <strong>tout dérouler et copier tous les produits</strong> d'un coup. Collez ensuite (<strong>Ctrl + V</strong>) ici :
                                 </p>
-                                <textarea id="scrapeHtmlSourceInput" rows="3" placeholder="Collez ici le JSON ou HTML copié depuis la Console..." class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-mono focus:outline-none focus:border-sage-600"></textarea>
+                                <textarea id="scrapeHtmlSourceInput" rows="3" placeholder="Collez ici (Ctrl+V) les produits copiés depuis Palmarosa Shop..." class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-mono focus:outline-none focus:border-sage-600"></textarea>
                                 <div class="flex flex-wrap justify-end gap-2">
                                     <button type="button" onclick="extractProductsFromPastedSource(true)" class="px-3.5 py-2 rounded-xl bg-sage-700 hover:bg-sage-800 text-white font-bold text-xs transition cursor-pointer">
                                         ➕ Cumuler avec la liste ci-dessous
@@ -3508,8 +3549,82 @@
         let cmsRedoStack = [];
         let selectedCmsProductIds = new Set();
         let cmsProductsCurrentPage = 1;
-        const CMS_PRODUCTS_PER_PAGE = 20;
+        let cmsProductsPerPage = 9999;
+        let cmsProductsViewMode = 'table';
         const MAX_CMS_HISTORY = 40;
+
+        function setCmsProductsViewMode(mode) {
+            cmsProductsViewMode = mode === 'cards' ? 'cards' : 'table';
+            const tableWrapper = document.getElementById('cmsInventoryTableWrapper');
+            const cardsWrapper = document.getElementById('cmsProductsList');
+            const tableBtn = document.getElementById('cmsViewModeTableBtn');
+            const cardsBtn = document.getElementById('cmsViewModeCardsBtn');
+
+            if (tableWrapper) tableWrapper.classList.toggle('hidden', cmsProductsViewMode !== 'table');
+            if (cardsWrapper) cardsWrapper.classList.toggle('hidden', cmsProductsViewMode !== 'cards');
+
+            if (tableBtn) {
+                tableBtn.className = cmsProductsViewMode === 'table'
+                    ? 'px-3 py-1 rounded-lg bg-sage-700 text-white text-xs font-extrabold transition cursor-pointer'
+                    : 'px-3 py-1 rounded-lg text-slate-700 hover:text-slate-900 text-xs font-bold transition cursor-pointer';
+            }
+            if (cardsBtn) {
+                cardsBtn.className = cmsProductsViewMode === 'cards'
+                    ? 'px-3 py-1 rounded-lg bg-sage-700 text-white text-xs font-extrabold transition cursor-pointer'
+                    : 'px-3 py-1 rounded-lg text-slate-700 hover:text-slate-900 text-xs font-bold transition cursor-pointer';
+            }
+            renderCmsProductsList();
+        }
+
+        function changeCmsProductsPerPage(val) {
+            cmsProductsPerPage = Math.max(1, Number(val) || 9999);
+            cmsProductsCurrentPage = 1;
+            renderCmsProductsList();
+        }
+
+        function resetAllProductsStockToZero() {
+            if (!SITE_DATA.products || SITE_DATA.products.length === 0) return;
+            pushCmsUndoSnapshot();
+            SITE_DATA.products = SITE_DATA.products.map(p => syncProductStockFields({ ...p }, 0));
+            saveCmsToLocalPreview(true);
+            showToast("🔄 Tous les stocks ont été mis à 0. Saisissez maintenant vos quantités dans le tableau !");
+        }
+
+        function updateCmsInlineProductField(id, field, rawVal) {
+            const p = SITE_DATA.products.find(x => x.id === id);
+            if (!p) return;
+            pushCmsUndoSnapshot();
+            if (field === 'price') {
+                p.price = Math.max(1, parsePriceNumber(rawVal) || p.price);
+            } else if (field === 'category') {
+                p.category = rawVal;
+            } else if (field === 'brand') {
+                p.brand = String(rawVal || '').trim() || p.brand;
+            } else if (field === 'name') {
+                p.name = String(rawVal || '').trim() || p.name;
+            }
+            saveCmsToLocalPreview(true);
+        }
+
+        function handleStockInputKeydown(event, currentIndex) {
+            if (event.key === 'Enter' || event.key === 'ArrowDown') {
+                event.preventDefault();
+                event.target.blur();
+                const nextInput = document.querySelector(`input[data-stock-row="${currentIndex + 1}"]`);
+                if (nextInput) {
+                    nextInput.focus();
+                    nextInput.select();
+                }
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                event.target.blur();
+                const prevInput = document.querySelector(`input[data-stock-row="${currentIndex - 1}"]`);
+                if (prevInput) {
+                    prevInput.focus();
+                    prevInput.select();
+                }
+            }
+        }
 
         function pushCmsUndoSnapshot() {
             cmsUndoStack.push(JSON.stringify(SITE_DATA));
@@ -3771,18 +3886,82 @@
 
         function renderCmsProductsList() {
             const container = document.getElementById('cmsProductsList');
+            const tableBody = document.getElementById('cmsInventoryTableBody');
             const paginationEl = document.getElementById('cmsProductsPagination');
             const list = getFilteredCmsProducts();
             updateCmsBulkSelectionUI();
             updateCmsInventoryStats();
 
-            const totalPages = Math.max(1, Math.ceil(list.length / CMS_PRODUCTS_PER_PAGE));
+            const totalPages = Math.max(1, Math.ceil(list.length / cmsProductsPerPage));
             if (cmsProductsCurrentPage > totalPages) cmsProductsCurrentPage = totalPages;
             if (cmsProductsCurrentPage < 1) cmsProductsCurrentPage = 1;
 
-            const startIdx = (cmsProductsCurrentPage - 1) * CMS_PRODUCTS_PER_PAGE;
-            const paginated = list.slice(startIdx, startIdx + CMS_PRODUCTS_PER_PAGE);
+            const startIdx = (cmsProductsCurrentPage - 1) * cmsProductsPerPage;
+            const paginated = list.slice(startIdx, startIdx + cmsProductsPerPage);
+            const activeRayons = SITE_DATA.rayons.filter(r => !r.isBudget).map(r => r.name);
 
+            // RENDU DU GRAND TABLEAU D'INVENTAIRE UNIFIÉ (FAÇON EXCEL)
+            if (tableBody) {
+                if (paginated.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400 font-semibold">Aucun article trouvé pour ce filtre.</td></tr>`;
+                } else {
+                    tableBody.innerHTML = paginated.map((p, rowIdx) => {
+                        const isSelected = selectedCmsProductIds.has(p.id);
+                        const qty = getProductStockQty(p);
+                        const statusPill = qty === 0
+                            ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-coral-50 text-coral-600 text-[10.5px] font-extrabold">🔴 Rupture (0)</span>`
+                            : (qty <= 3
+                                ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-[10.5px] font-extrabold">🟠 Faible (${qty})</span>`
+                                : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-sage-50 text-sage-700 text-[10.5px] font-extrabold">🟢 En stock (${qty})</span>`);
+
+                        return `
+                        <tr class="${isSelected ? 'bg-sage-50/70' : (qty === 0 ? 'bg-coral-50/20 hover:bg-slate-50' : 'bg-white hover:bg-slate-50')} transition">
+                            <td class="p-2.5 text-center">
+                                <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleCmsProductSelection(${p.id}, this.checked)" class="w-4 h-4 rounded accent-sage-700 cursor-pointer">
+                            </td>
+                            <td class="p-2.5">
+                                <div class="w-11 h-11 rounded-xl bg-sage-50 border border-slate-200 flex items-center justify-center overflow-hidden p-1">
+                                    ${p.imageUrl ? `<img src="${escapeHtmlAttr(p.imageUrl)}" class="max-h-full max-w-full object-contain" onerror="this.style.display='none'">` : `<span class="text-[10px] font-extrabold text-sage-700">${escapeHtmlAttr(p.brand.slice(0, 3))}</span>`}
+                                </div>
+                            </td>
+                            <td class="p-2.5">
+                                <input type="text" value="${escapeHtmlAttr(p.brand)}" onchange="updateCmsInlineProductField(${p.id}, 'brand', this.value)" class="w-full px-2 py-1 rounded-lg border border-transparent hover:border-slate-200 focus:border-sage-500 focus:bg-white bg-transparent font-bold text-sage-800 text-xs focus:outline-none">
+                            </td>
+                            <td class="p-2.5">
+                                <input type="text" value="${escapeHtmlAttr(p.name)}" onchange="updateCmsInlineProductField(${p.id}, 'name', this.value)" class="w-full px-2 py-1 rounded-lg border border-transparent hover:border-slate-200 focus:border-sage-500 focus:bg-white bg-transparent font-semibold text-slate-900 text-xs focus:outline-none">
+                            </td>
+                            <td class="p-2.5">
+                                <select onchange="updateCmsInlineProductField(${p.id}, 'category', this.value)" class="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:border-sage-500">
+                                    ${activeRayons.map(r => `<option value="${escapeHtmlAttr(r)}" ${p.category === r ? 'selected' : ''}>${escapeHtmlAttr(r)}</option>`).join('')}
+                                </select>
+                            </td>
+                            <td class="p-2.5">
+                                <div class="flex items-center gap-1">
+                                    <input type="number" min="1" value="${p.price}" onchange="updateCmsInlineProductField(${p.id}, 'price', this.value)" class="w-20 px-2 py-1.5 rounded-lg border border-slate-200 bg-white font-display font-extrabold text-xs text-sage-900 text-right focus:outline-none focus:border-sage-500">
+                                    <span class="text-[10px] font-bold text-slate-400">DH</span>
+                                </div>
+                            </td>
+                            <td class="p-2.5 bg-sage-50/50">
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <button type="button" onclick="adjustCmsProductStock(${p.id}, -1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-coral-50 hover:text-coral-600 font-extrabold text-sm flex items-center justify-center cursor-pointer shadow-2xs">-</button>
+                                    <input type="number" min="0" value="${qty}" data-stock-row="${rowIdx}" onfocus="this.select()" onkeydown="handleStockInputKeydown(event, ${rowIdx})" onchange="setCmsProductStockDirect(${p.id}, this.value)" class="w-20 py-1.5 px-2 rounded-xl border-2 ${qty === 0 ? 'border-coral-400 bg-white text-coral-600' : 'border-sage-500 bg-white text-sage-900'} text-center font-display font-extrabold text-sm focus:outline-none focus:ring-2 focus:ring-sage-400">
+                                    <button type="button" onclick="adjustCmsProductStock(${p.id}, 1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-sage-100 hover:text-sage-800 font-extrabold text-sm flex items-center justify-center cursor-pointer shadow-2xs">+</button>
+                                </div>
+                            </td>
+                            <td class="p-2.5 text-center">
+                                ${statusPill}
+                            </td>
+                            <td class="p-2.5 text-right whitespace-nowrap">
+                                <button onclick="openCmsProductEditor(${p.id})" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-sage-100 text-slate-700 hover:text-sage-900 text-xs font-bold cursor-pointer" title="Modifier tous les détails">✏️</button>
+                                <button onclick="deleteCmsProduct(${p.id})" class="px-2 py-1 rounded-lg bg-coral-50 hover:bg-coral-100 text-coral-600 text-xs font-bold cursor-pointer ml-1" title="Supprimer">🗑️</button>
+                            </td>
+                        </tr>
+                        `;
+                    }).join('');
+                }
+            }
+
+            // RENDU DE LA VUE CARTES
             container.innerHTML = paginated.map(p => {
                 const isSelected = selectedCmsProductIds.has(p.id);
                 const qty = getProductStockQty(p);
@@ -3833,7 +4012,9 @@
             }).join('');
 
             if (paginationEl) {
-                paginationEl.innerHTML = buildMinimalCirclePaginationHTML(cmsProductsCurrentPage, totalPages, 'goToCmsProductsPage');
+                paginationEl.innerHTML = totalPages > 1
+                    ? buildMinimalCirclePaginationHTML(cmsProductsCurrentPage, totalPages, 'goToCmsProductsPage')
+                    : '';
             }
         }
 
@@ -4750,44 +4931,118 @@
         }
 
         function copyUniversalConsoleExtractor() {
-            const snippet = `(async () => {
-  const baseUrl = window.location.origin + window.location.pathname.replace(/\\/$/, '') + '/products.json';
-  let all = [];
-  try {
-    for (let p = 1; p <= 10; p++) {
-      const res = await fetch(baseUrl + '?limit=250&page=' + p);
-      if (!res.ok) break;
-      const data = await res.json();
-      if (!data.products || data.products.length === 0) break;
-      all = all.concat(data.products);
-    }
-  } catch (e) {}
-  if (all.length === 0) {
-    const seen = new Set();
-    document.querySelectorAll('article, [class*="product"], [class*="card"]').forEach(card => {
-      const img = card.querySelector('img');
-      const titleEl = card.querySelector('h2, h3, h4, a[title], [class*="title"], [class*="name"]');
-      if (!img || !titleEl) return;
-      const name = (titleEl.innerText || titleEl.getAttribute('title') || '').trim().replace(/\\s+/g, ' ');
-      const text = card.innerText || '';
-      const prices = [...text.matchAll(/(\\d+(?:[.,]\\d+)?)\\s*(?:DH|MAD|Dhs)/gi)].map(m => parseFloat(m[1].replace(',', '.')));
-      if (name.length < 4 || prices.length === 0 || seen.has(name.toLowerCase())) return;
-      seen.add(name.toLowerCase());
+            const snippet = `(() => {
+  window.__palmarosaMap = window.__palmarosaMap || new Map();
+
+  function scanPageProducts() {
+    const priceRegex = /(\\d[\\d\\s.,]*)\\s*(?:MAD|DH|Dhs)/gi;
+    const allEls = Array.from(document.querySelectorAll('div, article, li, a'));
+
+    allEls.forEach(card => {
+      const txt = (card.innerText || '').trim();
+      if (!txt || txt.length > 550) return;
+      const matches = [...txt.matchAll(priceRegex)];
+      if (matches.length === 0 || matches.length > 3) return;
+
+      const imgs = card.querySelectorAll('img');
+      if (imgs.length !== 1) return;
+      const img = imgs[0];
+
+      const prices = matches.map(m => parseFloat(m[1].replace(/\\s+/g, '').replace(',', '.'))).filter(n => n > 5 && n < 25000);
+      if (prices.length === 0) return;
+
+      const lines = txt.split(/\\r?\\n/).map(l => l.trim()).filter(l =>
+        l.length > 1 &&
+        !/^(rupture|epuise|épuisé|ajouter|acheter|panier|promo|nouveau)$/i.test(l) &&
+        !/^\\d+(\\.\\d+)?\\s*\\(\\d+\\)$/.test(l) &&
+        !/^(\\d[\\d\\s.,]*)\\s*(?:MAD|DH|Dhs)$/i.test(l) &&
+        !/^-\\s*\\d+\\s*%$/.test(l)
+      );
+
+      if (lines.length === 0) return;
+      let brand = 'Parateams';
+      let name = lines[0];
+
+      if (lines.length >= 2 && lines[0].length <= 28 && lines[1].length > lines[0].length) {
+        brand = lines[0];
+        name = lines[1];
+      } else if (name.includes(' - ')) {
+        brand = name.split(' - ')[0].trim();
+      } else {
+        brand = name.split(' ')[0].trim();
+      }
+
+      if (!name || name.length < 4) return;
+      const key = name.toLowerCase();
       const price = Math.min(...prices);
       const maxPrice = Math.max(...prices);
-      const brandEl = card.querySelector('[class*="brand"], [class*="vendor"], [class*="marque"]');
-      const brand = brandEl ? brandEl.innerText.trim() : name.split(' ')[0];
-      const image = img.getAttribute('data-src') || img.currentSrc || img.src || '';
-      all.push({ vendor: brand, title: name, price, oldPrice: maxPrice > price ? maxPrice : null, image });
+      const imageUrl = img.currentSrc || img.getAttribute('src') || img.getAttribute('data-src') || '';
+
+      if (!window.__palmarosaMap.has(key)) {
+        window.__palmarosaMap.set(key, {
+          vendor: brand,
+          title: name,
+          price: price,
+          oldPrice: maxPrice > price ? maxPrice : null,
+          image: imageUrl,
+          stockQty: 0,
+          category: document.title || window.location.pathname
+        });
+      }
     });
+
+    const countEl = document.getElementById('__palmarosaCount');
+    if (countEl) countEl.textContent = window.__palmarosaMap.size;
   }
-  const json = JSON.stringify({ products: all });
-  const btn = document.createElement('button');
-  btn.textContent = '📋 CLIQUER ICI POUR COPIER ' + all.length + ' PRODUITS';
-  btn.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999999;padding:18px 28px;background:#16a34a;color:#fff;font-size:18px;font-weight:bold;border:none;border-radius:12px;cursor:pointer;box-shadow:0 10px 25px rgba(0,0,0,0.4);';
-  btn.onclick = () => { navigator.clipboard.writeText(json); btn.textContent = '✅ ' + all.length + ' PRODUITS COPIÉS !'; btn.style.background = '#0f172a'; };
-  document.body.appendChild(btn);
-  console.log('✅ ' + all.length + ' produits prêts ! Cliquez sur le bouton vert en haut de la page.');
+
+  scanPageProducts();
+  window.addEventListener('scroll', scanPageProducts, { passive: true });
+
+  let bar = document.getElementById('__palmarosaBar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = '__palmarosaBar';
+    bar.style.cssText = 'position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:9999999;background:#0f172a;color:#fff;padding:12px 18px;border-radius:16px;box-shadow:0 15px 35px rgba(0,0,0,0.45);display:flex;align-items:center;gap:10px;font-family:sans-serif;border:2px solid #22c55e;';
+    bar.innerHTML = \`
+      <span style="font-size:14px;font-weight:bold;">🌸 <span id="__palmarosaCount">\${window.__palmarosaMap.size}</span> produits détectés</span>
+      <button id="__palmarosaScrollBtn" style="padding:8px 12px;background:#334155;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:bold;cursor:pointer;">⏬ Dérouler la page auto</button>
+      <button id="__palmarosaCopyBtn" style="padding:10px 16px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;">📋 COPIER TOUT</button>
+      <button id="__palmarosaDlBtn" style="padding:10px 12px;background:#e11d48;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:bold;cursor:pointer;">⬇️ Fichier .JSON</button>
+    \`;
+    document.body.appendChild(bar);
+
+    document.getElementById('__palmarosaScrollBtn').onclick = async function() {
+      this.textContent = '⏳ Défilement en cours...';
+      for (let i = 0; i < 18; i++) {
+        window.scrollBy(0, 750);
+        const moreBtn = Array.from(document.querySelectorAll('button, a')).find(b => /voir plus|charger plus|plus de produits|afficher plus/i.test(b.innerText || ''));
+        if (moreBtn) moreBtn.click();
+        await new Promise(r => setTimeout(r, 450));
+        scanPageProducts();
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      this.textContent = '✅ Page déroulée !';
+    };
+
+    document.getElementById('__palmarosaCopyBtn').onclick = function() {
+      scanPageProducts();
+      const arr = Array.from(window.__palmarosaMap.values());
+      const json = JSON.stringify({ products: arr }, null, 2);
+      navigator.clipboard.writeText(json);
+      this.textContent = '✅ ' + arr.length + ' PRODUITS COPIÉS !';
+      this.style.background = '#2563eb';
+    };
+
+    document.getElementById('__palmarosaDlBtn').onclick = function() {
+      scanPageProducts();
+      const arr = Array.from(window.__palmarosaMap.values());
+      const blob = new Blob([JSON.stringify({ products: arr }, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'palmarosa-produits.json';
+      a.click();
+    };
+  }
 })();`;
             const ta = document.createElement('textarea');
             ta.value = snippet;
@@ -4795,7 +5050,7 @@
             ta.select();
             document.execCommand('copy');
             document.body.removeChild(ta);
-            showToast("📋 Script Console universel copié ! Collez-le dans la Console du site cible.");
+            showToast("🌸 Script spécial Palmarosa Shop copié ! Collez-le dans la Console sur palmarosashop.com.");
         }
 
         function setBulkStagedProducts(items, append = false) {
