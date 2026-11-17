@@ -58,15 +58,15 @@
 </head>
 <body class="bg-white text-slate-800 antialiased selection:bg-sage-100 selection:text-sage-900 pt-[106px] md:pt-0 pb-24 md:pb-0">
 
-    <!-- BANDEAU MODE APERÇU LOCAL CMS (VISIBLE SI DES MODIFICATIONS NON PUBLIÉES SONT ACTIVES) -->
+    <!-- BANDEAU MODE APERÇU LOCAL CMS -->
     <div id="cmsPreviewBanner" class="hidden bg-amber-500 text-[#0D1310] text-xs font-bold py-1.5 px-4 text-center z-50 relative">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-3">
-            <span>🛠️ Mode Aperçu CMS actif — Vos modifications sont enregistrées sur cet appareil.</span>
+            <span>🛠️ Mode Aperçu CMS actif — Vos produits importés et modifications sont enregistrés sur cet appareil.</span>
             <button onclick="openAdminCMS()" class="px-3 py-0.5 rounded-full bg-[#0D1310] text-white text-[11px] hover:bg-black cursor-pointer">Ouvrir Admin CMS / Publier sur GitHub</button>
         </div>
     </div>
 
-    <!-- ENVELOPPE FIXE EN HAUT SUR MOBILE (BARRE ANNONCE + EN-TÊTE + RAYONS) & STICKY SUR DESKTOP -->
+    <!-- ENVELOPPE FIXE EN HAUT SUR MOBILE & STICKY SUR DESKTOP -->
     <div id="mobileFixedTopWrapper" class="fixed md:static top-0 inset-x-0 z-40 bg-white shadow-sm">
         <!-- 1. BARRE SUPÉRIEURE DE RÉASSURANCE SOMBRE (#0D1310) -->
         <div class="bg-[#0D1310] text-white text-[11px] sm:text-[13px] py-1.5 sm:py-2 px-3 sm:px-4 text-center font-medium tracking-wide border-b border-white/10">
@@ -88,7 +88,6 @@
                     <span>WhatsApp • <span id="topPhoneDisplay">06 61 00 00 00</span></span>
                 </button>
                 <span class="hidden xl:inline text-white/30">·</span>
-                <!-- Réseaux Sociaux Barre Supérieure -->
                 <div class="hidden xl:inline-flex items-center gap-2">
                     <a id="topInstaLink" href="https://instagram.com/parateams.ma" target="_blank" rel="noopener noreferrer" aria-label="Instagram Parateams" class="text-white/80 hover:text-amber-300 transition">
                         <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
@@ -104,12 +103,12 @@
             </div>
         </div>
 
-        <!-- 2. EN-TÊTE PRINCIPAL (FIXE EN HAUT SUR MOBILE, STICKY SUR DESKTOP) -->
+        <!-- 2. EN-TÊTE PRINCIPAL -->
         <header class="md:sticky md:top-0 z-40 bg-white">
             <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between py-2.5 md:h-20 gap-2 sm:gap-4 lg:gap-6">
                     
-                    <!-- Logo Parateams + Mention Team Medical Service -->
+                    <!-- Logo Parateams -->
                     <a href="#" onclick="resetAllFilters(); return false;" class="flex items-center gap-2.5 sm:gap-3 shrink-0 group">
                         <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-sage-50 border border-sage-200/80 flex items-center justify-center shadow-xs group-hover:bg-sage-100/70 transition p-1.5">
                             <svg class="w-full h-full" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Logo Parateams">
@@ -139,14 +138,14 @@
                             <input 
                                 type="text" 
                                 id="searchInput"
-                                placeholder="Rechercher un soin, marque (ex: CeraVe, ISDIN, solaire, pack)..." 
+                                placeholder="Rechercher un soin, marque (ex: CeraVe, ISDIN, dentifrice, bébé, homme)..." 
                                 class="w-full pl-3 pr-9 py-2.5 bg-transparent text-sm text-slate-800 placeholder-slate-400 focus:outline-none"
                             >
                             <button id="clearSearchBtn" onclick="clearSearch()" class="hidden mr-3 text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer shrink-0" aria-label="Effacer la recherche">✕</button>
                         </div>
                     </div>
 
-                    <!-- Actions Droite : Loupe Mobile, WhatsApp, Favoris & Panier -->
+                    <!-- Actions Droite -->
                     <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
                         <button onclick="toggleMobileSearchBar()" class="md:hidden w-9 h-9 rounded-full bg-[#F4F6F5] border border-slate-200 text-slate-700 flex items-center justify-center transition cursor-pointer" aria-label="Rechercher un soin">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -186,7 +185,7 @@
                         <input 
                             type="text" 
                             id="mobileSearchInput"
-                            placeholder="Rechercher CeraVe, solaire, pack..." 
+                            placeholder="Rechercher CeraVe, solaire, bébé, homme..." 
                             class="w-full pl-2.5 pr-9 py-2 bg-transparent text-sm text-slate-800 placeholder-slate-400 focus:outline-none"
                         >
                         <button onclick="toggleMobileSearchBar(false)" class="mr-3 text-slate-500 text-xs font-bold cursor-pointer">✕</button>
@@ -199,7 +198,7 @@
                 <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
                     <nav class="flex items-center justify-between gap-2 py-1 sm:py-2" id="categoryNav">
                         <div id="topCategoryNavScroll" class="flex-1 min-w-0 overflow-x-auto no-scrollbar flex items-center gap-2 py-1 px-1">
-                            <!-- Injecté dynamiquement selon les rayons configurés dans le CMS -->
+                            <!-- Injecté dynamiquement selon les rayons -->
                         </div>
 
                         <!-- Boutons épinglés à droite -->
@@ -219,12 +218,11 @@
         </header>
     </div>
 
-    <!-- 3. SLIDER / CARROUSEL HÉRO SIGNATURE SOMBRE (DYNAMIQUE & GÉRABLE VIA CMS) -->
+    <!-- 3. SLIDER / CARROUSEL HÉRO SIGNATURE SOMBRE -->
     <section class="bg-gradient-to-b from-sage-50/70 via-sand-50/40 to-white pt-3 pb-5 sm:pt-6 sm:pb-10">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
             <div id="heroSliderContainer" class="relative rounded-[24px] sm:rounded-[32px] overflow-hidden shadow-xl border border-sage-900/20 promo-dark-pattern select-none group">
                 
-                <!-- Décorations festives flottantes -->
                 <div class="pointer-events-none absolute inset-0 overflow-hidden z-0 hidden sm:block" aria-hidden="true">
                     <span class="absolute top-12 left-[52%] text-3xl opacity-55 -rotate-12 select-none">🎉</span>
                     <span class="absolute top-[52%] left-[22%] text-3xl opacity-45 rotate-6 select-none">🎁</span>
@@ -234,10 +232,8 @@
                     </svg>
                 </div>
 
-                <!-- Piste des Slides (Injectée dynamiquement depuis SITE_DATA.slides) -->
                 <div id="heroSlidesTrack" class="relative min-h-[435px] sm:min-h-[470px] lg:min-h-[500px] w-full"></div>
 
-                <!-- Barre inférieure minimaliste -->
                 <div class="absolute bottom-3.5 sm:bottom-6 inset-x-0 z-20 px-5 sm:px-12 lg:px-14 flex items-center justify-between pointer-events-none">
                     <div id="heroDotsContainer" class="flex items-center gap-2 pointer-events-auto" role="tablist" aria-label="Navigation des diapositives"></div>
 
@@ -261,7 +257,7 @@
                 <h2 class="font-display text-lg sm:text-2xl font-bold text-sage-900">Nos Rayons</h2>
                 <button onclick="resetAllFilters()" class="text-xs sm:text-sm font-semibold text-sage-700 hover:underline cursor-pointer">Tout voir →</button>
             </div>
-            <div id="rayonsGrid" class="flex overflow-x-auto no-scrollbar sm:grid sm:grid-cols-4 lg:grid-cols-8 gap-2.5 sm:gap-3 pb-1"></div>
+            <div id="rayonsGrid" class="flex overflow-x-auto no-scrollbar sm:grid sm:grid-cols-5 lg:grid-cols-5 gap-2.5 sm:gap-3 pb-1"></div>
         </div>
 
         <!-- Bannières Rapides -->
@@ -324,8 +320,8 @@
 
                 <select id="perPageSelect" onchange="changeCatalogItemsPerPage(this.value)" aria-label="Produits par page" class="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full bg-white border border-slate-200 text-xs sm:text-sm font-medium text-slate-700 focus:outline-none focus:border-sage-500 cursor-pointer">
                     <option value="20" selected>20 / page</option>
+                    <option value="40">40 / page</option>
                     <option value="12">12 / page</option>
-                    <option value="8">8 / page</option>
                 </select>
 
                 <select id="sortSelect" onchange="renderProducts()" class="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full bg-sage-50 border border-slate-200 text-xs sm:text-sm font-medium text-slate-700 focus:outline-none focus:border-sage-500 cursor-pointer">
@@ -339,7 +335,7 @@
 
         <div id="productsGrid" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mt-5 sm:mt-8"></div>
 
-        <!-- Pagination épurée (← 1 (2) 3 ... 7 →) -->
+        <!-- Pagination épurée -->
         <div id="catalogPagination" class="mt-8 sm:mt-10 flex items-center justify-center"></div>
 
         <div id="emptyState" class="hidden text-center py-12 px-4 bg-sage-50/50 rounded-3xl mt-6 border border-dashed border-sage-200">
@@ -351,7 +347,7 @@
         </div>
     </main>
 
-    <!-- 6. ATELIER PHOTO WHATSAPP EXPRESS (CENTRÉ SUR L'ENVOI D'UNE PHOTO : PRODUIT / PEAU / ORDONNANCE) -->
+    <!-- 6. ATELIER PHOTO WHATSAPP EXPRESS -->
     <section id="whatsapp-express" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 scroll-mt-28">
         <div class="rounded-[24px] sm:rounded-[28px] bg-gradient-to-br from-[#F0FDF4] via-white to-sage-50 border-2 border-[#25D366]/35 p-4 sm:p-8 shadow-sm">
             <div class="max-w-3xl mx-auto bg-white rounded-3xl p-4 sm:p-7 border border-slate-200/90 shadow-xs space-y-4 sm:space-y-5">
@@ -367,7 +363,6 @@
                     <span class="px-3 py-1 rounded-full bg-sage-50 text-sage-700 text-[10.5px] sm:text-xs font-bold border border-sage-200/70">100% Confidentiel</span>
                 </div>
 
-                <!-- 3 Modes Sélectionnables par Onglets -->
                 <div class="grid grid-cols-3 gap-2 sm:gap-3" id="waExpressModeTabs">
                     <button type="button" onclick="setWaExpressMode('product')" data-mode="product" class="wa-mode-btn active p-3 sm:p-4 rounded-2xl border-2 border-[#5D9C2A] bg-sage-50/80 text-center sm:text-left transition cursor-pointer">
                         <span class="text-lg sm:text-xl block">🧴</span>
@@ -648,7 +643,7 @@
                 </div>
             </div>
 
-            <!-- BANDE COMMUNAUTAIRE & RÉSEAUX SOCIAUX OFFICIELS (@parateams.ma) -->
+            <!-- BANDE COMMUNAUTAIRE -->
             <div class="rounded-3xl bg-white border border-slate-200/80 p-5 sm:p-8 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-5">
                 <div class="space-y-1">
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-sage-50 text-sage-700 text-[11px] font-bold uppercase tracking-wider">
@@ -683,7 +678,7 @@
         </div>
     </section>
 
-    <!-- 10. PIED DE PAGE SOMBRE (#0D1310) AVEC BOUTON D'ACCÈS MINI-CMS -->
+    <!-- 10. PIED DE PAGE SOMBRE (#0D1310) -->
     <footer class="bg-[#0D1310] text-sage-100 pt-12 pb-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pb-10 border-b border-white/10">
@@ -731,9 +726,11 @@
                     <ul class="space-y-2.5 text-sm text-sage-200/80">
                         <li><button onclick="selectRayon('Visage')" class="hover:text-white transition cursor-pointer">Soins du Visage</button></li>
                         <li><button onclick="selectRayon('Solaires')" class="hover:text-white transition cursor-pointer">Protections Solaires SPF50+</button></li>
-                        <li><button onclick="selectRayon('Corps')" class="hover:text-white transition cursor-pointer">Hydratation Corps</button></li>
-                        <li><button onclick="selectRayon('Cheveux & Hygiène')" class="hover:text-white transition cursor-pointer">Cheveux & Cuir Chevelu</button></li>
-                        <li><button onclick="selectRayon('Bébés & Maman')" class="hover:text-white transition cursor-pointer">Bébés & Maman</button></li>
+                        <li><button onclick="selectRayon('Cheveux')" class="hover:text-white transition cursor-pointer">Cheveux & Anti-Chute</button></li>
+                        <li><button onclick="selectRayon('Corps & Hygiène')" class="hover:text-white transition cursor-pointer">Corps & Hygiène</button></li>
+                        <li><button onclick="selectRayon('Bucco-Dentaire')" class="hover:text-white transition cursor-pointer">Hygiène Bucco-Dentaire</button></li>
+                        <li><button onclick="selectRayon('Bébé & Maman')" class="hover:text-white transition cursor-pointer">Bébé & Maman</button></li>
+                        <li><button onclick="selectRayon('Homme')" class="hover:text-white transition cursor-pointer">Soins pour Homme</button></li>
                     </ul>
                 </div>
 
@@ -771,7 +768,7 @@
         </div>
     </footer>
 
-    <!-- BARRE DE NAVIGATION FIXE EN BAS D'ÉCRAN (TOUJOURS VISIBLE SUR MOBILE PENDANT LE DÉFILEMENT) -->
+    <!-- BARRE DE NAVIGATION MOBILE FIXE EN BAS -->
     <nav aria-label="Navigation mobile" class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-[0_-6px_24px_rgba(13,19,16,0.10)]">
         <div class="grid grid-cols-4 gap-1">
             <a href="#" onclick="resetAllFilters(); window.scrollTo({top:0, behavior:'smooth'}); return false;" class="flex flex-col items-center justify-center py-1 rounded-xl text-sage-800 active:bg-sage-50 font-bold text-[11px] gap-0.5">
@@ -795,7 +792,7 @@
     </nav>
 
     <!-- ===================================================================== -->
-    <!-- MINI-CMS COMPLET INTÉGRÉ (ADMINISTRATION VISUELLE + PUBLICATION GITHUB) -->
+    <!-- MINI-CMS COMPLET INTÉGRÉ                                              -->
     <!-- ===================================================================== -->
     <div id="adminCmsOverlay" class="hidden fixed inset-0 z-[70] bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
         
@@ -814,7 +811,7 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1.5">Mot de passe administrateur</label>
                         <input type="password" id="cmsPasswordInput" required placeholder="Entrez le mot de passe..." class="w-full px-4 py-3 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-sage-600">
-                        <p class="text-[11px] text-slate-400 mt-1.5">Mot de passe par défaut : <code class="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-bold">parateams2026</code> (modifiable dans les paramètres CMS).</p>
+                        <p class="text-[11px] text-slate-400 mt-1.5">Mot de passe par défaut : <code class="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-bold">parateams2026</code></p>
                     </div>
                     <p id="cmsLoginError" class="hidden text-xs font-bold text-coral-600">Mot de passe incorrect. Réessayez.</p>
                     <button type="submit" class="w-full py-3.5 rounded-xl bg-sage-700 hover:bg-sage-800 text-white font-bold text-sm shadow-md transition cursor-pointer">
@@ -826,14 +823,13 @@
 
         <!-- TABLEAU DE BORD COMPLET DU MINI-CMS -->
         <div id="cmsDashboardScreen" class="hidden min-h-screen bg-slate-100 flex flex-col">
-            <!-- Barre Supérieure CMS -->
             <div class="sticky top-0 z-20 bg-[#0D1310] text-white px-4 sm:px-8 py-3.5 border-b border-white/10 shadow-md">
                 <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
                         <span class="w-9 h-9 rounded-xl bg-sage-500 text-white font-display font-extrabold flex items-center justify-center">CMS</span>
                         <div>
                             <h2 class="font-display font-bold text-base sm:text-lg leading-tight">Parateams Studio CMS</h2>
-                            <p class="text-[11px] text-sage-200">Édition visuelle complète • GitHub & Vercel Sync</p>
+                            <p class="text-[11px] text-sage-200">Catégorisation intelligente • GitHub & Vercel Sync</p>
                         </div>
                     </div>
 
@@ -892,20 +888,26 @@
                 
                 <!-- ONGLET 1 : PRODUITS -->
                 <div id="cmsPanel-products" class="cms-panel space-y-5">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200">
                         <div>
-                            <h3 class="font-display font-bold text-lg text-slate-900">Gestion du Catalogue Produits</h3>
-                            <p class="text-xs text-slate-500">Ajoutez de nouveaux soins, importez vos photos, sélectionnez plusieurs articles pour les supprimer ou faites <kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-300 rounded text-[10px] font-bold">Ctrl+Z</kbd> pour annuler.</p>
+                            <h3 class="font-display font-bold text-lg text-slate-900">Gestion & Catégorisation du Catalogue</h3>
+                            <p class="text-xs text-slate-500">Reclassez automatiquement tous vos produits importés dans les nouveaux rayons ou filtrez par rayon.</p>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <input type="text" id="cmsProdSearch" oninput="renderCmsProductsList()" placeholder="Filtrer un produit..." class="px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-sage-600">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button type="button" onclick="recategorizeAllExistingProducts()" class="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-[#0D1310] text-xs font-extrabold shadow-xs whitespace-nowrap cursor-pointer">
+                                ✨ Auto-catégoriser tous mes produits
+                            </button>
+                            <select id="cmsProdRayonFilter" onchange="cmsProductsCurrentPage=1; renderCmsProductsList()" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold bg-sand-50">
+                                <option value="all">Tous les rayons</option>
+                            </select>
+                            <input type="text" id="cmsProdSearch" oninput="cmsProductsCurrentPage=1; renderCmsProductsList()" placeholder="Filtrer un produit..." class="px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-sage-600">
                             <button onclick="openCmsProductEditor(null)" class="px-4 py-2.5 rounded-xl bg-sage-700 hover:bg-sage-800 text-white text-xs font-bold whitespace-nowrap cursor-pointer">
                                 + Nouveau produit
                             </button>
                         </div>
                     </div>
 
-                    <!-- Barre d'actions groupées (Sélection multiple / Tout sélectionner / Supprimer) -->
+                    <!-- Barre d'actions groupées -->
                     <div class="flex flex-wrap items-center justify-between gap-2.5 bg-white px-4 py-3 rounded-2xl border border-slate-200 shadow-2xs">
                         <div class="flex flex-wrap items-center gap-2">
                             <button type="button" onclick="selectAllFilteredCmsProducts()" class="px-3 py-1.5 rounded-xl bg-sage-50 hover:bg-sage-100 text-sage-900 border border-sage-200 text-xs font-bold transition cursor-pointer">
@@ -919,13 +921,21 @@
                             </span>
                         </div>
 
-                        <button type="button" id="cmsBulkDeleteBtn" onclick="deleteSelectedCmsProducts()" disabled class="px-4 py-2 rounded-xl bg-coral-500 hover:bg-coral-600 disabled:opacity-40 disabled:pointer-events-none text-white text-xs font-extrabold shadow-xs transition cursor-pointer flex items-center gap-1.5">
-                            <span>🗑️</span>
-                            <span>Supprimer la sélection (<span id="cmsBulkDeleteCount">0</span>)</span>
-                        </button>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <select id="cmsBulkMoveRayonSelect" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold bg-sand-50">
+                                <option value="">Déplacer la sélection vers...</option>
+                            </select>
+                            <button type="button" onclick="bulkMoveSelectedCmsProducts()" class="px-3.5 py-2 rounded-xl bg-sage-700 hover:bg-sage-800 text-white text-xs font-bold cursor-pointer">
+                                📂 Appliquer le rayon
+                            </button>
+                            <button type="button" id="cmsBulkDeleteBtn" onclick="deleteSelectedCmsProducts()" disabled class="px-4 py-2 rounded-xl bg-coral-500 hover:bg-coral-600 disabled:opacity-40 disabled:pointer-events-none text-white text-xs font-extrabold shadow-xs transition cursor-pointer flex items-center gap-1.5">
+                                <span>🗑️</span>
+                                <span>Supprimer (<span id="cmsBulkDeleteCount">0</span>)</span>
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Formulaire Ajout / Édition Produit (repliable) -->
+                    <!-- Formulaire Ajout / Édition Produit -->
                     <div id="cmsProductFormBox" class="hidden bg-white p-5 sm:p-6 rounded-3xl border-2 border-sage-500 shadow-lg space-y-4">
                         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                             <h4 id="cmsProductFormTitle" class="font-display font-bold text-base sm:text-lg text-sage-900">Ajouter un produit</h4>
@@ -935,7 +945,6 @@
                         <form onsubmit="saveCmsProduct(event)" class="grid grid-cols-1 md:grid-cols-12 gap-4">
                             <input type="hidden" id="editProdId">
 
-                            <!-- Colonne Photo -->
                             <div class="md:col-span-4 space-y-3 bg-sand-50 p-4 rounded-2xl border border-slate-200">
                                 <label class="block text-xs font-bold text-slate-700">Photo du produit</label>
                                 <div class="w-full h-40 rounded-xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden p-2">
@@ -953,7 +962,6 @@
                                 <button type="button" onclick="clearCmsProductImage()" class="text-[11px] text-coral-600 font-semibold hover:underline cursor-pointer">Revenir à l'illustration vectorielle</button>
                             </div>
 
-                            <!-- Colonne Champs -->
                             <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-xs font-bold text-slate-700 mb-1">Marque / Laboratoire *</label>
@@ -1014,7 +1022,7 @@
                     <!-- Liste des produits -->
                     <div id="cmsProductsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 
-                    <!-- Pagination CMS (← 1 (2) 3 ... 7 →) -->
+                    <!-- Pagination CMS -->
                     <div id="cmsProductsPagination" class="mt-6 flex items-center justify-center"></div>
                 </div>
 
@@ -1022,9 +1030,9 @@
                 <div id="cmsPanel-bulk" class="cms-panel hidden space-y-6">
                     <div class="bg-gradient-to-r from-sage-900 to-sage-800 text-white p-5 sm:p-6 rounded-3xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <span class="inline-block px-2.5 py-0.5 rounded-full bg-amber-400 text-[#0D1310] text-[10px] font-extrabold uppercase tracking-wider">Gain de temps maximal</span>
+                            <span class="inline-block px-2.5 py-0.5 rounded-full bg-amber-400 text-[#0D1310] text-[10px] font-extrabold uppercase tracking-wider">Catégorisation Automatique Activée</span>
                             <h3 class="font-display font-extrabold text-lg sm:text-2xl mt-1">Import en Masse & Extraction Web</h3>
-                            <p class="text-xs sm:text-sm text-sage-100/90 mt-0.5">Importez des dizaines de produits depuis Excel/CSV, par copier-coller ou directement depuis un autre site web.</p>
+                            <p class="text-xs sm:text-sm text-sage-100/90 mt-0.5">Chaque produit importé est automatiquement classé dans son rayon (Visage, Cheveux, Bébé & Maman, Bucco-Dentaire, Homme...).</p>
                         </div>
                         <button type="button" onclick="downloadCsvTemplate()" class="px-4 py-2.5 rounded-xl bg-white hover:bg-sage-50 text-sage-900 font-extrabold text-xs shadow-sm transition cursor-pointer shrink-0">
                             📄 Télécharger modèle Excel (.csv)
@@ -1062,7 +1070,7 @@
                                 <span id="bulkPasteCounter" class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold">0 détecté</span>
                             </div>
 
-                            <textarea id="bulkPasteTextarea" oninput="previewBulkPasteLines()" rows="4" placeholder="Exemples :&#10;CeraVe | Gel Moussant 473ml | 165 | 195 | Visage | https://...&#10;La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps | https://..." class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-xs font-mono focus:outline-none focus:border-sage-600"></textarea>
+                            <textarea id="bulkPasteTextarea" oninput="previewBulkPasteLines()" rows="4" placeholder="Exemples :&#10;CeraVe | Gel Moussant 473ml | 165 | 195 | Visage | https://...&#10;La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps & Hygiène | https://..." class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-xs font-mono focus:outline-none focus:border-sage-600"></textarea>
 
                             <div class="flex justify-end">
                                 <button type="button" onclick="loadBulkPasteIntoStaging()" class="px-4 py-2 rounded-xl bg-sage-700 hover:bg-sage-800 text-white text-xs font-bold cursor-pointer">
@@ -1072,23 +1080,22 @@
                         </div>
                     </div>
 
-                    <!-- BLOC 3 : EXTRAIRE DEPUIS UN AUTRE SITE WEB (URL OU CODE HTML / JSON) -->
+                    <!-- BLOC 3 : EXTRAIRE DEPUIS UN AUTRE SITE WEB -->
                     <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 space-y-5">
                         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
                             <div class="flex items-center gap-2.5">
                                 <span class="w-9 h-9 rounded-xl bg-coral-50 text-coral-600 flex items-center justify-center font-bold text-base">🌐</span>
                                 <div>
                                     <h4 class="font-display font-bold text-base text-slate-900">3. Importer depuis un autre site web</h4>
-                                    <p class="text-xs text-slate-500">Récupérez automatiquement les noms, marques, prix, descriptions et photos depuis un lien ou une page catalogue.</p>
+                                    <p class="text-xs text-slate-500">Catégorisation automatique selon le produit (ou rayon de secours choisi ci-contre).</p>
                                 </div>
                             </div>
                             <select id="bulkDefaultRayonSelect" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-sage-900 bg-sage-50">
-                                <option value="Visage">Rayon par défaut : Visage</option>
+                                <option value="auto">Détection automatique (Recommandé)</option>
                             </select>
                         </div>
 
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                            <!-- Mode A : Par Lien URL -->
                             <div class="lg:col-span-5 bg-sand-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
                                 <span class="text-[11px] font-extrabold uppercase tracking-wider text-sage-700 block">Mode A • Par Lien URL (Fiche produit ou page)</span>
                                 <input type="url" id="scrapeUrlInput" placeholder="https://exemple-parapharmacie.ma/produit..." class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs focus:outline-none focus:border-sage-600">
@@ -1096,11 +1103,10 @@
                                     🔍 Extraire depuis ce lien URL
                                 </button>
                                 <p id="scrapeUrlStatus" class="text-[11px] text-slate-500 leading-relaxed">
-                                    Astuce : Pour importer toute une catégorie (20 à 100 produits d'un coup), utilisez le <strong>Mode B</strong> ci-contre.
+                                    Astuce : Pour importer toute une catégorie (20 à 600 produits d'un coup), utilisez le <strong>Mode B</strong> ci-contre.
                                 </p>
                             </div>
 
-                            <!-- Mode B : Par Code Source HTML ou Flux JSON (100% fiable pour des pages entières) -->
                             <div class="lg:col-span-7 bg-sand-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
                                 <div class="flex flex-wrap items-center justify-between gap-2">
                                     <span class="text-[11px] font-extrabold uppercase tracking-wider text-coral-600">Mode B • Extraction massive (Page catalogue entière)</span>
@@ -1109,7 +1115,7 @@
                                     </button>
                                 </div>
                                 <p class="text-[11px] text-slate-600 leading-relaxed">
-                                    <strong>Astuce sites modernes :</strong> Si <code>Ctrl+U</code> est vide, ouvrez la page catalogue, appuyez sur <strong>F12 → Console</strong>, collez le script copié via le bouton noir ci-dessus, puis faites <strong>Ctrl + V</strong> ici :
+                                    <strong>Astuce sites modernes :</strong> Ouvrez la page catalogue, faites <strong>Clic droit → Inspecter → Console</strong>, collez le script copié via le bouton noir ci-dessus, cliquez sur le bouton vert en haut de la page, puis faites <strong>Ctrl + V</strong> ici :
                                 </p>
                                 <textarea id="scrapeHtmlSourceInput" rows="3" placeholder="Collez ici le résultat du script Console, le code HTML ou le JSON produits..." class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-mono focus:outline-none focus:border-sage-600"></textarea>
                                 <div class="flex justify-end">
@@ -1128,7 +1134,7 @@
                                 <h4 class="font-display font-bold text-base sm:text-lg text-sage-900">
                                     Produits prêts à importer (<span id="bulkStagingSelectedCount">0</span> / <span id="bulkStagingTotalCount">0</span> sélectionnés)
                                 </h4>
-                                <p class="text-xs text-slate-500">Vérifiez ou ajustez les noms, prix et rayons avant de valider.</p>
+                                <p class="text-xs text-slate-500">Les rayons ont été attribués automatiquement. Vérifiez ou ajustez avant de valider.</p>
                             </div>
                             <div class="flex flex-wrap items-center gap-2">
                                 <select id="bulkImportModeSelect" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-sand-50">
@@ -1196,7 +1202,7 @@
                     <div id="cmsRayonsList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"></div>
                 </div>
 
-                <!-- ONGLET 4 : INFORMATIONS BOUTIQUE, RÉSEAUX & LIVRAISON -->
+                <!-- ONGLET 4 : INFORMATIONS BOUTIQUE -->
                 <div id="cmsPanel-settings" class="cms-panel hidden">
                     <form onsubmit="saveCmsGeneralSettings(event)" class="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 space-y-6">
                         <div>
@@ -1299,7 +1305,6 @@
                 <!-- ONGLET 5 : PUBLICATION DIRECTE SUR GITHUB & SAUVEGARDE JSON -->
                 <div id="cmsPanel-github" class="cms-panel hidden space-y-5">
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                        <!-- Connexion API GitHub pour publication en 1 clic -->
                         <div class="lg:col-span-7 bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 space-y-4">
                             <div class="flex items-center gap-2.5">
                                 <span class="w-9 h-9 rounded-xl bg-[#0D1310] text-white flex items-center justify-center font-bold">GH</span>
@@ -1328,7 +1333,7 @@
                                 <label class="block text-xs font-bold text-slate-700 mb-1">GitHub Personal Access Token (PAT)</label>
                                 <input type="password" id="ghTokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx ou github_pat_xxxx" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm">
                                 <p class="text-[11px] text-slate-500 mt-1">
-                                    Créez un token gratuit sur <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener noreferrer" class="text-sage-700 underline font-semibold">github.com/settings/tokens</a> avec l'autorisation <strong>Contents: Read and write</strong> sur votre dépôt <code>Parateams-site</code>. Le token est sauvegardé uniquement dans votre navigateur.
+                                    Créez un token gratuit sur <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener noreferrer" class="text-sage-700 underline font-semibold">github.com/settings/tokens</a> avec l'autorisation <strong>Contents: Read and write</strong> sur votre dépôt <code>Parateams-site</code>.
                                 </p>
                             </div>
 
@@ -1344,7 +1349,6 @@
                             </div>
                         </div>
 
-                        <!-- Sauvegarde / Restauration JSON & Réinitialisation -->
                         <div class="lg:col-span-5 bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 space-y-4 flex flex-col justify-between">
                             <div class="space-y-3">
                                 <h3 class="font-display font-bold text-lg text-slate-900">Sauvegarde & Restauration</h3>
@@ -1377,7 +1381,7 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- MODALES & TIROIRS INTERACTIFS (ARTICLES, APERÇU, DIAGNOSTIC, PANIER)  -->
+    <!-- MODALES & TIROIRS INTERACTIFS                                         -->
     <!-- ===================================================================== -->
 
     <div id="articleModal" onclick="if(event.target===this) closeArticleModal()" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs items-center justify-center p-4">
@@ -1601,7 +1605,7 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- DONNÉES CENTRALISÉES DU SITE (MODIFIABLES VIA LE MINI-CMS)            -->
+    <!-- DONNÉES CENTRALISÉES DU SITE (AVEC NOUVEAUX RAYONS PARAPHARMACIE)      -->
     <!-- ===================================================================== -->
     <script id="parateams-site-data" type="application/json">
     {
@@ -1628,9 +1632,11 @@
         "rayons": [
             { "name": "Visage", "icon": "✨" },
             { "name": "Solaires", "icon": "☀️" },
-            { "name": "Corps", "icon": "🧴" },
-            { "name": "Cheveux & Hygiène", "icon": "💆‍♀️" },
-            { "name": "Bébés & Maman", "icon": "🍼" },
+            { "name": "Cheveux", "icon": "💆‍♀️" },
+            { "name": "Corps & Hygiène", "icon": "🧴" },
+            { "name": "Bucco-Dentaire", "icon": "🦷" },
+            { "name": "Bébé & Maman", "icon": "🍼" },
+            { "name": "Homme", "icon": "🧔" },
             { "name": "Compléments & Santé", "icon": "🌿" },
             { "name": "Packs & Coffrets", "icon": "🎁" },
             { "name": "≤ 99 DH", "icon": "🏷️", "isBudget": true }
@@ -1702,8 +1708,8 @@
                 "color": "#E06D53",
                 "shape": "tube",
                 "imageUrl": "",
-                "description": "La très haute protection solaire quotidienne fluide et ultra-légère. Ne laisse aucune trace blanche, résiste à l'eau et à la transpiration, idéale sous le soleil marocain.",
-                "usage": "Appliquer chaque matin sur le visage et le cou avant toute exposition. Renouveler toutes les 2 heures.",
+                "description": "La très haute protection solaire quotidienne fluide et ultra-légère. Ne laisse aucune trace blanche, résiste à l'eau et à la transpiration.",
+                "usage": "Appliquer chaque matin sur le visage et le cou avant toute exposition.",
                 "ingredients": "Mexoryl 400, Eau Thermale de La Roche-Posay, Glycérine hydratante."
             },
             {
@@ -1726,9 +1732,9 @@
                 "color": "#3D5F4D",
                 "shape": "jar",
                 "imageUrl": "",
-                "description": "Développé avec des dermatologues, ce baume riche mais non gras restaure la barrière protectrice de la peau grâce à ses 3 céramides essentiels et son acide hyaluronique.",
-                "usage": "Appliquer généreusement sur le visage et le corps aussi souvent que nécessaire. Sans parfum.",
-                "ingredients": "3 Céramides essentiels (1, 3, 6-II), Acide Hyaluronique, Technologie MVE."
+                "description": "Développé avec des dermatologues, ce baume riche mais non gras restaure la barrière protectrice de la peau.",
+                "usage": "Appliquer généreusement sur le visage et le corps aussi souvent que nécessaire.",
+                "ingredients": "3 Céramides essentiels, Acide Hyaluronique."
             },
             {
                 "id": 3,
@@ -1750,9 +1756,9 @@
                 "color": "#E06D53",
                 "shape": "bottle",
                 "imageUrl": "",
-                "description": "Protection solaire faciale à phase aqueuse ultra-légère qui fond sur la peau sans laisser de résidu. Ne pique pas les yeux et hydrate intensément.",
-                "usage": "Appliquer généreusement sur peau sèche ou humide 30 minutes avant l'exposition solaire.",
-                "ingredients": "Acide Hyaluronique, Vitamine E, Extrait d'algue méditerranéenne."
+                "description": "Protection solaire faciale à phase aqueuse ultra-légère qui fond sur la peau sans laisser de résidu.",
+                "usage": "Appliquer généreusement 30 minutes avant l'exposition solaire.",
+                "ingredients": "Acide Hyaluronique, Vitamine E."
             },
             {
                 "id": 4,
@@ -1774,8 +1780,8 @@
                 "color": "#C8563D",
                 "shape": "serum",
                 "imageUrl": "",
-                "description": "Sérum double action associant le Thiamidol breveté pour réduire efficacement les taches pigmentaires et l'acide hyaluronique concentré pour repulper la peau.",
-                "usage": "Appliquer matin et soir sur visage nettoyé avant votre crème de jour ou votre protection solaire.",
+                "description": "Sérum double action associant le Thiamidol breveté pour réduire efficacement les taches pigmentaires.",
+                "usage": "Appliquer matin et soir sur visage nettoyé.",
                 "ingredients": "Thiamidol breveté, Acide Hyaluronique pur."
             },
             {
@@ -1798,15 +1804,15 @@
                 "color": "#E06D53",
                 "shape": "bottle",
                 "imageUrl": "",
-                "description": "L'eau micellaire dermatologique de référence qui nettoie en douceur le visage et les yeux, élimine les impuretés et apaise immédiatement les peaux sensibles.",
-                "usage": "Imbiber un coton et nettoyer délicatement le visage et les paupières matin et soir.",
-                "ingredients": "Micelles d'esters d'acides gras, Extrait de concombre apaisant, pH physiologique."
+                "description": "L'eau micellaire dermatologique de référence qui nettoie en douceur le visage et les yeux.",
+                "usage": "Imbiber un coton et nettoyer délicatement matin et soir.",
+                "ingredients": "Micelles d'esters d'acides gras, Extrait de concombre."
             },
             {
                 "id": 6,
                 "brand": "Avène",
                 "name": "Cicalfate+ Crème Réparatrice Protectrice",
-                "category": "Corps",
+                "category": "Corps & Hygiène",
                 "concern": "Peau sensible",
                 "skinType": "Sèche à Sensible",
                 "benefit": "Apaise & répare en 48h",
@@ -1822,9 +1828,9 @@
                 "color": "#4F7762",
                 "shape": "tube",
                 "imageUrl": "",
-                "description": "La crème SOS de toute la famille (nourrissons, enfants, adultes) pour apaiser, réparer et assainir les peaux irritées ou fragilisées au quotidien.",
-                "usage": "Appliquer 1 à 2 fois par jour sur la zone concernée préalablement nettoyée et séchée.",
-                "ingredients": "[C+-Restore]™ actif post-biotique, Sulfate de cuivre et zinc, Eau Thermale d'Avène."
+                "description": "La crème SOS de toute la famille pour apaiser, réparer et assainir les peaux irritées.",
+                "usage": "Appliquer 1 à 2 fois par jour sur la zone concernée.",
+                "ingredients": "[C+-Restore]™, Sulfate de cuivre et zinc."
             },
             {
                 "id": 7,
@@ -1846,8 +1852,8 @@
                 "color": "#2E493B",
                 "shape": "serum",
                 "imageUrl": "",
-                "description": "Concentré à 89% d'Eau Volcanique de Vichy associée à de l'acide hyaluronique d'origine naturelle pour hydrater, repulper et fortifier la peau jour après jour.",
-                "usage": "Appliquer 2 gouttes sur peau propre matin et soir comme premier geste de votre routine.",
+                "description": "Concentré à 89% d'Eau Volcanique de Vichy associée à de l'acide hyaluronique d'origine naturelle.",
+                "usage": "Appliquer 2 gouttes sur peau propre matin et soir.",
                 "ingredients": "89% Eau Volcanique de Vichy, Acide Hyaluronique pur."
             },
             {
@@ -1870,9 +1876,9 @@
                 "color": "#4F7762",
                 "shape": "bottle",
                 "imageUrl": "",
-                "description": "Nettoie efficacement l'excès de sébum et les impuretés tout en respectant la barrière cutanée grâce à la niacinamide apaisante et aux céramides.",
-                "usage": "Faire mousser sur peau humide matin et soir puis rincer abondamment à l'eau tiède.",
-                "ingredients": "3 Céramides essentiels, Niacinamide (Vitamine B3), Acide Hyaluronique."
+                "description": "Nettoie efficacement l'excès de sébum et les impuretés tout en respectant la barrière cutanée.",
+                "usage": "Faire mousser sur peau humide matin et soir puis rincer.",
+                "ingredients": "3 Céramides essentiels, Niacinamide."
             },
             {
                 "id": 9,
@@ -1894,7 +1900,7 @@
                 "color": "#5D9C2A",
                 "shape": "jar",
                 "imageUrl": "",
-                "description": "Le coffret complet associant le Sérum Hyalu B5 Repulpant (30 ml) et le Fluide Solaire Anthelios UVMune 400 SPF50+ (50 ml) avec une trousse dermo offerte.",
+                "description": "Le coffret complet associant le Sérum Hyalu B5 Repulpant et le Fluide Solaire Anthelios UVMune 400 SPF50+.",
                 "usage": "Appliquer le sérum Hyalu B5 le matin suivi de la protection solaire Anthelios.",
                 "ingredients": "Acide Hyaluronique duo, Vitamine B5, Mexoryl 400."
             },
@@ -1902,7 +1908,7 @@
                 "id": 10,
                 "brand": "Avène",
                 "name": "TriXera Nutrition Lait Nutri-Fluide Bébé & Famille",
-                "category": "Bébés & Maman",
+                "category": "Bébé & Maman",
                 "concern": "Hydratation",
                 "skinType": "Sèche à Sensible",
                 "benefit": "Douceur haute tolérance",
@@ -1918,15 +1924,15 @@
                 "color": "#4F7762",
                 "shape": "bottle",
                 "imageUrl": "",
-                "description": "Soin quotidien haute tolérance pour les peaux sèches et sensibles de toute la famille, dès la naissance. Texture fluide qui permet un habillage rapide.",
+                "description": "Soin quotidien haute tolérance pour les peaux sèches et sensibles de toute la famille, dès la naissance.",
                 "usage": "Appliquer 1 à 2 fois par jour après la toilette douce.",
-                "ingredients": "Sélectiose brevetée, Trio lipidique végétal, Eau Thermale d'Avène."
+                "ingredients": "Sélectiose brevetée, Eau Thermale d'Avène."
             },
             {
                 "id": 11,
                 "brand": "Eucerin",
                 "name": "DermoCapillaire Shampooing Revitalisant Anti-Chute",
-                "category": "Cheveux & Hygiène",
+                "category": "Cheveux",
                 "concern": "Chute de cheveux",
                 "skinType": "Tous types",
                 "benefit": "Freine la chute & fortifie",
@@ -1942,9 +1948,9 @@
                 "color": "#3D5F4D",
                 "shape": "bottle",
                 "imageUrl": "",
-                "description": "Spécialement formulé pour stimuler les racines capillaires, redonner du volume et renforcer la fibre capillaire des cheveux clairsemés ou fragilisés.",
+                "description": "Spécialement formulé pour stimuler les racines capillaires et redonner du volume.",
                 "usage": "Masser délicatement sur cheveux mouillés, laisser agir 2 minutes puis rincer.",
-                "ingredients": "Carnitine, Créatine, Licochalcone A apaisante."
+                "ingredients": "Carnitine, Créatine, Licochalcone A."
             },
             {
                 "id": 12,
@@ -1966,70 +1972,101 @@
                 "color": "#D97706",
                 "shape": "jar",
                 "imageUrl": "",
-                "description": "Une cure complète riche en biotine, zinc, sélénium et vitamines B pour nourrir le bulbe capillaire de l'intérieur et stimuler la pousse.",
-                "usage": "Prendre 2 gélules par jour avec un grand verre d'eau le matin pendant 1 à 3 mois.",
-                "ingredients": "Biotine (Vitamine B8), Zinc, Sélénium, Huile de Bourrache, Vitamines B6 & E."
-            },
-            {
-                "id": 13,
-                "brand": "Bioderma",
-                "name": "Atoderm Stick Lèvres Hydratant & Réparateur",
-                "category": "Corps",
-                "concern": "Hydratation",
-                "skinType": "Sèche à Sensible",
-                "benefit": "Répare les lèvres gercées",
-                "price": 59,
-                "oldPrice": 75,
-                "badge": "-21%",
-                "badgeType": "promo",
-                "isNew": false,
-                "stockStatus": "good",
-                "rating": 4.9,
-                "reviewsCount": 71,
-                "volume": "4 g",
-                "color": "#5D9C2A",
-                "shape": "tube",
-                "imageUrl": "",
-                "description": "Stick hydratant quotidien enrichi en beurre de karité qui nourrit, répare et apaise instantanément les lèvres sèches et abîmées.",
-                "usage": "Appliquer directement sur les lèvres aussi souvent que nécessaire.",
-                "ingredients": "Beurre de Karité, Cire d'abeille, Vitamine E."
-            },
-            {
-                "id": 14,
-                "brand": "Nuxe",
-                "name": "Coffret Découverte Huile Prodigieuse & Crème Fraîche",
-                "category": "Packs & Coffrets",
-                "concern": "Hydratation",
-                "skinType": "Tous types",
-                "benefit": "Coffret cadeau 3 soins",
-                "price": 329,
-                "oldPrice": 410,
-                "badge": "Coffret -81 DH",
-                "badgeType": "promo",
-                "isNew": true,
-                "stockStatus": "low",
-                "rating": 5.0,
-                "reviewsCount": 25,
-                "volume": "Coffret 3 soins",
-                "color": "#D97706",
-                "shape": "bottle",
-                "imageUrl": "",
-                "description": "Un coffret sensoriel réunissant l'Huile Prodigieuse (50 ml), la Crème Fraîche de Beauté (30 ml) et le Gel Lavant Rêve de Miel.",
-                "usage": "Rituel complet visage et corps matin et soir.",
-                "ingredients": "7 Huiles précieuses végétales, Lait végétal, Miel d'acacia."
+                "description": "Une cure complète riche en biotine, zinc, sélénium et vitamines B pour nourrir le bulbe capillaire.",
+                "usage": "Prendre 2 gélules par jour le matin pendant 1 à 3 mois.",
+                "ingredients": "Biotine (Vitamine B8), Zinc, Sélénium."
             }
         ]
     }
     </script>
 
     <!-- ===================================================================== -->
-    <!-- LOGIQUE JAVASCRIPT COMPLETE & MOTEUR MINI-CMS                         -->
+    <!-- LOGIQUE JAVASCRIPT COMPLETE & MOTEUR DE CATÉGORISATION INTELLIGENTE   -->
     <!-- ===================================================================== -->
     <script>
         const CMS_STORAGE_KEY = "parateams_cms_data_v1";
         const CMS_GH_CFG_KEY = "parateams_cms_github_cfg_v1";
 
-        // Chargement initial des données depuis le script JSON ou localStorage
+        const STANDARD_PARATEAMS_RAYONS = [
+            { name: "Visage", icon: "✨" },
+            { name: "Solaires", icon: "☀️" },
+            { name: "Cheveux", icon: "💆‍♀️" },
+            { name: "Corps & Hygiène", icon: "🧴" },
+            { name: "Bucco-Dentaire", icon: "🦷" },
+            { name: "Bébé & Maman", icon: "🍼" },
+            { name: "Homme", icon: "🧔" },
+            { name: "Compléments & Santé", icon: "🌿" },
+            { name: "Packs & Coffrets", icon: "🎁" },
+            { name: "≤ 99 DH", icon: "🏷️", isBudget: true }
+        ];
+
+        // MOTEUR DE CATÉGORISATION INTELLIGENTE (PARAPHARMACIE MAROC / BEAUTYMARKET)
+        function autoDetectProductRayon(productOrText) {
+            const rawStr = typeof productOrText === 'string'
+                ? productOrText
+                : `${productOrText.name || ''} ${productOrText.brand || ''} ${productOrText.category || ''} ${productOrText.description || ''}`;
+            const t = rawStr.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+            // 1. Packs & Coffrets
+            if (/\b(pack|coffret|trousse|routine|duo|trio|kit|set)\b/.test(t)) {
+                return "Packs & Coffrets";
+            }
+
+            // 2. Bucco-Dentaire
+            if (/\b(dentifrice|brosse a dents|brossette|bain de bouche|fil dentaire|blancheur|gencive|aphte|halitose|bucco|dentaire|elmex|sensodyne|meridol|parodontax|gum|elgydium|arthrodont|inava|oral-b|curaprox|marvis)\b/.test(t)) {
+                return "Bucco-Dentaire";
+            }
+
+            // 3. Bébé & Maman
+            if (/\b(bebe|nourrisson|enfant|pediatrique|maman|maternite|allaitement|grossesse|vergeture|change|erytheme|fessier|liniment|biberon|tetine|sucette|mouches-bebe|serum physiologique|dodie|mustela|biolane|abcdem|abcderm|bepanthen|lansinoh|avent|suavinex|pampers)\b/.test(t)) {
+                return "Bébé & Maman";
+            }
+
+            // 4. Homme
+            if (/\b(homme|for men|men|rasage|apres-rasage|after shave|barbe|mousse a raser|gel a raser|tondeuse|vichy homme|nuxe men|avene men|l'oreal men)\b/.test(t)) {
+                return "Homme";
+            }
+
+            // 5. Solaires
+            if (/\b(solaire|spf|spf50|spf30|uv|uvmune|anthelios|fotoprotector|photoderm|sun|ecran|brume solaire|apres-soleil|autobronzant|heliocare|bariésun|capital soleil|fusion water)\b/.test(t)) {
+                return "Solaires";
+            }
+
+            // 6. Cheveux
+            if (/\b(cheveux|capillaire|shampooing|shampoing|apres-shampoing|masque capillaire|anti-chute|chute de cheveux|pellicule|antipelliculaire|cuir chevelu|keratine|lotion capillaire|serum capillaire|forcapil|anacaps|luxéol|luxeol|phyto|klorane|ducray|dercos|rene furterer|hair|capi)\b/.test(t)) {
+                return "Cheveux";
+            }
+
+            // 7. Compléments & Santé
+            if (/\b(gelule|comprime|capsule|ampoule|sirop|complement alimentaire|vitamine|magnesium|zinc|fer|collagene|omega|probiotique|immunite|sommeil|stress|minceur|brulle-graisse|drainant|tisane|infusion|huile essentielle|aromatherapie|arkopharma|pileje|bion3|supradyn|berocca|ergymag|nutergia|forte pharma)\b/.test(t)) {
+                return "Compléments & Santé";
+            }
+
+            // 8. Corps & Hygiène
+            if (/\b(corps|corporel|gel douche|lavant|savon|pain dermatologique|deodorant|anti-transpirant|lait corps|lait corporel|baume corps|huile seche|huile prodigieuse|creme mains|mains|pieds|talons|intime|toilette intime|saforelle|hydralin|roge cavailles|exfoliant corps|gommage corps|epilation|cire)\b/.test(t)) {
+                return "Corps & Hygiène";
+            }
+
+            // 9. Visage (par défaut pour dermo-cosmétique visage)
+            if (/\b(visage|serum|creme|micellaire|demaquillant|nettoyant|tonique|contour des yeux|yeux|levres|stick levres|anti-age|anti-rides|anti-taches|imperfections|acne|points noirs|pores|matifiant|hydratant|hyalu|retinol|niacinamide|vitamine c|acide hyaluronique|peeling|masque visage|effaclar|sebium|normaderm|toleriane|cicaplast|hydrabio|sensibio)\b/.test(t)) {
+                return "Visage";
+            }
+
+            return "Visage";
+        }
+
+        // Normalise les anciens noms de catégories vers les nouveaux rayons propres
+        function normalizeCategoryName(cat) {
+            if (!cat) return "Visage";
+            const c = cat.trim();
+            if (c === "Cheveux & Hygiène") return "Cheveux";
+            if (c === "Bébés & Maman") return "Bébé & Maman";
+            if (c === "Corps") return "Corps & Hygiène";
+            const exists = STANDARD_PARATEAMS_RAYONS.some(r => !r.isBudget && r.name === c);
+            return exists ? c : autoDetectProductRayon(c);
+        }
+
+        // Chargement initial des données en préservant TOUS vos produits importés
         function loadSiteData() {
             const rawDefault = document.getElementById('parateams-site-data').textContent;
             const defaultData = JSON.parse(rawDefault);
@@ -2038,7 +2075,35 @@
                 if (saved) {
                     const parsed = JSON.parse(saved);
                     document.getElementById('cmsPreviewBanner').classList.remove('hidden');
-                    return { ...defaultData, ...parsed };
+
+                    // Fusionner les rayons : garder les nouveaux rayons structurés + éventuels rayons personnalisés
+                    const mergedRayons = [...STANDARD_PARATEAMS_RAYONS];
+                    if (Array.isArray(parsed.rayons)) {
+                        parsed.rayons.forEach(r => {
+                            if (!r.isBudget && !["Cheveux & Hygiène", "Bébés & Maman", "Corps"].includes(r.name)) {
+                                if (!mergedRayons.some(m => m.name === r.name)) {
+                                    mergedRayons.splice(mergedRayons.length - 1, 0, r);
+                                }
+                            }
+                        });
+                    }
+
+                    // Conserver tous vos produits déjà importés et normaliser leurs rayons
+                    const preservedProducts = Array.isArray(parsed.products) && parsed.products.length > 0
+                        ? parsed.products.map(p => ({
+                            ...p,
+                            category: normalizeCategoryName(p.category)
+                        }))
+                        : defaultData.products;
+
+                    const updated = {
+                        ...defaultData,
+                        ...parsed,
+                        rayons: mergedRayons,
+                        products: preservedProducts
+                    };
+                    localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(updated));
+                    return updated;
                 }
             } catch (e) {
                 console.warn("Lecture cache CMS ignorée", e);
@@ -2121,7 +2186,7 @@
             });
         }
 
-        // VISUEL PRODUIT (PHOTO IMPORTÉE / URL OU SVG STUDIO)
+        // VISUEL PRODUIT
         function getProductVisualHTML(product) {
             if (product.imageUrl && product.imageUrl.trim() !== "") {
                 return `<img src="${product.imageUrl}" alt="${product.name}" class="w-24 h-24 sm:w-32 sm:h-32 mx-auto object-contain rounded-xl transition-transform duration-300 group-hover:scale-105">`;
@@ -2186,7 +2251,7 @@
                 }).join('');
 
                 topNav.innerHTML = `
-                    <button onclick="selectRayon('all', false)" class="cat-btn shrink-0 px-3 sm:px-3.5 py-1.5 rounded-full text-xs sm:text-sm ${state.category === 'all' && !state.promoOnly && !state.budget99Only ? 'font-bold bg-white text-[#3E6B1B] shadow-2xs' : 'font-medium text-white hover:bg-white/15'} whitespace-nowrap transition cursor-pointer">Tous les produits</button>
+                    <button onclick="selectRayon('all', false)" class="cat-btn shrink-0 px-3 sm:px-3.5 py-1.5 rounded-full text-xs sm:text-sm ${state.category === 'all' && !state.promoOnly && !state.budget99Only ? 'font-bold bg-white text-[#3E6B1B] shadow-2xs' : 'font-medium text-white hover:bg-white/15'} whitespace-nowrap transition cursor-pointer">Tous (${products.length})</button>
                     <button onclick="triggerSlidePromoAction()" class="cat-btn shrink-0 inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-extrabold bg-[#0D1310] text-amber-300 border border-amber-300/85 ring-1 ring-amber-300/30 shadow-xs hover:bg-black whitespace-nowrap transition cursor-pointer">
                         <span>🔥</span>
                         <span>Promos</span>
@@ -2205,7 +2270,7 @@
                 const isActive = r.isBudget ? state.budget99Only : state.category === r.name;
 
                 return `
-                <button onclick="${r.isBudget ? 'filterByBudget99()' : `selectRayon('${r.name.replace(/'/g, "\\'")}')`}" class="min-w-[116px] sm:min-w-0 shrink-0 p-3 sm:p-3.5 rounded-2xl border ${isActive ? 'bg-sage-700 text-white border-sage-700 shadow-sm' : 'bg-white border-slate-200/90 text-slate-800 hover:border-sage-500 hover:bg-sage-50/40'} transition text-left flex flex-col justify-between cursor-pointer group">
+                <button onclick="${r.isBudget ? 'filterByBudget99()' : `selectRayon('${r.name.replace(/'/g, "\\'")}')`}" class="min-w-[125px] sm:min-w-0 shrink-0 p-3 sm:p-3.5 rounded-2xl border ${isActive ? 'bg-sage-700 text-white border-sage-700 shadow-sm' : 'bg-white border-slate-200/90 text-slate-800 hover:border-sage-500 hover:bg-sage-50/40'} transition text-left flex flex-col justify-between cursor-pointer group">
                     <span class="text-lg sm:text-xl mb-1.5 sm:mb-2">${r.icon}</span>
                     <div>
                         <p class="font-display font-bold text-xs sm:text-sm leading-tight ${isActive ? 'text-white' : 'text-sage-900'}">${r.name}</p>
@@ -2335,7 +2400,7 @@
         function getFilteredProducts() {
             return SITE_DATA.products.filter(p => {
                 const matchCat = state.category === 'all' || p.category === state.category;
-                const matchBrand = state.brand === 'all' || p.brand === state.brand;
+                const matchBrand = state.brand === 'all' || p.brand.toLowerCase() === state.brand.toLowerCase();
                 const matchPromo = !state.promoOnly || (p.oldPrice !== null && p.oldPrice > 0);
                 const matchBudget = !state.budget99Only || p.price <= 99;
                 const matchNew = !state.newOnly || p.isNew === true;
@@ -2449,7 +2514,7 @@
                         </h3>
 
                         <div class="hidden sm:flex items-center justify-between mt-2">
-                            <p class="text-xs text-slate-500 line-clamp-1">${product.benefit || ''}</p>
+                            <p class="text-xs text-slate-500 line-clamp-1">${product.category}</p>
                             ${stockHTML}
                         </div>
                     </div>
@@ -2808,7 +2873,7 @@
                         <div>
                             <span class="text-[11px] font-bold uppercase text-sage-600">${p.brand}</span>
                             <h4 class="font-bold text-sm text-slate-900 leading-snug">${p.name}</h4>
-                            <p class="text-xs text-slate-500">${p.benefit || ''} • <strong class="text-sage-900">${p.price} DH</strong></p>
+                            <p class="text-xs text-slate-500">${p.category} • <strong class="text-sage-900">${p.price} DH</strong></p>
                         </div>
                     </div>
                     <button onclick="addToCart(${p.id})" class="px-3.5 py-2 rounded-full bg-sage-700 hover:bg-sage-800 text-white text-xs font-semibold shrink-0 cursor-pointer">+ Ajouter</button>
@@ -2845,7 +2910,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
                     <div class="md:col-span-5 bg-sage-50/70 rounded-3xl p-6 flex flex-col items-center justify-center border border-sage-100">
                         ${getProductVisualHTML(p)}
-                        <span class="mt-3 px-3 py-1 rounded-full bg-white text-xs font-semibold text-sage-800 border border-sage-200">${p.category} • ${p.volume || ''}</span>
+                        <span class="mt-3 px-3 py-1 rounded-full bg-white text-xs font-semibold text-sage-800 border border-sage-200">${p.category}${p.volume ? ' • ' + p.volume : ''}</span>
                         <span class="mt-2 text-xs text-slate-600 font-semibold">★ ${(p.rating || 4.9).toFixed(1)} (${p.reviewsCount || 24} avis vérifiés)</span>
                     </div>
                     <div class="md:col-span-7 space-y-4">
@@ -3299,7 +3364,7 @@
         }
 
         // =====================================================================
-        // MOTEUR MINI-CMS PARATEAMS STUDIO (ÉDITION COMPLÈTE + API GITHUB)
+        // MOTEUR MINI-CMS PARATEAMS STUDIO
         // =====================================================================
         let isCmsAuthenticated = false;
         let cmsUndoStack = [];
@@ -3357,7 +3422,6 @@
             showToast("↪️ Action rétablie (Ctrl+Y)");
         }
 
-        // Raccourcis clavier globaux Ctrl+Z / Cmd+Z et Ctrl+Y / Cmd+Shift+Z dans le CMS
         document.addEventListener('keydown', function(e) {
             const overlay = document.getElementById('adminCmsOverlay');
             if (!isCmsAuthenticated || !overlay || overlay.classList.contains('hidden')) return;
@@ -3414,10 +3478,50 @@
             if (!silent) showToast("Modifications appliquées sur la boutique !");
         }
 
+        // RE-CATÉGORISATION AUTOMATIQUE EN 1 CLIC DE TOUS LES PRODUITS EXISTANTS
+        function recategorizeAllExistingProducts() {
+            if (!SITE_DATA.products || SITE_DATA.products.length === 0) return;
+            pushCmsUndoSnapshot();
+            let updatedCount = 0;
+            SITE_DATA.products = SITE_DATA.products.map(p => {
+                const detected = autoDetectProductRayon(p);
+                if (detected && detected !== p.category) updatedCount++;
+                return { ...p, category: detected };
+            });
+            saveCmsToLocalPreview(true);
+            showToast(`✨ ${SITE_DATA.products.length} produits analysés (${updatedCount} reclassés dans leur bon rayon) !`);
+        }
+
+        // DÉPLACEMENT EN MASSE DE LA SÉLECTION VERS UN RAYON
+        function bulkMoveSelectedCmsProducts() {
+            const targetRayon = document.getElementById('cmsBulkMoveRayonSelect')?.value;
+            if (!targetRayon) {
+                showToast("Choisissez d'abord un rayon de destination.");
+                return;
+            }
+            if (selectedCmsProductIds.size === 0) {
+                showToast("Sélectionnez au moins un produit.");
+                return;
+            }
+            pushCmsUndoSnapshot();
+            const count = selectedCmsProductIds.size;
+            SITE_DATA.products = SITE_DATA.products.map(p =>
+                selectedCmsProductIds.has(p.id) ? { ...p, category: targetRayon } : p
+            );
+            selectedCmsProductIds.clear();
+            saveCmsToLocalPreview(true);
+            showToast(`📂 ${count} produit(s) déplacé(s) vers "${targetRayon}"`);
+        }
+
         // --- CMS ONGLET 1 : PRODUITS ---
         function getFilteredCmsProducts() {
             const q = (document.getElementById('cmsProdSearch')?.value || '').trim().toLowerCase();
-            return SITE_DATA.products.filter(p => !q || p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
+            const rayonFilter = document.getElementById('cmsProdRayonFilter')?.value || 'all';
+            return SITE_DATA.products.filter(p => {
+                const matchRayon = rayonFilter === 'all' || p.category === rayonFilter;
+                const matchQuery = !q || p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
+                return matchRayon && matchQuery;
+            });
         }
 
         function updateCmsBulkSelectionUI() {
@@ -3545,9 +3649,29 @@
             document.getElementById('cmsTabSlideCount').textContent = SITE_DATA.slides.length;
             document.getElementById('cmsTabRayonCount').textContent = SITE_DATA.rayons.length;
 
+            const activeRayons = SITE_DATA.rayons.filter(r => !r.isBudget);
+
             const bulkRayonSel = document.getElementById('bulkDefaultRayonSelect');
             if (bulkRayonSel) {
-                bulkRayonSel.innerHTML = SITE_DATA.rayons.filter(r => !r.isBudget).map(r => `<option value="${r.name}">Rayon par défaut : ${r.name}</option>`).join('');
+                bulkRayonSel.innerHTML = `<option value="auto">Détection automatique (Recommandé)</option>` +
+                    activeRayons.map(r => `<option value="${r.name}">Forcer le rayon : ${r.name}</option>`).join('');
+            }
+
+            const cmsFilterSel = document.getElementById('cmsProdRayonFilter');
+            if (cmsFilterSel) {
+                const prev = cmsFilterSel.value || 'all';
+                cmsFilterSel.innerHTML = `<option value="all">Tous les rayons (${SITE_DATA.products.length})</option>` +
+                    activeRayons.map(r => {
+                        const cnt = SITE_DATA.products.filter(p => p.category === r.name).length;
+                        return `<option value="${r.name}">${r.icon} ${r.name} (${cnt})</option>`;
+                    }).join('');
+                cmsFilterSel.value = prev;
+            }
+
+            const cmsBulkMoveSel = document.getElementById('cmsBulkMoveRayonSelect');
+            if (cmsBulkMoveSel) {
+                cmsBulkMoveSel.innerHTML = `<option value="">Déplacer la sélection vers...</option>` +
+                    activeRayons.map(r => `<option value="${r.name}">${r.icon} ${r.name}</option>`).join('');
             }
 
             renderCmsProductsList();
@@ -3555,18 +3679,6 @@
             renderCmsRayonsList();
             populateCmsSettingsForm();
             loadSavedGitHubConfig();
-        }
-
-        function saveCmsToLocalPreview() {
-            localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(SITE_DATA));
-            document.getElementById('cmsPreviewBanner').classList.remove('hidden');
-            applyStoreSettingsToUI();
-            renderHeroSlides();
-            renderProducts();
-            updateDeliverySimulator(state.selectedCity);
-            refreshAllCmsPanels();
-            updateCmsHistoryButtons();
-            if (!silent) showToast("Modifications appliquées sur la boutique !");
         }
 
         function openCmsProductEditor(productId) {
@@ -3635,7 +3747,6 @@
             updateEditProdImgPreview('');
         }
 
-        // Compression automatique intelligente des photos importées depuis téléphone/PC
         function compressImageToDataURL(file, maxDim, callback) {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -3932,7 +4043,6 @@
         }
 
         function buildUpdatedFullHtmlDocument() {
-            // Met à jour la balise script#parateams-site-data dans une copie propre du DOM
             const docClone = document.documentElement.cloneNode(true);
             const adminOverlay = docClone.querySelector('#adminCmsOverlay');
             if (adminOverlay) adminOverlay.classList.add('hidden');
@@ -3984,7 +4094,6 @@
                 const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
                 let currentSha = null;
 
-                // 1. Récupérer le SHA actuel du fichier s'il existe
                 const getRes = await fetch(apiUrl, {
                     headers: {
                         "Authorization": `Bearer ${token}`,
@@ -4000,12 +4109,11 @@
                     throw new Error(errData.message || `Erreur GitHub (${getRes.status})`);
                 }
 
-                // 2. Générer le fichier HTML complet avec les nouvelles données CMS
                 const updatedHtml = buildUpdatedFullHtmlDocument();
                 const base64Content = utf8ToBase64(updatedHtml);
 
                 const putBody = {
-                    message: "Mise à jour boutique via Parateams Studio CMS",
+                    message: "Mise à jour catalogue & catégorisation via Parateams Studio CMS",
                     content: base64Content
                 };
                 if (currentSha) putBody.sha = currentSha;
@@ -4049,7 +4157,7 @@
             a.download = "index.html";
             a.click();
             URL.revokeObjectURL(url);
-            showToast("Fichier index.html prêt à être uploadé téléchargé !");
+            showToast("Fichier index.html complet téléchargé !");
         }
 
         function exportCmsJsonBackup() {
@@ -4097,17 +4205,29 @@
         }
 
         // =====================================================================
-        // MOTEUR D'IMPORTATION EN MASSE & EXTRACTION WEB (CSV / EXCEL / URL)
+        // MOTEUR D'IMPORTATION EN MASSE & EXTRACTION WEB
         // =====================================================================
         let bulkStagedProducts = [];
 
-        function getValidRayonName(rawCat) {
+        function getValidRayonName(rawCat, productHintObj = null) {
             const validRayons = SITE_DATA.rayons.filter(r => !r.isBudget).map(r => r.name);
-            const fallback = document.getElementById('bulkDefaultRayonSelect')?.value || validRayons[0] || "Visage";
-            if (!rawCat) return fallback;
-            const clean = rawCat.trim().toLowerCase();
-            const found = validRayons.find(r => r.toLowerCase() === clean || r.toLowerCase().includes(clean) || clean.includes(r.toLowerCase()));
-            return found || fallback;
+            const forcedOrAuto = document.getElementById('bulkDefaultRayonSelect')?.value || 'auto';
+
+            if (forcedOrAuto && forcedOrAuto !== 'auto') {
+                return forcedOrAuto;
+            }
+
+            if (rawCat && rawCat.trim() !== '') {
+                const clean = rawCat.trim().toLowerCase();
+                const directMatch = validRayons.find(r => r.toLowerCase() === clean);
+                if (directMatch) return directMatch;
+            }
+
+            // Détection intelligente à partir du nom, de la marque, de la catégorie source et de la description
+            if (productHintObj) {
+                return autoDetectProductRayon({ ...productHintObj, category: rawCat || '' });
+            }
+            return autoDetectProductRayon(rawCat || 'Visage');
         }
 
         function parsePriceNumber(val) {
@@ -4121,7 +4241,7 @@
         function downloadCsvTemplate() {
             const headers = "brand;name;price;oldPrice;category;image;badge;description";
             const sampleRows = [
-                "La Roche-Posay;Cicaplast Baume B5+ Réparateur 100ml;179;215;Corps;;-17%;Baume ultra-réparateur apaisant pour peaux fragilisées.",
+                "La Roche-Posay;Cicaplast Baume B5+ Réparateur 100ml;179;215;Corps & Hygiène;;-17%;Baume ultra-réparateur apaisant pour peaux fragilisées.",
                 "CeraVe;Gel Moussant Nettoyant 473ml;165;;Visage;;Best-seller;Nettoie et purifie sans altérer la barrière cutanée.",
                 "ISDIN;FotoUltra 100 Spot Prevent Fusion Fluid SPF50+;245;290;Solaires;;Promo;Très haute protection solaire prévenant les taches pigmentaires."
             ];
@@ -4159,479 +4279,4 @@
             const file = event.target.files && event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result || '';
-                const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-                if (lines.length === 0) {
-                    showToast("Fichier CSV vide.");
-                    return;
-                }
-                const delimiter = (lines[0].match(/;/g) || []).length >= (lines[0].match(/,/g) || []).length ? ';' : ',';
-                const firstCols = parseDelimitedLine(lines[0], delimiter).map(c => c.toLowerCase());
-                const hasHeader = firstCols.includes('name') || firstCols.includes('nom') || firstCols.includes('price') || firstCols.includes('prix');
-                const startIdx = hasHeader ? 1 : 0;
-
-                const parsed = [];
-                for (let i = startIdx; i < lines.length; i++) {
-                    const cols = parseDelimitedLine(lines[i], delimiter);
-                    if (cols.length < 2) continue;
-                    const brand = cols[0] || "Parateams";
-                    const name = cols[1] || "";
-                    const price = parsePriceNumber(cols[2]) || 120;
-                    const oldPrice = parsePriceNumber(cols[3]) || null;
-                    const category = getValidRayonName(cols[4]);
-                    const imageUrl = cols[5] || "";
-                    const badge = cols[6] || (oldPrice && oldPrice > price ? `-${Math.round((1 - price / oldPrice) * 100)}%` : "");
-                    const description = cols[7] || `${brand} — ${name}`;
-                    if (name) {
-                        parsed.push({ selected: true, brand, name, price, oldPrice, category, imageUrl, badge, description });
-                    }
-                }
-                setBulkStagedProducts(parsed);
-                event.target.value = '';
-            };
-            reader.readAsText(file, 'UTF-8');
-        }
-
-        function parseRawLinesToProducts(rawText) {
-            const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-            const items = [];
-            lines.forEach(line => {
-                let sep = '|';
-                if (line.includes('\t')) sep = '\t';
-                else if (line.includes(';')) sep = ';';
-                const parts = line.split(sep).map(s => s.trim());
-                if (parts.length >= 2) {
-                    const brand = parts[0] || "Parateams";
-                    const name = parts[1];
-                    const price = parsePriceNumber(parts[2]) || 120;
-                    const oldPrice = parsePriceNumber(parts[3]) || null;
-                    const category = getValidRayonName(parts[4]);
-                    const imageUrl = parts[5] || "";
-                    if (name) {
-                        items.push({
-                            selected: true,
-                            brand,
-                            name,
-                            price,
-                            oldPrice,
-                            category,
-                            imageUrl,
-                            badge: oldPrice && oldPrice > price ? `-${Math.round((1 - price / oldPrice) * 100)}%` : "",
-                            description: `${brand} — ${name}`
-                        });
-                    }
-                }
-            });
-            return items;
-        }
-
-        function previewBulkPasteLines() {
-            const val = document.getElementById('bulkPasteTextarea').value;
-            const count = parseRawLinesToProducts(val).length;
-            document.getElementById('bulkPasteCounter').textContent = `${count} détecté${count > 1 ? 's' : ''}`;
-        }
-
-        function loadBulkPasteIntoStaging() {
-            const val = document.getElementById('bulkPasteTextarea').value;
-            const items = parseRawLinesToProducts(val);
-            if (items.length === 0) {
-                showToast("Aucune ligne valide détectée. Format : Marque | Nom | Prix");
-                return;
-            }
-            setBulkStagedProducts(items);
-        }
-
-        // EXTRACTION DEPUIS UN AUTRE SITE WEB (JSON-LD, SHOPIFY, OPENGRAPH, CARTES HTML)
-        function parseProductsFromHtmlOrJson(rawContent, sourceUrl = '') {
-            const trimmed = rawContent.trim();
-            const extracted = [];
-            const seenNames = new Set();
-
-            const pushUnique = (item) => {
-                if (!item || !item.name) return;
-                const cleanName = item.name.replace(/\s+/g, ' ').trim();
-                if (cleanName.length < 3 || seenNames.has(cleanName.toLowerCase())) return;
-                seenNames.add(cleanName.toLowerCase());
-                let img = (item.imageUrl || '').trim();
-                if (img && sourceUrl && img.startsWith('/')) {
-                    try { img = new URL(img, sourceUrl).href; } catch (e) {}
-                }
-                const price = parsePriceNumber(item.price) || 150;
-                const oldPrice = parsePriceNumber(item.oldPrice) || null;
-                extracted.push({
-                    selected: true,
-                    brand: (item.brand || 'Parateams').trim(),
-                    name: cleanName,
-                    price,
-                    oldPrice: oldPrice && oldPrice > price ? oldPrice : null,
-                    category: getValidRayonName(item.category),
-                    imageUrl: img,
-                    badge: oldPrice && oldPrice > price ? `-${Math.round((1 - price / oldPrice) * 100)}%` : 'Nouveau',
-                    description: (item.description || cleanName).replace(/\s+/g, ' ').trim().slice(0, 260)
-                });
-            };
-
-            // 1. Cas JSON brut (ex: Shopify /products.json ou tableau JSON)
-            if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
-                try {
-                    const data = JSON.parse(trimmed);
-                    const arr = Array.isArray(data) ? data : (data.products || data.items || [data]);
-                    arr.forEach(p => {
-                        const variant = Array.isArray(p.variants) && p.variants[0] ? p.variants[0] : {};
-                        const img = Array.isArray(p.images) && p.images[0] ? (p.images[0].src || p.images[0]) : (p.image?.src || p.image || p.imageUrl || '');
-                        pushUnique({
-                            brand: p.vendor || p.brand || 'Parateams',
-                            name: p.title || p.name,
-                            price: variant.price || p.price,
-                            oldPrice: variant.compare_at_price || p.oldPrice,
-                            category: p.product_type || p.category,
-                            imageUrl: img,
-                            description: p.body_html ? p.body_html.replace(/<[^>]+>/g, ' ') : (p.description || '')
-                        });
-                    });
-                    if (extracted.length > 0) return extracted;
-                } catch (e) {}
-            }
-
-            // 2. Analyse DOM HTML (Next.js __NEXT_DATA__, JSON-LD Schema.org, Meta OpenGraph & Cartes Produits)
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(trimmed, 'text/html');
-
-            // 2.0 Recherche récursive dans les scripts JSON internes (Next.js / React / Nuxt)
-            const walkJsonForProducts = (obj, depth = 0) => {
-                if (!obj || typeof obj !== 'object' || depth > 9) return;
-                if (Array.isArray(obj)) {
-                    obj.forEach(el => walkJsonForProducts(el, depth + 1));
-                    return;
-                }
-                const titleCand = obj.name || obj.title || obj.product_name;
-                const priceCand = obj.price || obj.sale_price || obj.regular_price || obj.min_price || obj.price_ttc;
-                if (typeof titleCand === 'string' && titleCand.length > 3 && priceCand !== undefined && priceCand !== null) {
-                    const imgCand = typeof obj.image === 'string' ? obj.image
-                        : (obj.image?.url || obj.image?.src || obj.thumbnail || obj.cover || (Array.isArray(obj.images) ? (obj.images[0]?.url || obj.images[0]?.src || obj.images[0]) : ''));
-                    const brandCand = typeof obj.brand === 'string' ? obj.brand : (obj.brand?.name || obj.vendor || obj.manufacturer || '');
-                    if (parsePriceNumber(priceCand) > 0) {
-                        pushUnique({
-                            brand: brandCand || titleCand.split(' ')[0] || 'Parateams',
-                            name: titleCand,
-                            price: priceCand,
-                            oldPrice: obj.oldPrice || obj.compare_at_price || obj.regular_price || null,
-                            category: obj.category?.name || obj.category || obj.product_type,
-                            imageUrl: imgCand,
-                            description: obj.description || obj.short_description || ''
-                        });
-                    }
-                }
-                Object.values(obj).forEach(val => {
-                    if (val && typeof val === 'object') walkJsonForProducts(val, depth + 1);
-                });
-            };
-
-            doc.querySelectorAll('script#__NEXT_DATA__, script[type="application/json"]').forEach(sc => {
-                try {
-                    walkJsonForProducts(JSON.parse(sc.textContent));
-                } catch (e) {}
-            });
-
-            // 2a. Scripts JSON-LD Schema.org/Product
-            doc.querySelectorAll('script[type="application/ld+json"]').forEach(sc => {
-                try {
-                    const json = JSON.parse(sc.textContent);
-                    const nodes = Array.isArray(json) ? json : (json['@graph'] ? json['@graph'] : [json]);
-                    nodes.forEach(node => {
-                        if (node['@type'] === 'Product') {
-                            const offer = Array.isArray(node.offers) ? node.offers[0] : (node.offers || {});
-                            const img = Array.isArray(node.image) ? node.image[0] : (node.image?.url || node.image || '');
-                            const brandName = typeof node.brand === 'object' ? node.brand?.name : node.brand;
-                            pushUnique({
-                                brand: brandName || 'Parateams',
-                                name: node.name,
-                                price: offer.price || offer.lowPrice,
-                                oldPrice: offer.highPrice,
-                                category: node.category,
-                                imageUrl: img,
-                                description: node.description
-                            });
-                        } else if (node['@type'] === 'ItemList' && Array.isArray(node.itemListElement)) {
-                            node.itemListElement.forEach(el => {
-                                const prod = el.item || el;
-                                if (prod && prod.name) {
-                                    const offer = Array.isArray(prod.offers) ? prod.offers[0] : (prod.offers || {});
-                                    pushUnique({
-                                        brand: typeof prod.brand === 'object' ? prod.brand?.name : (prod.brand || 'Parateams'),
-                                        name: prod.name,
-                                        price: offer.price,
-                                        imageUrl: Array.isArray(prod.image) ? prod.image[0] : prod.image,
-                                        description: prod.description
-                                    });
-                                }
-                            });
-                        }
-                    });
-                } catch (e) {}
-            });
-
-            // 2b. Cartes produits e-commerce (WooCommerce, Shopify, PrestaShop)
-            const cardSelectors = '.product, .product-card, .product-item, .grid-product, .product-miniature, li.product, [data-product-id]';
-            doc.querySelectorAll(cardSelectors).forEach(card => {
-                const titleEl = card.querySelector('h2, h3, h4, .product-title, .woocommerce-loop-product__title, .card__heading, .product-card__title, a[title]');
-                const priceEl = card.querySelector('.price ins .amount, .price .amount, .price, .product-price, .money, [data-price]');
-                const oldPriceEl = card.querySelector('.price del .amount, .regular-price, .compare-at-price, del');
-                const imgEl = card.querySelector('img');
-                const brandEl = card.querySelector('.brand, .product-brand, .vendor');
-
-                const name = titleEl ? (titleEl.textContent || titleEl.getAttribute('title') || '') : '';
-                const price = priceEl ? priceEl.textContent : '';
-                const oldPrice = oldPriceEl ? oldPriceEl.textContent : '';
-                const img = imgEl ? (imgEl.getAttribute('data-src') || imgEl.getAttribute('src') || '') : '';
-                const brand = brandEl ? brandEl.textContent : (name.split(' ')[0] || 'Parateams');
-
-                if (name.trim().length > 3 && parsePriceNumber(price) > 0) {
-                    pushUnique({ brand, name, price, oldPrice, imageUrl: img });
-                }
-            });
-
-            // 2c. Secours fiche produit unique via balises OpenGraph (og:title, og:image)
-            if (extracted.length === 0) {
-                const ogTitle = doc.querySelector('meta[property="og:title"]')?.getAttribute('content') || doc.querySelector('h1')?.textContent || '';
-                const ogImg = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || '';
-                const ogDesc = doc.querySelector('meta[property="og:description"]')?.getAttribute('content') || '';
-                const ogPrice = doc.querySelector('meta[property="product:price:amount"], meta[property="og:price:amount"]')?.getAttribute('content') || '';
-                if (ogTitle.trim()) {
-                    pushUnique({
-                        brand: ogTitle.split('-')[0]?.trim() || 'Parateams',
-                        name: ogTitle,
-                        price: ogPrice || 150,
-                        imageUrl: ogImg,
-                        description: ogDesc
-                    });
-                }
-            }
-
-            return extracted;
-        }
-
-        async function extractFromExternalUrl() {
-            const urlInput = document.getElementById('scrapeUrlInput');
-            const statusEl = document.getElementById('scrapeUrlStatus');
-            const btn = document.getElementById('scrapeUrlBtn');
-            const targetUrl = (urlInput.value || '').trim();
-
-            if (!targetUrl || !targetUrl.startsWith('http')) {
-                statusEl.className = "text-[11px] font-bold text-coral-600";
-                statusEl.textContent = "⚠️ Veuillez entrer une adresse URL valide commençant par https://";
-                return;
-            }
-
-            btn.disabled = true;
-            btn.classList.add('opacity-60');
-            statusEl.className = "text-[11px] font-semibold text-sage-800";
-            statusEl.textContent = "⏳ Récupération et analyse de la page en cours...";
-
-            try {
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-                const res = await fetch(proxyUrl);
-                if (!res.ok) throw new Error("Accès bloqué par le site distant");
-                const data = await res.json();
-                if (!data || !data.contents) throw new Error("Contenu vide");
-
-                const found = parseProductsFromHtmlOrJson(data.contents, targetUrl);
-                if (found.length === 0) {
-                    throw new Error("Aucun produit détecté automatiquement sur ce lien");
-                }
-
-                setBulkStagedProducts(found);
-                statusEl.className = "text-[11px] font-bold text-[#166534]";
-                statusEl.textContent = `✅ ${found.length} produit(s) extrait(s) ! Vérifiez le tableau ci-dessous.`;
-            } catch (err) {
-                statusEl.className = "text-[11px] font-semibold text-coral-600 leading-relaxed";
-                statusEl.innerHTML = `⚠️ Ce site protège son accès direct (${err.message}). <strong>Solution rapide :</strong> ouvrez la page dans votre navigateur, faites <strong>Ctrl+U</strong> → <strong>Ctrl+A</strong> → <strong>Ctrl+C</strong> et collez dans le <strong>Mode B</strong> à droite.`;
-            } finally {
-                btn.disabled = false;
-                btn.classList.remove('opacity-60');
-            }
-        }
-
-        function extractProductsFromPastedSource() {
-            const raw = document.getElementById('scrapeHtmlSourceInput').value;
-            if (!raw || raw.trim().length < 10) {
-                showToast("Collez d'abord le code source HTML ou JSON de la page.");
-                return;
-            }
-            const found = parseProductsFromHtmlOrJson(raw);
-            if (found.length === 0) {
-                showToast("Aucun produit détecté dans ce code brut. Utilisez le bouton « Copier le script Console » sur la page ouverte !");
-                return;
-            }
-            setBulkStagedProducts(found);
-        }
-
-        function copyUniversalConsoleExtractor() {
-            const snippet = `(() => {
-  const items = [];
-  const seen = new Set();
-  document.querySelectorAll('article, [class*="product"], [class*="card"], li').forEach(card => {
-    const img = card.querySelector('img');
-    const titleEl = card.querySelector('h2, h3, h4, a[title], [class*="title"], [class*="name"]');
-    if (!img || !titleEl) return;
-    const name = (titleEl.innerText || titleEl.getAttribute('title') || '').trim().replace(/\\s+/g, ' ');
-    const text = card.innerText || '';
-    const prices = [...text.matchAll(/(\\d+(?:[.,]\\d+)?)\\s*(?:DH|MAD|Dhs)/gi)].map(m => parseFloat(m[1].replace(',', '.')));
-    if (name.length < 4 || prices.length === 0 || seen.has(name.toLowerCase())) return;
-    seen.add(name.toLowerCase());
-    const price = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
-    const brandEl = card.querySelector('[class*="brand"], [class*="vendor"], [class*="marque"]');
-    const brand = brandEl ? brandEl.innerText.trim() : name.split(' ')[0];
-    const image = img.getAttribute('data-src') || img.currentSrc || img.src || '';
-    items.push({ brand, name, price, oldPrice: maxPrice > price ? maxPrice : null, category: 'Visage', image, description: name });
-  });
-  const out = JSON.stringify(items, null, 2);
-  if (typeof copy === 'function') copy(out);
-  else navigator.clipboard?.writeText(out);
-  console.log('✅ ' + items.length + ' produits copiés ! Retournez dans le CMS et faites Ctrl+V.');
-})();`;
-            const ta = document.createElement('textarea');
-            ta.value = snippet;
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand('copy');
-            document.body.removeChild(ta);
-            showToast("📋 Script Console copié ! Collez-le dans F12 → Console sur l'autre site.");
-        }
-
-        function setBulkStagedProducts(items) {
-            bulkStagedProducts = items;
-            const box = document.getElementById('bulkStagingBox');
-            box.classList.remove('hidden');
-            renderBulkStagingTable();
-            box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            showToast(`${items.length} produit(s) prêt(s) à être importé(s) !`);
-        }
-
-        function clearBulkStaging() {
-            bulkStagedProducts = [];
-            document.getElementById('bulkStagingBox').classList.add('hidden');
-        }
-
-        function toggleAllBulkStaged(checked) {
-            bulkStagedProducts.forEach(p => p.selected = checked);
-            renderBulkStagingTable();
-        }
-
-        function updateBulkStagedField(idx, field, val) {
-            if (!bulkStagedProducts[idx]) return;
-            if (field === 'price' || field === 'oldPrice') {
-                bulkStagedProducts[idx][field] = parsePriceNumber(val) || (field === 'price' ? 100 : null);
-            } else {
-                bulkStagedProducts[idx][field] = val;
-            }
-            const selectedCount = bulkStagedProducts.filter(p => p.selected).length;
-            document.getElementById('bulkStagingSelectedCount').textContent = selectedCount;
-        }
-
-        function renderBulkStagingTable() {
-            const tbody = document.getElementById('bulkStagingTableBody');
-            const validRayons = SITE_DATA.rayons.filter(r => !r.isBudget).map(r => r.name);
-            const selectedCount = bulkStagedProducts.filter(p => p.selected).length;
-
-            document.getElementById('bulkStagingSelectedCount').textContent = selectedCount;
-            document.getElementById('bulkStagingTotalCount').textContent = bulkStagedProducts.length;
-
-            tbody.innerHTML = bulkStagedProducts.map((p, idx) => `
-                <tr class="${p.selected ? 'bg-white' : 'bg-slate-50 opacity-55'}">
-                    <td class="p-2.5">
-                        <input type="checkbox" ${p.selected ? 'checked' : ''} onchange="updateBulkStagedField(${idx}, 'selected', this.checked)" class="accent-sage-700">
-                    </td>
-                    <td class="p-2.5">
-                        <div class="w-10 h-10 rounded-lg bg-sage-50 border border-slate-200 flex items-center justify-center overflow-hidden">
-                            ${p.imageUrl ? `<img src="${p.imageUrl}" class="max-h-full max-w-full object-contain" onerror="this.style.display='none'">` : `<span class="text-[10px] font-bold text-sage-700">IMG</span>`}
-                        </div>
-                    </td>
-                    <td class="p-2.5">
-                        <input type="text" value="${p.brand.replace(/"/g, '&quot;')}" onchange="updateBulkStagedField(${idx}, 'brand', this.value)" class="w-28 px-2 py-1 rounded border border-slate-200 text-xs font-semibold">
-                    </td>
-                    <td class="p-2.5">
-                        <input type="text" value="${p.name.replace(/"/g, '&quot;')}" onchange="updateBulkStagedField(${idx}, 'name', this.value)" class="w-full min-w-[180px] px-2 py-1 rounded border border-slate-200 text-xs">
-                    </td>
-                    <td class="p-2.5">
-                        <input type="number" value="${p.price}" onchange="updateBulkStagedField(${idx}, 'price', this.value)" class="w-20 px-2 py-1 rounded border border-slate-200 text-xs font-bold text-sage-900">
-                    </td>
-                    <td class="p-2.5">
-                        <input type="number" value="${p.oldPrice || ''}" placeholder="-" onchange="updateBulkStagedField(${idx}, 'oldPrice', this.value)" class="w-20 px-2 py-1 rounded border border-slate-200 text-xs text-slate-500">
-                    </td>
-                    <td class="p-2.5">
-                        <select onchange="updateBulkStagedField(${idx}, 'category', this.value)" class="px-2 py-1 rounded border border-slate-200 text-xs bg-white">
-                            ${validRayons.map(r => `<option value="${r}" ${p.category === r ? 'selected' : ''}>${r}</option>`).join('')}
-                        </select>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function commitBulkStagedProducts() {
-            const chosen = bulkStagedProducts.filter(p => p.selected && p.name.trim() !== '');
-            if (chosen.length === 0) {
-                showToast("Sélectionnez au moins un produit à importer.");
-                return;
-            }
-            pushCmsUndoSnapshot();
-            const mode = document.getElementById('bulkImportModeSelect').value;
-            let nextId = mode === 'replace' ? 1 : (Math.max(0, ...SITE_DATA.products.map(p => p.id)) + 1);
-
-            const formatted = chosen.map(item => ({
-                id: nextId++,
-                brand: item.brand || "Parateams",
-                name: item.name,
-                category: item.category || "Visage",
-                concern: "Hydratation",
-                skinType: "Tous types",
-                benefit: item.badge || "Soin dermo-cosmétique",
-                price: Number(item.price) || 120,
-                oldPrice: item.oldPrice ? Number(item.oldPrice) : null,
-                badge: item.badge || (item.oldPrice ? "Promo" : "Nouveau"),
-                badgeType: item.oldPrice ? "promo" : "new",
-                isNew: true,
-                stockStatus: "good",
-                rating: 4.9,
-                reviewsCount: 12,
-                volume: "",
-                color: "#5D9C2A",
-                shape: "bottle",
-                imageUrl: item.imageUrl || "",
-                description: item.description || `${item.brand} — ${item.name}`,
-                usage: "Appliquer selon les recommandations de votre pharmacien Parateams.",
-                ingredients: ""
-            }));
-
-            if (mode === 'replace') {
-                SITE_DATA.products = formatted;
-            } else {
-                SITE_DATA.products = [...formatted, ...SITE_DATA.products];
-            }
-
-            clearBulkStaging();
-            saveCmsToLocalPreview();
-            switchCmsTab('products');
-            showToast(`🎉 ${formatted.length} produit(s) importé(s) avec succès !`);
-        }
-
-        // INITIALISATION AU CHARGEMENT
-        window.addEventListener('DOMContentLoaded', () => {
-            applyStoreSettingsToUI();
-            renderHeroSlides();
-            syncMobileTopPadding();
-            window.addEventListener('resize', syncMobileTopPadding);
-            updateWishlistBadge();
-            renderProducts();
-            updateDeliverySimulator('Casablanca');
-            initHeroSliderInteractions();
-
-            if (window.location.hash === '#admin') {
-                openAdminCMS();
-            }
-        });
-    </script>
-</body>
-</html>
+            reader.onload
