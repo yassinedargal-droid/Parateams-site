@@ -890,39 +890,86 @@
             <!-- Contenu Principal CMS -->
             <div class="max-w-7xl w-full mx-auto px-4 sm:px-8 py-6 flex-1">
                 
-                <!-- ONGLET 1 : PRODUITS -->
+                <!-- ONGLET 1 : PRODUITS & GESTION INTELLIGENTE DU STOCK -->
                 <div id="cmsPanel-products" class="cms-panel space-y-5">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200">
-                        <div>
-                            <h3 class="font-display font-bold text-lg text-slate-900">Gestion du Catalogue Produits</h3>
-                            <p class="text-xs text-slate-500">Ajoutez de nouveaux soins, importez vos photos, sélectionnez plusieurs articles pour les supprimer ou faites <kbd class="px-1.5 py-0.5 bg-slate-100 border border-slate-300 rounded text-[10px] font-bold">Ctrl+Z</kbd> pour annuler.</p>
+                    <!-- Tableau de bord rapide de l'inventaire -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div onclick="setCmsStockFilterQuick('all')" class="bg-white p-3.5 rounded-2xl border border-slate-200 cursor-pointer hover:border-sage-500 transition">
+                            <span class="text-[11px] font-bold uppercase text-slate-400 block">Total Catalogue</span>
+                            <span id="cmsStatTotalProd" class="font-display font-extrabold text-xl text-sage-900 mt-0.5 block">0</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <input type="text" id="cmsProdSearch" oninput="renderCmsProductsList()" placeholder="Filtrer un produit..." class="px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-sage-600">
-                            <button onclick="openCmsProductEditor(null)" class="px-4 py-2.5 rounded-xl bg-sage-700 hover:bg-sage-800 text-white text-xs font-bold whitespace-nowrap cursor-pointer">
+                        <div onclick="setCmsStockFilterQuick('in')" class="bg-white p-3.5 rounded-2xl border border-slate-200 cursor-pointer hover:border-sage-500 transition">
+                            <span class="text-[11px] font-bold uppercase text-sage-600 block">🟢 En stock (4+)</span>
+                            <span id="cmsStatInStock" class="font-display font-extrabold text-xl text-sage-700 mt-0.5 block">0</span>
+                        </div>
+                        <div onclick="setCmsStockFilterQuick('low')" class="bg-white p-3.5 rounded-2xl border border-slate-200 cursor-pointer hover:border-amber-500 transition">
+                            <span class="text-[11px] font-bold uppercase text-amber-600 block">🟠 Stock limité (1-3)</span>
+                            <span id="cmsStatLowStock" class="font-display font-extrabold text-xl text-amber-600 mt-0.5 block">0</span>
+                        </div>
+                        <div onclick="setCmsStockFilterQuick('out')" class="bg-white p-3.5 rounded-2xl border border-slate-200 cursor-pointer hover:border-coral-500 transition">
+                            <span class="text-[11px] font-bold uppercase text-coral-600 block">🔴 Quantité à saisir (0)</span>
+                            <span id="cmsStatOutStock" class="font-display font-extrabold text-xl text-coral-600 mt-0.5 block">0</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200">
+                        <div>
+                            <h3 class="font-display font-bold text-lg text-slate-900">Contrôle du Stock & Catalogue</h3>
+                            <p class="text-xs text-slate-500">Saisissez simplement le nombre d'unités que vous avez sur chaque produit : le statut (En stock / Stock limité / Rupture) s'ajuste tout seul.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button type="button" onclick="recategorizeAllExistingProducts()" class="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-[#0D1310] text-xs font-extrabold shadow-xs whitespace-nowrap cursor-pointer">
+                                ✨ Auto-catégoriser tout
+                            </button>
+                            <select id="cmsProdStockFilter" onchange="cmsProductsCurrentPage=1; renderCmsProductsList()" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold bg-sage-50 text-sage-900">
+                                <option value="all">Tous les stocks</option>
+                                <option value="out">🔴 Quantité à 0 (Rupture)</option>
+                                <option value="low">🟠 Stock faible (1 à 3)</option>
+                                <option value="in">🟢 En stock (4 et +)</option>
+                            </select>
+                            <select id="cmsProdRayonFilter" onchange="cmsProductsCurrentPage=1; renderCmsProductsList()" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold bg-sand-50">
+                                <option value="all">Tous les rayons</option>
+                            </select>
+                            <input type="text" id="cmsProdSearch" oninput="cmsProductsCurrentPage=1; renderCmsProductsList()" placeholder="Rechercher un produit..." class="px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-sage-600">
+                            <button onclick="openCmsProductEditor(null)" class="px-4 py-2 rounded-xl bg-sage-700 hover:bg-sage-800 text-white text-xs font-bold whitespace-nowrap cursor-pointer">
                                 + Nouveau produit
                             </button>
                         </div>
                     </div>
 
-                    <!-- Barre d'actions groupées (Sélection multiple / Tout sélectionner / Supprimer) -->
+                    <!-- Barre d'actions groupées (Stock en masse + Déplacement Rayon + Suppression) -->
                     <div class="flex flex-wrap items-center justify-between gap-2.5 bg-white px-4 py-3 rounded-2xl border border-slate-200 shadow-2xs">
                         <div class="flex flex-wrap items-center gap-2">
                             <button type="button" onclick="selectAllFilteredCmsProducts()" class="px-3 py-1.5 rounded-xl bg-sage-50 hover:bg-sage-100 text-sage-900 border border-sage-200 text-xs font-bold transition cursor-pointer">
                                 ☑️ Tout sélectionner (filtrés)
                             </button>
                             <button type="button" onclick="deselectAllCmsProducts()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
-                                Tout désélectionner
+                                Désélectionner
                             </button>
                             <span id="cmsSelectedProdBadge" class="px-2.5 py-1 rounded-full bg-sage-100 text-sage-900 text-xs font-extrabold">
                                 0 sélectionné
                             </span>
                         </div>
 
-                        <button type="button" id="cmsBulkDeleteBtn" onclick="deleteSelectedCmsProducts()" disabled class="px-4 py-2 rounded-xl bg-coral-500 hover:bg-coral-600 disabled:opacity-40 disabled:pointer-events-none text-white text-xs font-extrabold shadow-xs transition cursor-pointer flex items-center gap-1.5">
-                            <span>🗑️</span>
-                            <span>Supprimer la sélection (<span id="cmsBulkDeleteCount">0</span>)</span>
-                        </button>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <div class="flex items-center gap-1.5 bg-sand-50 px-2.5 py-1 rounded-xl border border-slate-200">
+                                <span class="text-[11px] font-bold text-slate-600">Stock sélection :</span>
+                                <input type="number" id="cmsBulkStockQtyInput" min="0" value="10" class="w-16 px-2 py-1 rounded-lg border border-slate-200 text-xs font-extrabold bg-white text-center">
+                                <button type="button" onclick="bulkSetSelectedStockQty()" class="px-2.5 py-1 rounded-lg bg-sage-700 hover:bg-sage-800 text-white text-[11px] font-bold cursor-pointer">
+                                    Appliquer Qté
+                                </button>
+                            </div>
+                            <select id="cmsBulkMoveRayonSelect" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold bg-sand-50">
+                                <option value="">Déplacer vers rayon...</option>
+                            </select>
+                            <button type="button" onclick="bulkMoveSelectedCmsProducts()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-black text-white text-xs font-bold cursor-pointer">
+                                📂 Déplacer
+                            </button>
+                            <button type="button" id="cmsBulkDeleteBtn" onclick="deleteSelectedCmsProducts()" disabled class="px-3.5 py-1.5 rounded-xl bg-coral-500 hover:bg-coral-600 disabled:opacity-40 disabled:pointer-events-none text-white text-xs font-extrabold shadow-xs transition cursor-pointer flex items-center gap-1">
+                                <span>🗑️</span>
+                                <span>(<span id="cmsBulkDeleteCount">0</span>)</span>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Formulaire Ajout / Édition Produit (repliable) -->
@@ -976,26 +1023,23 @@
                                     <input type="number" id="editProdOldPrice" min="1" placeholder="Laisser vide si pas de promo" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1">Badge étiquette (ex: -20%, Nouveau)</label>
-                                    <input type="text" id="editProdBadge" placeholder="ex: Best-seller" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm">
+                                    <label class="block text-xs font-bold text-sage-800 mb-1">Quantité en stock (Unités) *</label>
+                                    <input type="number" id="editProdStockQty" required min="0" value="10" class="w-full px-3.5 py-2 rounded-xl border-2 border-sage-500 bg-sage-50/50 font-extrabold text-xs sm:text-sm text-sage-900">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-slate-700 mb-1">Contenance / Format</label>
                                     <input type="text" id="editProdVolume" placeholder="ex: 50 ml" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1">Bénéfice court</label>
-                                    <input type="text" id="editProdBenefit" placeholder="ex: Hydrate 48h & répare" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm">
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">Badge étiquette (ex: -20%, Nouveau)</label>
+                                    <input type="text" id="editProdBadge" placeholder="ex: Best-seller" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1">État du stock & Nouveauté</label>
-                                    <div class="flex items-center gap-3 pt-1.5">
-                                        <select id="editProdStock" class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs bg-white">
-                                            <option value="good">En stock</option>
-                                            <option value="low">Stock limité</option>
-                                        </select>
-                                        <label class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 cursor-pointer">
-                                            <input type="checkbox" id="editProdIsNew" class="accent-sage-700"> Nouveauté
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">Bénéfice court & Nouveauté</label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="text" id="editProdBenefit" placeholder="ex: Hydrate 48h" class="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                                        <label class="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 cursor-pointer shrink-0">
+                                            <input type="checkbox" id="editProdIsNew" class="accent-sage-700"> Nouveau
                                         </label>
                                     </div>
                                 </div>
@@ -1014,7 +1058,7 @@
                     <!-- Liste des produits -->
                     <div id="cmsProductsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 
-                    <!-- Pagination CMS (← 1 (2) 3 ... 7 →) -->
+                    <!-- Pagination CMS -->
                     <div id="cmsProductsPagination" class="mt-6 flex items-center justify-center"></div>
                 </div>
 
@@ -1022,30 +1066,36 @@
                 <div id="cmsPanel-bulk" class="cms-panel hidden space-y-6">
                     <div class="bg-gradient-to-r from-sage-900 to-sage-800 text-white p-5 sm:p-6 rounded-3xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <span class="inline-block px-2.5 py-0.5 rounded-full bg-amber-400 text-[#0D1310] text-[10px] font-extrabold uppercase tracking-wider">Gain de temps maximal</span>
-                            <h3 class="font-display font-extrabold text-lg sm:text-2xl mt-1">Import en Masse & Extraction Web</h3>
-                            <p class="text-xs sm:text-sm text-sage-100/90 mt-0.5">Importez des dizaines de produits depuis Excel/CSV, par copier-coller ou directement depuis un autre site web.</p>
+                            <span class="inline-block px-2.5 py-0.5 rounded-full bg-amber-400 text-[#0D1310] text-[10px] font-extrabold uppercase tracking-wider">Catégorisation & Stock Intelligents</span>
+                            <h3 class="font-display font-extrabold text-lg sm:text-2xl mt-1">Insérer tout votre catalogue & gérer vos quantités</h3>
+                            <p class="text-xs sm:text-sm text-sage-100/90 mt-0.5">Importez tous vos produits d'un coup (avec un stock initial au choix, ex: 10 ou 0), puis ajustez simplement vos quantités dans l'onglet Produits.</p>
                         </div>
-                        <button type="button" onclick="downloadCsvTemplate()" class="px-4 py-2.5 rounded-xl bg-white hover:bg-sage-50 text-sage-900 font-extrabold text-xs shadow-sm transition cursor-pointer shrink-0">
-                            📄 Télécharger modèle Excel (.csv)
-                        </button>
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <div class="bg-white/10 border border-white/20 rounded-xl px-3 py-1.5 flex items-center gap-2">
+                                <label for="bulkDefaultStockInput" class="text-[11px] font-bold text-sage-100">Stock initial par défaut :</label>
+                                <input type="number" id="bulkDefaultStockInput" min="0" value="10" class="w-16 px-2 py-1 rounded-lg bg-white text-sage-900 font-extrabold text-xs text-center">
+                            </div>
+                            <button type="button" onclick="downloadCsvTemplate()" class="px-4 py-2.5 rounded-xl bg-white hover:bg-sage-50 text-sage-900 font-extrabold text-xs shadow-sm transition cursor-pointer">
+                                📄 Modèle Excel (.csv)
+                            </button>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                        <!-- BLOC 1 : IMPORT FICHIER EXCEL / CSV -->
+                        <!-- BLOC 1 : IMPORT MULTI-FICHIERS EXCEL / CSV / JSON -->
                         <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 space-y-4">
                             <div class="flex items-center gap-2.5">
-                                <span class="w-9 h-9 rounded-xl bg-sage-100 text-sage-800 flex items-center justify-center font-bold text-base">📊</span>
+                                <span class="w-9 h-9 rounded-xl bg-sage-100 text-sage-800 flex items-center justify-center font-bold text-base">📦</span>
                                 <div>
-                                    <h4 class="font-display font-bold text-base text-slate-900">1. Importer un fichier Excel / CSV</h4>
-                                    <p class="text-xs text-slate-500">Colonnes : <code>brand;name;price;oldPrice;category;image;badge;description</code></p>
+                                    <h4 class="font-display font-bold text-base text-slate-900">1. Importer 1 ou plusieurs fichiers (.JSON / .CSV)</h4>
+                                    <p class="text-xs text-slate-500">Sélectionnez tous vos fichiers extraits d'un coup : fusion et tri automatiques par rayon.</p>
                                 </div>
                             </div>
 
                             <label class="block border-2 border-dashed border-sage-300 hover:border-sage-600 bg-sage-50/40 rounded-2xl p-5 text-center cursor-pointer transition">
-                                <input type="file" id="bulkCsvFileInput" accept=".csv,.txt" class="hidden" onchange="handleBulkCsvUpload(event)">
-                                <p class="font-bold text-xs sm:text-sm text-sage-900">Cliquez ou glissez votre fichier .CSV ici</p>
-                                <p class="text-[11px] text-slate-500 mt-1">Compatible Excel (séparateur point-virgule <code>;</code> ou virgule <code>,</code>)</p>
+                                <input type="file" id="bulkCsvFileInput" accept=".csv,.txt,.json" multiple class="hidden" onchange="handleBulkCsvUpload(event)">
+                                <p class="font-bold text-xs sm:text-sm text-sage-900">Cliquez ou glissez vos fichiers .JSON ou .CSV ici</p>
+                                <p class="text-[11px] text-slate-500 mt-1">Compatible multi-sélection • Déduplication automatique des produits</p>
                             </label>
                         </div>
 
@@ -1055,14 +1105,14 @@
                                 <div class="flex items-center gap-2.5">
                                     <span class="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-base">📋</span>
                                     <div>
-                                        <h4 class="font-display font-bold text-base text-slate-900">2. Copier-Coller rapide (Excel / Texte)</h4>
-                                        <p class="text-xs text-slate-500">1 ligne par produit : <code>Marque | Nom | Prix | AncienPrix | Rayon | URL Photo</code></p>
+                                        <h4 class="font-display font-bold text-base text-slate-900">2. Copier-Coller rapide (Excel / Liste)</h4>
+                                        <p class="text-xs text-slate-500"><code>Marque | Nom | Prix | AncienPrix | Rayon | URL Photo | Quantité</code></p>
                                     </div>
                                 </div>
                                 <span id="bulkPasteCounter" class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold">0 détecté</span>
                             </div>
 
-                            <textarea id="bulkPasteTextarea" oninput="previewBulkPasteLines()" rows="4" placeholder="Exemples :&#10;CeraVe | Gel Moussant 473ml | 165 | 195 | Visage | https://...&#10;La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps | https://..." class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-xs font-mono focus:outline-none focus:border-sage-600"></textarea>
+                            <textarea id="bulkPasteTextarea" oninput="previewBulkPasteLines()" rows="4" placeholder="Exemples :&#10;CeraVe | Gel Moussant 473ml | 165 | 195 | Visage | https://... | 15&#10;La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps & Hygiène | https://... | 8" class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 text-xs font-mono focus:outline-none focus:border-sage-600"></textarea>
 
                             <div class="flex justify-end">
                                 <button type="button" onclick="loadBulkPasteIntoStaging()" class="px-4 py-2 rounded-xl bg-sage-700 hover:bg-sage-800 text-white text-xs font-bold cursor-pointer">
@@ -1078,68 +1128,71 @@
                             <div class="flex items-center gap-2.5">
                                 <span class="w-9 h-9 rounded-xl bg-coral-50 text-coral-600 flex items-center justify-center font-bold text-base">🌐</span>
                                 <div>
-                                    <h4 class="font-display font-bold text-base text-slate-900">3. Importer depuis un autre site web</h4>
-                                    <p class="text-xs text-slate-500">Récupérez automatiquement les noms, marques, prix, descriptions et photos depuis un lien ou une page catalogue.</p>
+                                    <h4 class="font-display font-bold text-base text-slate-900">3. Importer depuis BeautyMarket / Palmarosa / Shopify</h4>
+                                    <p class="text-xs text-slate-500">Cumulez plusieurs catégories à la suite dans le tableau de prévisualisation avant de tout valider d'un coup.</p>
                                 </div>
                             </div>
                             <select id="bulkDefaultRayonSelect" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-sage-900 bg-sage-50">
-                                <option value="Visage">Rayon par défaut : Visage</option>
+                                <option value="auto">✨ Détection automatique du rayon (Recommandé)</option>
                             </select>
                         </div>
 
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
                             <!-- Mode A : Par Lien URL -->
                             <div class="lg:col-span-5 bg-sand-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
-                                <span class="text-[11px] font-extrabold uppercase tracking-wider text-sage-700 block">Mode A • Par Lien URL (Fiche produit ou page)</span>
-                                <input type="url" id="scrapeUrlInput" placeholder="https://exemple-parapharmacie.ma/produit..." class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs focus:outline-none focus:border-sage-600">
+                                <span class="text-[11px] font-extrabold uppercase tracking-wider text-sage-700 block">Mode A • Par Lien URL (Collection ou Produit)</span>
+                                <input type="url" id="scrapeUrlInput" placeholder="https://beautymarket.ma/collections/visage" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs focus:outline-none focus:border-sage-600">
                                 <button type="button" onclick="extractFromExternalUrl()" id="scrapeUrlBtn" class="w-full py-2.5 px-4 rounded-xl bg-sage-900 hover:bg-black text-white font-bold text-xs transition cursor-pointer">
                                     🔍 Extraire depuis ce lien URL
                                 </button>
                                 <p id="scrapeUrlStatus" class="text-[11px] text-slate-500 leading-relaxed">
-                                    Astuce : Pour importer toute une catégorie (20 à 100 produits d'un coup), utilisez le <strong>Mode B</strong> ci-contre.
+                                    Astuce : Pour importer toute une catégorie (jusqu'à 700 produits d'un coup), utilisez le <strong>Mode B</strong> ci-contre.
                                 </p>
                             </div>
 
-                            <!-- Mode B : Par Code Source HTML ou Flux JSON (100% fiable pour des pages entières) -->
+                            <!-- Mode B : Par Code Source HTML ou Flux JSON -->
                             <div class="lg:col-span-7 bg-sand-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
                                 <div class="flex flex-wrap items-center justify-between gap-2">
                                     <span class="text-[11px] font-extrabold uppercase tracking-wider text-coral-600">Mode B • Extraction massive (Page catalogue entière)</span>
                                     <button type="button" onclick="copyUniversalConsoleExtractor()" class="px-2.5 py-1 rounded-lg bg-[#0D1310] hover:bg-black text-amber-300 text-[10.5px] font-bold transition cursor-pointer">
-                                        📋 Copier le script Console (1 clic)
+                                        📋 Copier le script Console (Bouton Vert)
                                     </button>
                                 </div>
                                 <p class="text-[11px] text-slate-600 leading-relaxed">
-                                    <strong>Astuce sites modernes :</strong> Si <code>Ctrl+U</code> est vide, ouvrez la page catalogue, appuyez sur <strong>F12 → Console</strong>, collez le script copié via le bouton noir ci-dessus, puis faites <strong>Ctrl + V</strong> ici :
+                                    Ouvrez la catégorie sur l'autre site, faites <strong>Clic droit → Inspecter → Console</strong>, collez le script copié ci-dessus, cliquez sur le bouton vert, puis faites <strong>Ctrl + V</strong> ici :
                                 </p>
-                                <textarea id="scrapeHtmlSourceInput" rows="3" placeholder="Collez ici le résultat du script Console, le code HTML ou le JSON produits..." class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-mono focus:outline-none focus:border-sage-600"></textarea>
-                                <div class="flex justify-end">
-                                    <button type="button" onclick="extractProductsFromPastedSource()" class="px-4 py-2 rounded-xl bg-coral-500 hover:bg-coral-600 text-white font-bold text-xs transition cursor-pointer">
-                                        ⚡ Analyser et extraire tous les produits
+                                <textarea id="scrapeHtmlSourceInput" rows="3" placeholder="Collez ici le JSON ou HTML copié depuis la Console..." class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-mono focus:outline-none focus:border-sage-600"></textarea>
+                                <div class="flex flex-wrap justify-end gap-2">
+                                    <button type="button" onclick="extractProductsFromPastedSource(true)" class="px-3.5 py-2 rounded-xl bg-sage-700 hover:bg-sage-800 text-white font-bold text-xs transition cursor-pointer">
+                                        ➕ Cumuler avec la liste ci-dessous
+                                    </button>
+                                    <button type="button" onclick="extractProductsFromPastedSource(false)" class="px-4 py-2 rounded-xl bg-coral-500 hover:bg-coral-600 text-white font-bold text-xs transition cursor-pointer">
+                                        ⚡ Analyser et extraire les produits
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- TABLEAU DE PRÉVISUALISATION & VALIDATION AVANT IMPORTATION -->
+                    <!-- TABLEAU DE PRÉVISUALISATION & SAISIE DES QUANTITÉS AVANT IMPORTATION -->
                     <div id="bulkStagingBox" class="hidden bg-white p-5 sm:p-6 rounded-3xl border-2 border-sage-500 shadow-lg space-y-4">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
                             <div>
                                 <h4 class="font-display font-bold text-base sm:text-lg text-sage-900">
                                     Produits prêts à importer (<span id="bulkStagingSelectedCount">0</span> / <span id="bulkStagingTotalCount">0</span> sélectionnés)
                                 </h4>
-                                <p class="text-xs text-slate-500">Vérifiez ou ajustez les noms, prix et rayons avant de valider.</p>
+                                <p class="text-xs text-slate-500">Vous pouvez ajuster la quantité en stock dès maintenant ou après l'importation dans l'onglet Produits.</p>
                             </div>
                             <div class="flex flex-wrap items-center gap-2">
                                 <select id="bulkImportModeSelect" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-sand-50">
-                                    <option value="append">Ajouter au catalogue existant</option>
+                                    <option value="append">Ajouter au catalogue existant (Sans doublons)</option>
                                     <option value="replace">Remplacer tout le catalogue</option>
                                 </select>
                                 <button type="button" onclick="commitBulkStagedProducts()" class="px-5 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#1fb858] text-white font-extrabold text-xs shadow-sm cursor-pointer">
-                                    ✓ Importer la sélection
+                                    ✓ Importer la sélection dans la boutique
                                 </button>
                                 <button type="button" onclick="clearBulkStaging()" class="px-3 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold cursor-pointer">
-                                    Annuler
+                                    Vider
                                 </button>
                             </div>
                         </div>
@@ -1153,8 +1206,8 @@
                                         <th class="p-2.5">Marque</th>
                                         <th class="p-2.5">Nom du soin</th>
                                         <th class="p-2.5 w-24">Prix (DH)</th>
-                                        <th class="p-2.5 w-24">Ancien</th>
-                                        <th class="p-2.5">Rayon</th>
+                                        <th class="p-2.5 w-24">Stock (Qté)</th>
+                                        <th class="p-2.5">Rayon auto</th>
                                     </tr>
                                 </thead>
                                 <tbody id="bulkStagingTableBody" class="divide-y divide-slate-100"></tbody>
@@ -1628,9 +1681,11 @@
         "rayons": [
             { "name": "Visage", "icon": "✨" },
             { "name": "Solaires", "icon": "☀️" },
-            { "name": "Corps", "icon": "🧴" },
-            { "name": "Cheveux & Hygiène", "icon": "💆‍♀️" },
-            { "name": "Bébés & Maman", "icon": "🍼" },
+            { "name": "Cheveux", "icon": "💆‍♀️" },
+            { "name": "Corps & Hygiène", "icon": "🧴" },
+            { "name": "Bucco-Dentaire", "icon": "🦷" },
+            { "name": "Bébé & Maman", "icon": "🍼" },
+            { "name": "Homme", "icon": "🧔" },
             { "name": "Compléments & Santé", "icon": "🌿" },
             { "name": "Packs & Coffrets", "icon": "🎁" },
             { "name": "≤ 99 DH", "icon": "🏷️", "isBudget": true }
@@ -1695,6 +1750,7 @@
                 "badge": "-20%",
                 "badgeType": "promo",
                 "isNew": false,
+                "stockQty": 18,
                 "stockStatus": "good",
                 "rating": 4.9,
                 "reviewsCount": 48,
@@ -1719,6 +1775,7 @@
                 "badge": "Best-seller",
                 "badgeType": "best",
                 "isNew": false,
+                "stockQty": 25,
                 "stockStatus": "good",
                 "rating": 4.9,
                 "reviewsCount": 64,
@@ -1743,6 +1800,7 @@
                 "badge": "Nouveau",
                 "badgeType": "new",
                 "isNew": true,
+                "stockQty": 3,
                 "stockStatus": "low",
                 "rating": 5.0,
                 "reviewsCount": 37,
@@ -1767,6 +1825,7 @@
                 "badge": "-76 DH",
                 "badgeType": "promo",
                 "isNew": false,
+                "stockQty": 12,
                 "stockStatus": "good",
                 "rating": 4.8,
                 "reviewsCount": 29,
@@ -1791,6 +1850,7 @@
                 "badge": "Indispensable",
                 "badgeType": "best",
                 "isNew": false,
+                "stockQty": 30,
                 "stockStatus": "good",
                 "rating": 4.9,
                 "reviewsCount": 82,
@@ -1806,7 +1866,7 @@
                 "id": 6,
                 "brand": "Avène",
                 "name": "Cicalfate+ Crème Réparatrice Protectrice",
-                "category": "Corps",
+                "category": "Corps & Hygiène",
                 "concern": "Peau sensible",
                 "skinType": "Sèche à Sensible",
                 "benefit": "Apaise & répare en 48h",
@@ -1815,6 +1875,7 @@
                 "badge": "-24%",
                 "badgeType": "promo",
                 "isNew": false,
+                "stockQty": 14,
                 "stockStatus": "good",
                 "rating": 4.9,
                 "reviewsCount": 53,
@@ -1824,7 +1885,7 @@
                 "imageUrl": "",
                 "description": "La crème SOS de toute la famille (nourrissons, enfants, adultes) pour apaiser, réparer et assainir les peaux irritées ou fragilisées au quotidien.",
                 "usage": "Appliquer 1 à 2 fois par jour sur la zone concernée préalablement nettoyée et séchée.",
-                "ingredients": "[C+-Restore]™ actif post-biotique, Sulfate de cuivre et zinc, Eau Thermale d'Avène."
+                "ingredients": "[C+-Restore] actif post-biotique, Sulfate de cuivre et zinc, Eau Thermale d'Avène."
             },
             {
                 "id": 7,
@@ -1839,6 +1900,7 @@
                 "badge": "Nouveau",
                 "badgeType": "new",
                 "isNew": true,
+                "stockQty": 9,
                 "stockStatus": "good",
                 "rating": 4.8,
                 "reviewsCount": 31,
@@ -1863,6 +1925,7 @@
                 "badge": "Petit Prix",
                 "badgeType": "best",
                 "isNew": false,
+                "stockQty": 20,
                 "stockStatus": "good",
                 "rating": 4.8,
                 "reviewsCount": 41,
@@ -1887,6 +1950,7 @@
                 "badge": "Pack -131 DH",
                 "badgeType": "promo",
                 "isNew": true,
+                "stockQty": 2,
                 "stockStatus": "low",
                 "rating": 5.0,
                 "reviewsCount": 19,
@@ -1902,7 +1966,7 @@
                 "id": 10,
                 "brand": "Avène",
                 "name": "TriXera Nutrition Lait Nutri-Fluide Bébé & Famille",
-                "category": "Bébés & Maman",
+                "category": "Bébé & Maman",
                 "concern": "Hydratation",
                 "skinType": "Sèche à Sensible",
                 "benefit": "Douceur haute tolérance",
@@ -1911,6 +1975,7 @@
                 "badge": "Famille",
                 "badgeType": "best",
                 "isNew": false,
+                "stockQty": 11,
                 "stockStatus": "good",
                 "rating": 4.9,
                 "reviewsCount": 27,
@@ -1926,7 +1991,7 @@
                 "id": 11,
                 "brand": "Eucerin",
                 "name": "DermoCapillaire Shampooing Revitalisant Anti-Chute",
-                "category": "Cheveux & Hygiène",
+                "category": "Cheveux",
                 "concern": "Chute de cheveux",
                 "skinType": "Tous types",
                 "benefit": "Freine la chute & fortifie",
@@ -1935,6 +2000,7 @@
                 "badge": "-16%",
                 "badgeType": "promo",
                 "isNew": false,
+                "stockQty": 16,
                 "stockStatus": "good",
                 "rating": 4.7,
                 "reviewsCount": 22,
@@ -1959,6 +2025,7 @@
                 "badge": "Cure 1 mois",
                 "badgeType": "best",
                 "isNew": false,
+                "stockQty": 10,
                 "stockStatus": "good",
                 "rating": 4.8,
                 "reviewsCount": 34,
@@ -1972,51 +2039,53 @@
             },
             {
                 "id": 13,
-                "brand": "Bioderma",
-                "name": "Atoderm Stick Lèvres Hydratant & Réparateur",
-                "category": "Corps",
-                "concern": "Hydratation",
-                "skinType": "Sèche à Sensible",
-                "benefit": "Répare les lèvres gercées",
-                "price": 59,
-                "oldPrice": 75,
-                "badge": "-21%",
+                "brand": "Elgydium",
+                "name": "Dentifrice Blancheur & Protection Émail Quotidien",
+                "category": "Bucco-Dentaire",
+                "concern": "Hygiène",
+                "skinType": "Tous types",
+                "benefit": "Éclat & soin des gencives",
+                "price": 65,
+                "oldPrice": 80,
+                "badge": "-19%",
                 "badgeType": "promo",
                 "isNew": false,
+                "stockQty": 22,
                 "stockStatus": "good",
                 "rating": 4.9,
-                "reviewsCount": 71,
-                "volume": "4 g",
+                "reviewsCount": 44,
+                "volume": "75 ml",
                 "color": "#5D9C2A",
                 "shape": "tube",
                 "imageUrl": "",
-                "description": "Stick hydratant quotidien enrichi en beurre de karité qui nourrit, répare et apaise instantanément les lèvres sèches et abîmées.",
-                "usage": "Appliquer directement sur les lèvres aussi souvent que nécessaire.",
-                "ingredients": "Beurre de Karité, Cire d'abeille, Vitamine E."
+                "description": "Aide à éliminer les taches superficielles tout en respectant l'émail et les gencives sensibles.",
+                "usage": "En brossage 2 à 3 fois par jour après les repas.",
+                "ingredients": "Bicarbonate de sodium micropulvérisé, Chlorhexidine."
             },
             {
                 "id": 14,
-                "brand": "Nuxe",
-                "name": "Coffret Découverte Huile Prodigieuse & Crème Fraîche",
-                "category": "Packs & Coffrets",
+                "brand": "Vichy",
+                "name": "Vichy Homme Hydra Mag C+ Soin Visage & Yeux Anti-Fatigue",
+                "category": "Homme",
                 "concern": "Hydratation",
                 "skinType": "Tous types",
-                "benefit": "Coffret cadeau 3 soins",
-                "price": 329,
-                "oldPrice": 410,
-                "badge": "Coffret -81 DH",
+                "benefit": "Tonifie & défatigue 24h",
+                "price": 175,
+                "oldPrice": 210,
+                "badge": "-17%",
                 "badgeType": "promo",
                 "isNew": true,
-                "stockStatus": "low",
-                "rating": 5.0,
-                "reviewsCount": 25,
-                "volume": "Coffret 3 soins",
-                "color": "#D97706",
+                "stockQty": 8,
+                "stockStatus": "good",
+                "rating": 4.9,
+                "reviewsCount": 31,
+                "volume": "50 ml",
+                "color": "#2E493B",
                 "shape": "bottle",
                 "imageUrl": "",
-                "description": "Un coffret sensoriel réunissant l'Huile Prodigieuse (50 ml), la Crème Fraîche de Beauté (30 ml) et le Gel Lavant Rêve de Miel.",
-                "usage": "Rituel complet visage et corps matin et soir.",
-                "ingredients": "7 Huiles précieuses végétales, Lait végétal, Miel d'acacia."
+                "description": "Soin hydratant fortifiant 2-en-1 visage et contour des yeux conçu pour la peau des hommes.",
+                "usage": "Appliquer matin et/ou soir sur visage propre, même après le rasage.",
+                "ingredients": "Magnésium, Vitamine C phosphorylée, Dextran."
             }
         ]
     }
@@ -2029,7 +2098,65 @@
         const CMS_STORAGE_KEY = "parateams_cms_data_v1";
         const CMS_GH_CFG_KEY = "parateams_cms_github_cfg_v1";
 
-        // Chargement initial des données depuis le script JSON ou localStorage
+        const STANDARD_PARATEAMS_RAYONS = [
+            { name: "Visage", icon: "✨" },
+            { name: "Solaires", icon: "☀️" },
+            { name: "Cheveux", icon: "💆‍♀️" },
+            { name: "Corps & Hygiène", icon: "🧴" },
+            { name: "Bucco-Dentaire", icon: "🦷" },
+            { name: "Bébé & Maman", icon: "🍼" },
+            { name: "Homme", icon: "🧔" },
+            { name: "Compléments & Santé", icon: "🌿" },
+            { name: "Packs & Coffrets", icon: "🎁" },
+            { name: "≤ 99 DH", icon: "🏷️", isBudget: true }
+        ];
+
+        // MOTEUR DE CATÉGORISATION AUTOMATIQUE INTELLIGENTE
+        function autoDetectProductRayon(productOrText) {
+            const rawStr = typeof productOrText === 'string'
+                ? productOrText
+                : `${productOrText.name || ''} ${productOrText.brand || ''} ${productOrText.category || ''} ${productOrText.description || ''}`;
+            const t = rawStr.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+            if (/\b(pack|coffret|trousse|routine|duo|trio|kit|set)\b/.test(t)) return "Packs & Coffrets";
+            if (/\b(dentifrice|brosse a dents|brossette|bain de bouche|fil dentaire|blancheur|gencive|aphte|halitose|bucco|dentaire|elmex|sensodyne|meridol|parodontax|gum|elgydium|arthrodont|inava|oral-b|curaprox|marvis)\b/.test(t)) return "Bucco-Dentaire";
+            if (/\b(bebe|nourrisson|enfant|pediatrique|maman|maternite|allaitement|grossesse|vergeture|change|erytheme|fessier|liniment|biberon|tetine|sucette|mouches-bebe|serum physiologique|dodie|mustela|biolane|abcdem|abcderm|bepanthen|lansinoh|avent|suavinex|pampers)\b/.test(t)) return "Bébé & Maman";
+            if (/\b(homme|for men|men|rasage|apres-rasage|after shave|barbe|mousse a raser|gel a raser|tondeuse|vichy homme|nuxe men|avene men)\b/.test(t)) return "Homme";
+            if (/\b(solaire|spf|spf50|spf30|uv|uvmune|anthelios|fotoprotector|photoderm|sun|ecran|brume solaire|apres-soleil|autobronzant|heliocare|bariesun|capital soleil|fusion water)\b/.test(t)) return "Solaires";
+            if (/\b(cheveux|capillaire|shampooing|shampoing|apres-shampoing|masque capillaire|anti-chute|chute de cheveux|pellicule|antipelliculaire|cuir chevelu|keratine|lotion capillaire|serum capillaire|forcapil|anacaps|luxeol|phyto|klorane|ducray|dercos|rene furterer|hair)\b/.test(t)) return "Cheveux";
+            if (/\b(gelule|comprime|capsule|ampoule|sirop|complement alimentaire|vitamine|magnesium|zinc|fer|collagene|omega|probiotique|immunite|sommeil|stress|minceur|drainant|tisane|infusion|huile essentielle|aromatherapie|arkopharma|pileje|bion3|supradyn|berocca|ergymag|nutergia|forte pharma)\b/.test(t)) return "Compléments & Santé";
+            if (/\b(corps|corporel|gel douche|lavant|savon|pain dermatologique|deodorant|anti-transpirant|lait corps|lait corporel|baume corps|huile seche|huile prodigieuse|creme mains|mains|pieds|talons|intime|toilette intime|saforelle|hydralin|roge cavailles|exfoliant corps|gommage corps|epilation|cire)\b/.test(t)) return "Corps & Hygiène";
+            return "Visage";
+        }
+
+        function normalizeCategoryName(cat) {
+            if (!cat) return "Visage";
+            const c = String(cat).trim();
+            if (c === "Cheveux & Hygiène") return "Cheveux";
+            if (c === "Bébés & Maman") return "Bébé & Maman";
+            if (c === "Corps") return "Corps & Hygiène";
+            const exists = STANDARD_PARATEAMS_RAYONS.some(r => !r.isBudget && r.name === c);
+            return exists ? c : autoDetectProductRayon(c);
+        }
+
+        // GESTION INTELLIGENTE DU STOCK (QUANTITÉ EXACTE)
+        function getProductStockQty(p) {
+            if (typeof p.stockQty === 'number' && !isNaN(p.stockQty)) {
+                return Math.max(0, Math.floor(p.stockQty));
+            }
+            if (p.stockStatus === 'out') return 0;
+            if (p.stockStatus === 'low') return 2;
+            return 10;
+        }
+
+        function syncProductStockFields(p, qty) {
+            const cleanQty = Math.max(0, Math.floor(Number(qty) || 0));
+            p.stockQty = cleanQty;
+            p.stockStatus = cleanQty === 0 ? 'out' : (cleanQty <= 3 ? 'low' : 'good');
+            return p;
+        }
+
+        // Chargement initial sécurisé des données
         function loadSiteData() {
             const rawDefault = document.getElementById('parateams-site-data').textContent;
             const defaultData = JSON.parse(rawDefault);
@@ -2038,10 +2165,35 @@
                 if (saved) {
                     const parsed = JSON.parse(saved);
                     document.getElementById('cmsPreviewBanner').classList.remove('hidden');
-                    return { ...defaultData, ...parsed };
+
+                    const mergedRayons = [...STANDARD_PARATEAMS_RAYONS];
+                    if (Array.isArray(parsed.rayons)) {
+                        parsed.rayons.forEach(r => {
+                            if (r && r.name && !r.isBudget && !["Cheveux & Hygiène", "Bébés & Maman", "Corps"].includes(r.name)) {
+                                if (!mergedRayons.some(m => m.name === r.name)) {
+                                    mergedRayons.splice(mergedRayons.length - 1, 0, r);
+                                }
+                            }
+                        });
+                    }
+
+                    const preservedProducts = Array.isArray(parsed.products) && parsed.products.length > 0
+                        ? parsed.products.map(p => {
+                            const copy = { ...p, category: normalizeCategoryName(p.category) };
+                            return syncProductStockFields(copy, getProductStockQty(copy));
+                        })
+                        : defaultData.products;
+
+                    return {
+                        ...defaultData,
+                        ...parsed,
+                        rayons: mergedRayons,
+                        products: preservedProducts
+                    };
                 }
             } catch (e) {
-                console.warn("Lecture cache CMS ignorée", e);
+                console.warn("Cache CMS corrompu ignoré et réinitialisé", e);
+                localStorage.removeItem(CMS_STORAGE_KEY);
             }
             return defaultData;
         }
@@ -2087,7 +2239,10 @@
             diagSkin: null
         };
 
-        // APPLIQUER LES PARAMÈTRES GÉNÉRAUX DE LA BOUTIQUE
+        function escapeHtmlAttr(str) {
+            return String(str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
         function applyStoreSettingsToUI() {
             const s = SITE_DATA.settings;
             document.getElementById('topRatingText').textContent = s.googleRating;
@@ -2121,10 +2276,9 @@
             });
         }
 
-        // VISUEL PRODUIT (PHOTO IMPORTÉE / URL OU SVG STUDIO)
         function getProductVisualHTML(product) {
             if (product.imageUrl && product.imageUrl.trim() !== "") {
-                return `<img src="${product.imageUrl}" alt="${product.name}" class="w-24 h-24 sm:w-32 sm:h-32 mx-auto object-contain rounded-xl transition-transform duration-300 group-hover:scale-105">`;
+                return `<img src="${escapeHtmlAttr(product.imageUrl)}" alt="${escapeHtmlAttr(product.name)}" class="w-24 h-24 sm:w-32 sm:h-32 mx-auto object-contain rounded-xl transition-transform duration-300 group-hover:scale-105">`;
             }
             const c = product.color || "#5D9C2A";
             if (product.shape === 'tube') {
@@ -2173,6 +2327,16 @@
             </svg>`;
         }
 
+        function selectRayonByIndex(idx, shouldScroll = true) {
+            const r = SITE_DATA.rayons[idx];
+            if (!r) return;
+            if (r.isBudget) {
+                filterByBudget99();
+            } else {
+                selectRayon(r.name, shouldScroll);
+            }
+        }
+
         // RENDU DES RAYONS (BARRE VERTE HAUT + GRILLE RAYONS)
         function renderRayons() {
             const grid = document.getElementById('rayonsGrid');
@@ -2180,13 +2344,14 @@
             const products = SITE_DATA.products;
 
             if (topNav) {
-                const rayonButtons = SITE_DATA.rayons.filter(r => !r.isBudget).map(r => {
+                const rayonButtons = SITE_DATA.rayons.map((r, idx) => {
+                    if (r.isBudget) return '';
                     const isActive = state.category === r.name;
-                    return `<button onclick="selectRayon('${r.name.replace(/'/g, "\\'")}', false)" class="cat-btn shrink-0 px-3 sm:px-3.5 py-1.5 rounded-full text-xs sm:text-sm ${isActive ? 'font-bold bg-white text-[#3E6B1B] shadow-2xs' : 'font-medium text-white hover:bg-white/15'} whitespace-nowrap transition cursor-pointer">${r.name}</button>`;
+                    return `<button onclick="selectRayonByIndex(${idx}, false)" class="cat-btn shrink-0 px-3 sm:px-3.5 py-1.5 rounded-full text-xs sm:text-sm ${isActive ? 'font-bold bg-white text-[#3E6B1B] shadow-2xs' : 'font-medium text-white hover:bg-white/15'} whitespace-nowrap transition cursor-pointer">${escapeHtmlAttr(r.name)}</button>`;
                 }).join('');
 
                 topNav.innerHTML = `
-                    <button onclick="selectRayon('all', false)" class="cat-btn shrink-0 px-3 sm:px-3.5 py-1.5 rounded-full text-xs sm:text-sm ${state.category === 'all' && !state.promoOnly && !state.budget99Only ? 'font-bold bg-white text-[#3E6B1B] shadow-2xs' : 'font-medium text-white hover:bg-white/15'} whitespace-nowrap transition cursor-pointer">Tous les produits</button>
+                    <button onclick="selectRayon('all', false)" class="cat-btn shrink-0 px-3 sm:px-3.5 py-1.5 rounded-full text-xs sm:text-sm ${state.category === 'all' && !state.promoOnly && !state.budget99Only ? 'font-bold bg-white text-[#3E6B1B] shadow-2xs' : 'font-medium text-white hover:bg-white/15'} whitespace-nowrap transition cursor-pointer">Tous (${products.length})</button>
                     <button onclick="triggerSlidePromoAction()" class="cat-btn shrink-0 inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-extrabold bg-[#0D1310] text-amber-300 border border-amber-300/85 ring-1 ring-amber-300/30 shadow-xs hover:bg-black whitespace-nowrap transition cursor-pointer">
                         <span>🔥</span>
                         <span>Promos</span>
@@ -2197,7 +2362,7 @@
             }
 
             if (!grid) return;
-            grid.innerHTML = SITE_DATA.rayons.map(r => {
+            grid.innerHTML = SITE_DATA.rayons.map((r, idx) => {
                 const count = r.isBudget
                     ? products.filter(p => p.price <= 99).length
                     : products.filter(p => p.category === r.name).length;
@@ -2205,10 +2370,10 @@
                 const isActive = r.isBudget ? state.budget99Only : state.category === r.name;
 
                 return `
-                <button onclick="${r.isBudget ? 'filterByBudget99()' : `selectRayon('${r.name.replace(/'/g, "\\'")}')`}" class="min-w-[116px] sm:min-w-0 shrink-0 p-3 sm:p-3.5 rounded-2xl border ${isActive ? 'bg-sage-700 text-white border-sage-700 shadow-sm' : 'bg-white border-slate-200/90 text-slate-800 hover:border-sage-500 hover:bg-sage-50/40'} transition text-left flex flex-col justify-between cursor-pointer group">
-                    <span class="text-lg sm:text-xl mb-1.5 sm:mb-2">${r.icon}</span>
+                <button onclick="selectRayonByIndex(${idx}, true)" class="min-w-[116px] sm:min-w-0 shrink-0 p-3 sm:p-3.5 rounded-2xl border ${isActive ? 'bg-sage-700 text-white border-sage-700 shadow-sm' : 'bg-white border-slate-200/90 text-slate-800 hover:border-sage-500 hover:bg-sage-50/40'} transition text-left flex flex-col justify-between cursor-pointer group">
+                    <span class="text-lg sm:text-xl mb-1.5 sm:mb-2">${escapeHtmlAttr(r.icon)}</span>
                     <div>
-                        <p class="font-display font-bold text-xs sm:text-sm leading-tight ${isActive ? 'text-white' : 'text-sage-900'}">${r.name}</p>
+                        <p class="font-display font-bold text-xs sm:text-sm leading-tight ${isActive ? 'text-white' : 'text-sage-900'}">${escapeHtmlAttr(r.name)}</p>
                         <p class="text-[10.5px] sm:text-[11px] mt-0.5 ${isActive ? 'text-sage-100' : 'text-slate-400'}">${count} soin${count > 1 ? 's' : ''}</p>
                     </div>
                 </button>
@@ -2219,7 +2384,7 @@
         // RENDU DYNAMIQUE DU CARROUSEL HÉRO
         function getSlideVisualSVG(slide) {
             if (slide.imageUrl && slide.imageUrl.trim() !== "") {
-                return `<img src="${slide.imageUrl}" alt="${slide.title}" class="h-full max-h-[130px] sm:max-h-[290px] w-auto object-contain rounded-2xl drop-shadow-xl transition-transform duration-500 group-hover/card:scale-105">`;
+                return `<img src="${escapeHtmlAttr(slide.imageUrl)}" alt="${escapeHtmlAttr(slide.title)}" class="h-full max-h-[130px] sm:max-h-[290px] w-auto object-contain rounded-2xl drop-shadow-xl transition-transform duration-500 group-hover/card:scale-105">`;
             }
             if (slide.visualType === 'bottles') {
                 return `
@@ -2297,27 +2462,28 @@
             track.innerHTML = slides.map((slide, idx) => {
                 const isActive = idx === currentHeroSlide;
                 const HeadingTag = idx === 0 ? 'h1' : 'h2';
+                const action = escapeHtmlAttr(slide.actionType || 'promo');
                 return `
                 <div class="hero-slide absolute inset-0 transition-opacity duration-500 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 pointer-events-none z-0'} flex items-center" data-index="${idx}">
                     <div class="w-full h-full grid grid-cols-1 lg:grid-cols-12 items-center gap-4 lg:gap-4 px-5 sm:pl-12 lg:pl-14 sm:pr-10 lg:pr-0 pt-5 pb-14 lg:py-10">
                         <div class="order-1 lg:order-2 lg:col-span-5 flex justify-center lg:justify-end items-center">
-                            <div onclick="handleHeroSlideAction('${slide.actionType}')" class="w-full sm:w-[88%] lg:w-full h-[145px] sm:h-[240px] lg:h-[360px] bg-[#F4F5F4] rounded-[20px] sm:rounded-[28px] lg:rounded-l-[32px] lg:rounded-r-none p-3.5 sm:p-7 flex items-center justify-center relative overflow-hidden shadow-xl cursor-pointer group/card">
-                                <span style="background-color:${slide.badgeBg || '#3E6B1B'}" class="absolute top-2.5 left-2.5 sm:top-4 sm:left-4 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider shadow-xs">
-                                    ${slide.badge}
+                            <div onclick="handleHeroSlideAction('${action}')" class="w-full sm:w-[88%] lg:w-full h-[145px] sm:h-[240px] lg:h-[360px] bg-[#F4F5F4] rounded-[20px] sm:rounded-[28px] lg:rounded-l-[32px] lg:rounded-r-none p-3.5 sm:p-7 flex items-center justify-center relative overflow-hidden shadow-xl cursor-pointer group/card">
+                                <span style="background-color:${escapeHtmlAttr(slide.badgeBg || '#3E6B1B')}" class="absolute top-2.5 left-2.5 sm:top-4 sm:left-4 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider shadow-xs">
+                                    ${escapeHtmlAttr(slide.badge)}
                                 </span>
                                 ${getSlideVisualSVG(slide)}
                             </div>
                         </div>
                         <div class="order-2 lg:order-1 lg:col-span-7 flex flex-col justify-center text-white space-y-2.5 sm:space-y-5 z-10">
                             <${HeadingTag} class="font-display text-2xl sm:text-5xl lg:text-[3.35rem] font-extrabold leading-[1.08] tracking-tight text-white">
-                                ${slide.title}
+                                ${escapeHtmlAttr(slide.title)}
                             </${HeadingTag}>
                             <p class="text-slate-200/90 text-xs sm:text-base lg:text-[17px] max-w-lg leading-relaxed font-normal line-clamp-2 sm:line-clamp-none">
-                                ${slide.subtitle}
+                                ${escapeHtmlAttr(slide.subtitle)}
                             </p>
                             <div class="pt-0.5 sm:pt-1">
-                                <button onclick="handleHeroSlideAction('${slide.actionType}')" class="inline-flex items-center gap-2.5 sm:gap-3 px-5 py-3 sm:px-7 sm:py-4 rounded-xl sm:rounded-2xl bg-white hover:bg-sage-50 active:scale-[0.99] text-[#0D1310] font-display font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-lg transition cursor-pointer">
-                                    <span>${slide.buttonText}</span>
+                                <button onclick="handleHeroSlideAction('${action}')" class="inline-flex items-center gap-2.5 sm:gap-3 px-5 py-3 sm:px-7 sm:py-4 rounded-xl sm:rounded-2xl bg-white hover:bg-sage-50 active:scale-[0.99] text-[#0D1310] font-display font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-lg transition cursor-pointer">
+                                    <span>${escapeHtmlAttr(slide.buttonText)}</span>
                                     <span class="text-base leading-none" aria-hidden="true">→</span>
                                 </button>
                             </div>
@@ -2335,7 +2501,7 @@
         function getFilteredProducts() {
             return SITE_DATA.products.filter(p => {
                 const matchCat = state.category === 'all' || p.category === state.category;
-                const matchBrand = state.brand === 'all' || p.brand === state.brand;
+                const matchBrand = state.brand === 'all' || p.brand.toLowerCase() === state.brand.toLowerCase();
                 const matchPromo = !state.promoOnly || (p.oldPrice !== null && p.oldPrice > 0);
                 const matchBudget = !state.budget99Only || p.price <= 99;
                 const matchNew = !state.newOnly || p.isNew === true;
@@ -2401,13 +2567,16 @@
                 : `${filtered.length} soin${filtered.length > 1 ? 's' : ''} disponible${filtered.length > 1 ? 's' : ''}`;
 
             grid.innerHTML = paginatedItems.map(product => {
+                const qty = getProductStockQty(product);
+                const isOut = qty === 0;
+
                 let badgeColorClass = 'bg-sage-100 text-sage-800';
                 if (product.badgeType === 'promo' || (product.oldPrice && product.oldPrice > product.price)) badgeColorClass = 'bg-coral-500 text-white';
                 if (product.badgeType === 'new' || product.isNew) badgeColorClass = 'bg-sage-700 text-white';
 
                 const badgeHTML = product.badge ? `
                     <span class="absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5 z-10 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold tracking-wide ${badgeColorClass}">
-                        ${product.badge}
+                        ${escapeHtmlAttr(product.badge)}
                     </span>
                 ` : '';
 
@@ -2416,12 +2585,18 @@
                 ` : '';
 
                 const isLiked = state.wishlist.includes(product.id);
-                const stockHTML = product.stockStatus === 'good'
-                    ? `<span class="inline-flex items-center gap-1 text-[10.5px] sm:text-[11px] font-semibold text-sage-700"><span class="w-1.5 h-1.5 rounded-full bg-sage-500"></span>En stock</span>`
-                    : `<span class="inline-flex items-center gap-1 text-[10.5px] sm:text-[11px] font-semibold text-amber-600"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>Stock limité</span>`;
+                const stockHTML = isOut
+                    ? `<span class="inline-flex items-center gap-1 text-[10.5px] sm:text-[11px] font-bold text-coral-600"><span class="w-1.5 h-1.5 rounded-full bg-coral-500"></span>Rupture</span>`
+                    : (qty <= 3
+                        ? `<span class="inline-flex items-center gap-1 text-[10.5px] sm:text-[11px] font-semibold text-amber-600"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>Plus que ${qty}</span>`
+                        : `<span class="inline-flex items-center gap-1 text-[10.5px] sm:text-[11px] font-semibold text-sage-700"><span class="w-1.5 h-1.5 rounded-full bg-sage-500"></span>En stock (${qty})</span>`);
+
+                const addButtonHTML = isOut
+                    ? `<button disabled class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-full bg-slate-100 text-slate-400 text-[11px] sm:text-xs font-bold cursor-not-allowed shrink-0">Épuisé</button>`
+                    : `<button onclick="addToCart(${product.id})" class="px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-sage-700 hover:bg-sage-800 active:scale-95 text-white text-[11px] sm:text-sm font-semibold shadow-xs transition flex items-center gap-1 cursor-pointer shrink-0"><span>+ Ajouter</span></button>`;
 
                 return `
-                <article class="group bg-white rounded-2xl sm:rounded-3xl border border-slate-100 p-3 sm:p-5 shadow-xs hover:shadow-lg hover:border-sage-200 transition-all duration-300 flex flex-col justify-between relative">
+                <article class="group bg-white rounded-2xl sm:rounded-3xl border border-slate-100 p-3 sm:p-5 shadow-xs hover:shadow-lg hover:border-sage-200 transition-all duration-300 flex flex-col justify-between relative ${isOut ? 'opacity-80' : ''}">
                     <div>
                         ${badgeHTML}
                         <div class="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 z-10 flex items-center gap-1">
@@ -2438,18 +2613,18 @@
                         </div>
 
                         <div class="flex items-center justify-between text-[10.5px] sm:text-xs mt-1">
-                            <span class="font-bold uppercase tracking-wider text-sage-600 truncate">${product.brand}</span>
+                            <span class="font-bold uppercase tracking-wider text-sage-600 truncate">${escapeHtmlAttr(product.brand)}</span>
                             <span class="inline-flex items-center gap-0.5 text-slate-600 font-semibold shrink-0">
                                 <span class="text-amber-400">★</span> ${(product.rating || 4.9).toFixed(1)}
                             </span>
                         </div>
 
                         <h3 onclick="openQuickView(${product.id})" class="font-display font-bold text-xs sm:text-base text-slate-900 mt-1 line-clamp-2 group-hover:text-sage-700 transition cursor-pointer min-h-[34px] sm:min-h-[48px]">
-                            ${product.name}
+                            ${escapeHtmlAttr(product.name)}
                         </h3>
 
-                        <div class="hidden sm:flex items-center justify-between mt-2">
-                            <p class="text-xs text-slate-500 line-clamp-1">${product.benefit || ''}</p>
+                        <div class="flex items-center justify-between mt-1.5 sm:mt-2">
+                            <p class="text-[10.5px] sm:text-xs text-slate-500 line-clamp-1">${escapeHtmlAttr(product.category)}</p>
                             ${stockHTML}
                         </div>
                     </div>
@@ -2461,14 +2636,12 @@
                                 ${oldPriceHTML}
                             </div>
 
-                            <button onclick="addToCart(${product.id})" class="px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-sage-700 hover:bg-sage-800 active:scale-95 text-white text-[11px] sm:text-sm font-semibold shadow-xs transition flex items-center gap-1 cursor-pointer shrink-0">
-                                <span>+ Ajouter</span>
-                            </button>
+                            ${addButtonHTML}
                         </div>
 
                         <button onclick="orderSingleProductOnWhatsApp(${product.id})" class="w-full py-1.5 sm:py-2 px-2 sm:px-3 rounded-full bg-[#F0FDF4] hover:bg-[#25D366] text-[#166534] hover:text-white border border-[#25D366]/40 text-[10.5px] sm:text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer">
                             <svg class="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824z"/></svg>
-                            <span class="truncate">Commander WhatsApp</span>
+                            <span class="truncate">${isOut ? 'Demander dispo WhatsApp' : 'Commander WhatsApp'}</span>
                         </button>
                     </div>
                 </article>
@@ -2641,8 +2814,8 @@
                 content.innerHTML = items.map(p => `
                     <div class="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-slate-100 bg-sand-50/50">
                         <div>
-                            <span class="text-[11px] font-bold uppercase text-sage-600">${p.brand}</span>
-                            <h4 class="font-bold text-sm text-slate-900">${p.name}</h4>
+                            <span class="text-[11px] font-bold uppercase text-sage-600">${escapeHtmlAttr(p.brand)}</span>
+                            <h4 class="font-bold text-sm text-slate-900">${escapeHtmlAttr(p.name)}</h4>
                             <p class="font-display font-bold text-sm text-sage-900 mt-0.5">${p.price} DH</p>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
@@ -2803,12 +2976,12 @@
                 <div class="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-slate-100 bg-white hover:border-sage-300 transition">
                     <div class="flex items-center gap-3">
                         <div class="w-12 h-12 rounded-xl bg-sage-50 flex items-center justify-center shrink-0">
-                            <span class="text-xs font-extrabold text-sage-700">${p.brand.slice(0, 3).toUpperCase()}</span>
+                            <span class="text-xs font-extrabold text-sage-700">${escapeHtmlAttr(p.brand.slice(0, 3).toUpperCase())}</span>
                         </div>
                         <div>
-                            <span class="text-[11px] font-bold uppercase text-sage-600">${p.brand}</span>
-                            <h4 class="font-bold text-sm text-slate-900 leading-snug">${p.name}</h4>
-                            <p class="text-xs text-slate-500">${p.benefit || ''} • <strong class="text-sage-900">${p.price} DH</strong></p>
+                            <span class="text-[11px] font-bold uppercase text-sage-600">${escapeHtmlAttr(p.brand)}</span>
+                            <h4 class="font-bold text-sm text-slate-900 leading-snug">${escapeHtmlAttr(p.name)}</h4>
+                            <p class="text-xs text-slate-500">${escapeHtmlAttr(p.category)} • <strong class="text-sage-900">${p.price} DH</strong></p>
                         </div>
                     </div>
                     <button onclick="addToCart(${p.id})" class="px-3.5 py-2 rounded-full bg-sage-700 hover:bg-sage-800 text-white text-xs font-semibold shrink-0 cursor-pointer">+ Ajouter</button>
@@ -2838,6 +3011,7 @@
         function openQuickView(productId) {
             const p = SITE_DATA.products.find(item => item.id === productId);
             if (!p) return;
+            const qty = getProductStockQty(p);
 
             const modal = document.getElementById('quickViewModal');
             document.getElementById('quickViewContent').innerHTML = `
@@ -2845,26 +3019,27 @@
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
                     <div class="md:col-span-5 bg-sage-50/70 rounded-3xl p-6 flex flex-col items-center justify-center border border-sage-100">
                         ${getProductVisualHTML(p)}
-                        <span class="mt-3 px-3 py-1 rounded-full bg-white text-xs font-semibold text-sage-800 border border-sage-200">${p.category} • ${p.volume || ''}</span>
+                        <span class="mt-3 px-3 py-1 rounded-full bg-white text-xs font-semibold text-sage-800 border border-sage-200">${escapeHtmlAttr(p.category)}${p.volume ? ' • ' + escapeHtmlAttr(p.volume) : ''}</span>
                         <span class="mt-2 text-xs text-slate-600 font-semibold">★ ${(p.rating || 4.9).toFixed(1)} (${p.reviewsCount || 24} avis vérifiés)</span>
                     </div>
                     <div class="md:col-span-7 space-y-4">
                         <div>
-                            <span class="text-xs font-bold uppercase tracking-widest text-sage-600">${p.brand}</span>
-                            <h3 class="font-display text-xl sm:text-2xl font-bold text-sage-900 mt-1">${p.name}</h3>
+                            <span class="text-xs font-bold uppercase tracking-widest text-sage-600">${escapeHtmlAttr(p.brand)}</span>
+                            <h3 class="font-display text-xl sm:text-2xl font-bold text-sage-900 mt-1">${escapeHtmlAttr(p.name)}</h3>
                         </div>
                         <div class="flex items-baseline gap-2">
                             <span class="font-display text-2xl font-extrabold text-sage-900">${p.price} DH</span>
                             ${p.oldPrice ? `<span class="text-sm text-slate-400 line-through">${p.oldPrice} DH</span>` : ''}
-                            ${p.badge ? `<span class="ml-2 px-2.5 py-0.5 rounded-full bg-coral-500 text-white text-xs font-bold">${p.badge}</span>` : ''}
+                            ${p.badge ? `<span class="ml-2 px-2.5 py-0.5 rounded-full bg-coral-500 text-white text-xs font-bold">${escapeHtmlAttr(p.badge)}</span>` : ''}
                         </div>
-                        <p class="text-sm text-slate-600 leading-relaxed">${p.description || ''}</p>
+                        <p class="text-sm text-slate-600 leading-relaxed">${escapeHtmlAttr(p.description || '')}</p>
                         <div class="pt-2 space-y-2.5">
-                            <button onclick="addToCart(${p.id}); closeQuickView();" class="w-full py-3.5 rounded-full bg-sage-700 hover:bg-sage-800 text-white font-semibold text-sm shadow-md transition cursor-pointer">
-                                Ajouter au panier — ${p.price} DH
-                            </button>
+                            ${qty > 0
+                                ? `<button onclick="addToCart(${p.id}); closeQuickView();" class="w-full py-3.5 rounded-full bg-sage-700 hover:bg-sage-800 text-white font-semibold text-sm shadow-md transition cursor-pointer">Ajouter au panier — ${p.price} DH</button>`
+                                : `<button disabled class="w-full py-3.5 rounded-full bg-slate-100 text-slate-400 font-bold text-sm cursor-not-allowed">Actuellement en rupture de stock</button>`
+                            }
                             <button onclick="orderSingleProductOnWhatsApp(${p.id})" class="w-full py-3 rounded-full bg-[#25D366] hover:bg-[#1fb858] text-white font-bold text-sm shadow-xs transition flex items-center justify-center gap-2 cursor-pointer">
-                                <span>Commander sur WhatsApp (${p.price} DH)</span>
+                                <span>Commander / Réserver sur WhatsApp (${p.price} DH)</span>
                             </button>
                         </div>
                     </div>
@@ -2882,14 +3057,15 @@
 
         function openArticleModal(index) {
             const art = ARTICLES[index];
+            if (!art) return;
             const modal = document.getElementById('articleModal');
             document.getElementById('articleModalContent').innerHTML = `
                 <button onclick="closeArticleModal()" class="absolute right-5 top-5 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition cursor-pointer">✕</button>
-                <span class="px-3 py-1 rounded-full bg-sage-100 text-sage-800 text-xs font-bold">${art.tag}</span>
-                <h3 class="font-display text-xl sm:text-2xl font-bold text-sage-900 mt-3">${art.title}</h3>
-                <div class="text-sm text-slate-600 mt-4 space-y-3 whitespace-pre-line leading-relaxed">${art.content}</div>
+                <span class="px-3 py-1 rounded-full bg-sage-100 text-sage-800 text-xs font-bold">${escapeHtmlAttr(art.tag)}</span>
+                <h3 class="font-display text-xl sm:text-2xl font-bold text-sage-900 mt-3">${escapeHtmlAttr(art.title)}</h3>
+                <div class="text-sm text-slate-600 mt-4 space-y-3 whitespace-pre-line leading-relaxed">${escapeHtmlAttr(art.content)}</div>
                 <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end">
-                    <button onclick="closeArticleModal(); selectRayon('${art.filterCategory}');" class="px-5 py-2.5 rounded-full bg-sage-700 text-white text-sm font-semibold hover:bg-sage-800 transition cursor-pointer">
+                    <button onclick="closeArticleModal(); selectRayon('${escapeHtmlAttr(art.filterCategory)}');" class="px-5 py-2.5 rounded-full bg-sage-700 text-white text-sm font-semibold hover:bg-sage-800 transition cursor-pointer">
                         Voir les soins recommandés
                     </button>
                 </div>
@@ -2930,9 +3106,21 @@
         function addToCart(productId) {
             const product = SITE_DATA.products.find(p => p.id === productId);
             if (!product) return;
+            const availableQty = getProductStockQty(product);
+            if (availableQty <= 0) {
+                showToast("Ce soin est actuellement en rupture de stock.");
+                return;
+            }
             const existing = state.cart.find(item => item.id === productId);
-            if (existing) existing.qty += 1;
-            else state.cart.push({ ...product, qty: 1 });
+            if (existing) {
+                if (existing.qty >= availableQty) {
+                    showToast(`Quantité maximale en stock atteinte (${availableQty})`);
+                    return;
+                }
+                existing.qty += 1;
+            } else {
+                state.cart.push({ ...product, qty: 1 });
+            }
             updateCartBadge();
             updateDeliverySimulator(state.selectedCity);
             showToast(`"${product.name.slice(0, 26)}..." ajouté au panier`);
@@ -2941,6 +3129,12 @@
         function updateQty(productId, delta) {
             const item = state.cart.find(i => i.id === productId);
             if (!item) return;
+            const product = SITE_DATA.products.find(p => p.id === productId);
+            const maxStock = product ? getProductStockQty(product) : 99;
+            if (delta > 0 && item.qty >= maxStock) {
+                showToast(`Maximum disponible en stock : ${maxStock}`);
+                return;
+            }
             item.qty += delta;
             if (item.qty <= 0) state.cart = state.cart.filter(i => i.id !== productId);
             updateCartBadge();
@@ -2976,7 +3170,7 @@
             freeBar.style.width = `${progressPct}%`;
 
             if (remaining === 0 && subtotal > 0) {
-                freeText.innerHTML = `<span class="text-sage-700 font-bold">🎉 Félicitations ! Votre livraison vers ${state.selectedCity} est GRATUITE.</span>`;
+                freeText.innerHTML = `<span class="text-sage-700 font-bold">🎉 Félicitations ! Votre livraison vers ${escapeHtmlAttr(state.selectedCity)} est GRATUITE.</span>`;
             } else {
                 freeText.textContent = `Plus que ${remaining} DH pour la livraison gratuite vers ${state.selectedCity} !`;
             }
@@ -2998,7 +3192,7 @@
                     <div class="text-center py-10 px-2 space-y-4">
                         <div class="w-16 h-16 mx-auto rounded-full bg-sage-100 text-sage-700 flex items-center justify-center text-2xl font-bold">✓</div>
                         <h3 class="font-display text-2xl font-bold text-sage-900">Commande confirmée !</h3>
-                        <p class="text-sm text-slate-600 leading-relaxed">Merci pour votre confiance. Un conseiller <strong>${s.brandName}</strong> vous contactera par téléphone pour confirmer la livraison vers <strong>${state.selectedCity}</strong>.</p>
+                        <p class="text-sm text-slate-600 leading-relaxed">Merci pour votre confiance. Un conseiller <strong>${escapeHtmlAttr(s.brandName)}</strong> vous contactera par téléphone pour confirmer la livraison vers <strong>${escapeHtmlAttr(state.selectedCity)}</strong>.</p>
                     </div>
                 `;
                 footer.innerHTML = `<button onclick="toggleCart(false)" class="w-full py-3.5 rounded-full bg-sage-700 text-white font-semibold text-sm hover:bg-sage-800 transition cursor-pointer">Retourner à la boutique</button>`;
@@ -3015,10 +3209,10 @@
                         <form onsubmit="submitOrder(event)" class="space-y-3.5">
                             <input type="text" required placeholder="Nom complet *" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm">
                             <input type="tel" required placeholder="Téléphone (Maroc) *" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm">
-                            <input type="text" required placeholder="Adresse de livraison (${state.selectedCity}) *" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm">
+                            <input type="text" required placeholder="Adresse de livraison (${escapeHtmlAttr(state.selectedCity)}) *" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm">
                             <div class="bg-sand-50 p-3.5 rounded-2xl text-xs space-y-1 border border-slate-100">
                                 <div class="flex justify-between"><span>Sous-total</span><span>${subtotal} DH</span></div>
-                                <div class="flex justify-between"><span>Livraison (${state.selectedCity})</span><span>${shippingCost === 0 ? 'Gratuit' : shippingCost + ' DH'}</span></div>
+                                <div class="flex justify-between"><span>Livraison (${escapeHtmlAttr(state.selectedCity)})</span><span>${shippingCost === 0 ? 'Gratuit' : shippingCost + ' DH'}</span></div>
                                 <div class="flex justify-between font-bold text-base text-sage-900 pt-1.5 border-t border-slate-200"><span>Total</span><span>${grandTotal} DH</span></div>
                             </div>
                             <button type="submit" class="w-full py-3.5 rounded-full bg-coral-500 hover:bg-coral-600 text-white font-bold text-sm shadow-md cursor-pointer">Valider ma commande (${grandTotal} DH)</button>
@@ -3033,8 +3227,8 @@
             body.innerHTML = state.cart.map(item => `
                 <div class="flex items-center justify-between gap-3 p-3 rounded-2xl border border-slate-100 bg-white">
                     <div>
-                        <p class="text-[11px] font-bold uppercase text-sage-600">${item.brand}</p>
-                        <h4 class="font-bold text-xs sm:text-sm text-slate-900 line-clamp-1">${item.name}</h4>
+                        <p class="text-[11px] font-bold uppercase text-sage-600">${escapeHtmlAttr(item.brand)}</p>
+                        <h4 class="font-bold text-xs sm:text-sm text-slate-900 line-clamp-1">${escapeHtmlAttr(item.name)}</h4>
                         <p class="font-display font-bold text-sm text-sage-900 mt-0.5">${item.price * item.qty} DH</p>
                     </div>
                     <div class="flex items-center gap-1.5 bg-sage-50 rounded-full p-1 border border-sage-100 shrink-0">
@@ -3048,7 +3242,7 @@
             const shippingCost = subtotal >= threshold ? 0 : baseShipping;
             footer.innerHTML = `
                 <div class="space-y-1.5 text-sm">
-                    <div class="flex justify-between text-slate-500 text-xs"><span>Livraison (${state.selectedCity})</span><span>${shippingCost === 0 ? '<strong class="text-sage-700">Offerte</strong>' : shippingCost + ' DH'}</span></div>
+                    <div class="flex justify-between text-slate-500 text-xs"><span>Livraison (${escapeHtmlAttr(state.selectedCity)})</span><span>${shippingCost === 0 ? '<strong class="text-sage-700">Offerte</strong>' : shippingCost + ' DH'}</span></div>
                     <div class="flex justify-between items-baseline"><span class="font-semibold text-slate-700">Total panier</span><span class="font-display text-2xl font-extrabold text-sage-900">${subtotal + shippingCost} DH</span></div>
                 </div>
                 <button onclick="state.checkoutStep='form'; renderCart();" class="w-full py-3.5 rounded-full bg-sage-700 hover:bg-sage-800 text-white font-semibold text-sm shadow-md cursor-pointer">Commander en 1 étape →</button>
@@ -3058,7 +3252,15 @@
 
         function submitOrder(e) {
             e.preventDefault();
+            // Décrémente automatiquement le stock réel des produits commandés
+            state.cart.forEach(cartItem => {
+                const prod = SITE_DATA.products.find(p => p.id === cartItem.id);
+                if (prod) {
+                    syncProductStockFields(prod, getProductStockQty(prod) - cartItem.qty);
+                }
+            });
             state.cart = [];
+            saveCmsToLocalPreview(true);
             updateCartBadge();
             updateDeliverySimulator(state.selectedCity);
             state.checkoutStep = 'success';
@@ -3299,7 +3501,7 @@
         }
 
         // =====================================================================
-        // MOTEUR MINI-CMS PARATEAMS STUDIO (ÉDITION COMPLÈTE + API GITHUB)
+        // MOTEUR MINI-CMS PARATEAMS STUDIO (STOCK INTELLIGENT + MULTI-IMPORT)
         // =====================================================================
         let isCmsAuthenticated = false;
         let cmsUndoStack = [];
@@ -3357,7 +3559,6 @@
             showToast("↪️ Action rétablie (Ctrl+Y)");
         }
 
-        // Raccourcis clavier globaux Ctrl+Z / Cmd+Z et Ctrl+Y / Cmd+Shift+Z dans le CMS
         document.addEventListener('keydown', function(e) {
             const overlay = document.getElementById('adminCmsOverlay');
             if (!isCmsAuthenticated || !overlay || overlay.classList.contains('hidden')) return;
@@ -3414,10 +3615,116 @@
             if (!silent) showToast("Modifications appliquées sur la boutique !");
         }
 
+        function setCmsStockFilterQuick(val) {
+            const sel = document.getElementById('cmsProdStockFilter');
+            if (sel) {
+                sel.value = val;
+                cmsProductsCurrentPage = 1;
+                renderCmsProductsList();
+            }
+        }
+
+        function updateCmsInventoryStats() {
+            const prods = SITE_DATA.products || [];
+            let inCount = 0, lowCount = 0, outCount = 0;
+            prods.forEach(p => {
+                const q = getProductStockQty(p);
+                if (q === 0) outCount++;
+                else if (q <= 3) lowCount++;
+                else inCount++;
+            });
+            const elTotal = document.getElementById('cmsStatTotalProd');
+            const elIn = document.getElementById('cmsStatInStock');
+            const elLow = document.getElementById('cmsStatLowStock');
+            const elOut = document.getElementById('cmsStatOutStock');
+            if (elTotal) elTotal.textContent = prods.length;
+            if (elIn) elIn.textContent = inCount;
+            if (elLow) elLow.textContent = lowCount;
+            if (elOut) elOut.textContent = outCount;
+        }
+
+        function adjustCmsProductStock(id, delta) {
+            const p = SITE_DATA.products.find(x => x.id === id);
+            if (!p) return;
+            pushCmsUndoSnapshot();
+            syncProductStockFields(p, getProductStockQty(p) + delta);
+            saveCmsToLocalPreview(true);
+        }
+
+        function setCmsProductStockDirect(id, rawVal) {
+            const p = SITE_DATA.products.find(x => x.id === id);
+            if (!p) return;
+            pushCmsUndoSnapshot();
+            syncProductStockFields(p, rawVal);
+            saveCmsToLocalPreview(true);
+            showToast(`Stock mis à jour : ${p.stockQty} unité(s)`);
+        }
+
+        function bulkSetSelectedStockQty() {
+            if (selectedCmsProductIds.size === 0) {
+                showToast("Sélectionnez d'abord au moins un produit.");
+                return;
+            }
+            const qty = Math.max(0, Math.floor(Number(document.getElementById('cmsBulkStockQtyInput')?.value) || 0));
+            pushCmsUndoSnapshot();
+            const count = selectedCmsProductIds.size;
+            SITE_DATA.products = SITE_DATA.products.map(p =>
+                selectedCmsProductIds.has(p.id) ? syncProductStockFields({ ...p }, qty) : p
+            );
+            selectedCmsProductIds.clear();
+            saveCmsToLocalPreview(true);
+            showToast(`📦 Stock fixé à ${qty} unité(s) pour ${count} produit(s) !`);
+        }
+
+        function recategorizeAllExistingProducts() {
+            if (!SITE_DATA.products || SITE_DATA.products.length === 0) return;
+            pushCmsUndoSnapshot();
+            let updatedCount = 0;
+            SITE_DATA.products = SITE_DATA.products.map(p => {
+                const detected = autoDetectProductRayon(p);
+                if (detected && detected !== p.category) updatedCount++;
+                return { ...p, category: detected };
+            });
+            saveCmsToLocalPreview(true);
+            showToast(`✨ ${SITE_DATA.products.length} produits analysés (${updatedCount} reclassés dans leur bon rayon) !`);
+        }
+
+        function bulkMoveSelectedCmsProducts() {
+            const targetRayon = document.getElementById('cmsBulkMoveRayonSelect')?.value;
+            if (!targetRayon) {
+                showToast("Choisissez d'abord un rayon de destination.");
+                return;
+            }
+            if (selectedCmsProductIds.size === 0) {
+                showToast("Sélectionnez au moins un produit.");
+                return;
+            }
+            pushCmsUndoSnapshot();
+            const count = selectedCmsProductIds.size;
+            SITE_DATA.products = SITE_DATA.products.map(p =>
+                selectedCmsProductIds.has(p.id) ? { ...p, category: targetRayon } : p
+            );
+            selectedCmsProductIds.clear();
+            saveCmsToLocalPreview(true);
+            showToast(`📂 ${count} produit(s) déplacé(s) vers "${targetRayon}"`);
+        }
+
         // --- CMS ONGLET 1 : PRODUITS ---
         function getFilteredCmsProducts() {
             const q = (document.getElementById('cmsProdSearch')?.value || '').trim().toLowerCase();
-            return SITE_DATA.products.filter(p => !q || p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
+            const rayonFilter = document.getElementById('cmsProdRayonFilter')?.value || 'all';
+            const stockFilter = document.getElementById('cmsProdStockFilter')?.value || 'all';
+
+            return SITE_DATA.products.filter(p => {
+                const qty = getProductStockQty(p);
+                const matchRayon = rayonFilter === 'all' || p.category === rayonFilter;
+                const matchQuery = !q || p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
+                let matchStock = true;
+                if (stockFilter === 'out') matchStock = qty === 0;
+                else if (stockFilter === 'low') matchStock = qty > 0 && qty <= 3;
+                else if (stockFilter === 'in') matchStock = qty >= 4;
+                return matchRayon && matchQuery && matchStock;
+            });
         }
 
         function updateCmsBulkSelectionUI() {
@@ -3467,6 +3774,7 @@
             const paginationEl = document.getElementById('cmsProductsPagination');
             const list = getFilteredCmsProducts();
             updateCmsBulkSelectionUI();
+            updateCmsInventoryStats();
 
             const totalPages = Math.max(1, Math.ceil(list.length / CMS_PRODUCTS_PER_PAGE));
             if (cmsProductsCurrentPage > totalPages) cmsProductsCurrentPage = totalPages;
@@ -3477,27 +3785,45 @@
 
             container.innerHTML = paginated.map(p => {
                 const isSelected = selectedCmsProductIds.has(p.id);
+                const qty = getProductStockQty(p);
+                const stockBadge = qty === 0
+                    ? `<span class="px-2 py-0.5 rounded-full bg-coral-50 text-coral-600 text-[10px] font-extrabold">Rupture (0)</span>`
+                    : (qty <= 3
+                        ? `<span class="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-extrabold">Stock faible (${qty})</span>`
+                        : `<span class="px-2 py-0.5 rounded-full bg-sage-50 text-sage-700 text-[10px] font-extrabold">En stock (${qty})</span>`);
+
                 return `
-                <div class="bg-white rounded-2xl border-2 ${isSelected ? 'border-sage-600 bg-sage-50/35 shadow-sm' : 'border-slate-200'} p-4 flex flex-col justify-between gap-3 transition">
+                <div class="bg-white rounded-2xl border-2 ${isSelected ? 'border-sage-600 bg-sage-50/35 shadow-sm' : (qty === 0 ? 'border-coral-200/80' : 'border-slate-200')} p-4 flex flex-col justify-between gap-3 transition">
                     <div class="flex items-start gap-3">
                         <label class="pt-0.5 cursor-pointer shrink-0 flex items-center" title="Sélectionner ce produit">
                             <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleCmsProductSelection(${p.id}, this.checked)" class="w-4 h-4 rounded accent-sage-700 cursor-pointer">
                         </label>
-                        <div class="w-16 h-16 rounded-xl bg-sage-50 border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden p-1">
-                            ${p.imageUrl ? `<img src="${p.imageUrl}" class="max-h-full max-w-full object-contain">` : `<span class="text-xs font-extrabold text-sage-700">${p.brand.slice(0, 4)}</span>`}
+                        <div class="w-14 h-14 rounded-xl bg-sage-50 border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden p-1">
+                            ${p.imageUrl ? `<img src="${escapeHtmlAttr(p.imageUrl)}" class="max-h-full max-w-full object-contain">` : `<span class="text-xs font-extrabold text-sage-700">${escapeHtmlAttr(p.brand.slice(0, 4))}</span>`}
                         </div>
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center justify-between gap-1">
-                                <span class="text-[10px] font-bold uppercase text-sage-600">${p.brand} • ${p.category}</span>
-                                ${p.badge ? `<span class="px-2 py-0.5 rounded-full bg-coral-50 text-coral-600 text-[10px] font-bold">${p.badge}</span>` : ''}
+                                <span class="text-[10px] font-bold uppercase text-sage-600 truncate">${escapeHtmlAttr(p.brand)} • ${escapeHtmlAttr(p.category)}</span>
+                                ${stockBadge}
                             </div>
-                            <h4 class="font-bold text-xs sm:text-sm text-slate-900 line-clamp-2 mt-0.5">${p.name}</h4>
+                            <h4 class="font-bold text-xs sm:text-sm text-slate-900 line-clamp-2 mt-0.5">${escapeHtmlAttr(p.name)}</h4>
                             <p class="font-display font-extrabold text-sm text-sage-900 mt-1">
                                 ${p.price} DH ${p.oldPrice ? `<span class="text-xs font-normal text-slate-400 line-through">${p.oldPrice} DH</span>` : ''}
                             </p>
                         </div>
                     </div>
-                    <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+
+                    <!-- Contrôleur intelligent de quantité en stock -->
+                    <div class="flex items-center justify-between gap-2 bg-sand-50 px-3 py-2 rounded-xl border border-slate-200/80">
+                        <span class="text-[11px] font-bold text-slate-700">Quantité en stock :</span>
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" onclick="adjustCmsProductStock(${p.id}, -1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-coral-50 hover:text-coral-600 font-extrabold text-sm flex items-center justify-center cursor-pointer">-</button>
+                            <input type="number" min="0" value="${qty}" onchange="setCmsProductStockDirect(${p.id}, this.value)" class="w-16 py-1 rounded-lg border border-sage-300 bg-white text-center font-display font-extrabold text-xs text-sage-900">
+                            <button type="button" onclick="adjustCmsProductStock(${p.id}, 1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-sage-100 hover:text-sage-800 font-extrabold text-sm flex items-center justify-center cursor-pointer">+</button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
                         <button onclick="openCmsProductEditor(${p.id})" class="px-3 py-1.5 rounded-lg bg-sage-50 hover:bg-sage-100 text-sage-800 text-xs font-bold cursor-pointer">✏️ Modifier</button>
                         <button onclick="duplicateCmsProduct(${p.id})" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer" title="Dupliquer">📋</button>
                         <button onclick="deleteCmsProduct(${p.id})" class="px-3 py-1.5 rounded-lg bg-coral-50 hover:bg-coral-100 text-coral-600 text-xs font-bold cursor-pointer">🗑️</button>
@@ -3545,9 +3871,29 @@
             document.getElementById('cmsTabSlideCount').textContent = SITE_DATA.slides.length;
             document.getElementById('cmsTabRayonCount').textContent = SITE_DATA.rayons.length;
 
+            const activeRayons = SITE_DATA.rayons.filter(r => !r.isBudget);
+
             const bulkRayonSel = document.getElementById('bulkDefaultRayonSelect');
             if (bulkRayonSel) {
-                bulkRayonSel.innerHTML = SITE_DATA.rayons.filter(r => !r.isBudget).map(r => `<option value="${r.name}">Rayon par défaut : ${r.name}</option>`).join('');
+                bulkRayonSel.innerHTML = `<option value="auto">✨ Détection automatique du rayon (Recommandé)</option>` +
+                    activeRayons.map(r => `<option value="${escapeHtmlAttr(r.name)}">Forcer le rayon : ${escapeHtmlAttr(r.name)}</option>`).join('');
+            }
+
+            const cmsFilterSel = document.getElementById('cmsProdRayonFilter');
+            if (cmsFilterSel) {
+                const prev = cmsFilterSel.value || 'all';
+                cmsFilterSel.innerHTML = `<option value="all">Tous les rayons (${SITE_DATA.products.length})</option>` +
+                    activeRayons.map(r => {
+                        const cnt = SITE_DATA.products.filter(p => p.category === r.name).length;
+                        return `<option value="${escapeHtmlAttr(r.name)}">${escapeHtmlAttr(r.icon)} ${escapeHtmlAttr(r.name)} (${cnt})</option>`;
+                    }).join('');
+                cmsFilterSel.value = prev;
+            }
+
+            const cmsBulkMoveSel = document.getElementById('cmsBulkMoveRayonSelect');
+            if (cmsBulkMoveSel) {
+                cmsBulkMoveSel.innerHTML = `<option value="">Déplacer vers rayon...</option>` +
+                    activeRayons.map(r => `<option value="${escapeHtmlAttr(r.name)}">${escapeHtmlAttr(r.icon)} ${escapeHtmlAttr(r.name)}</option>`).join('');
             }
 
             renderCmsProductsList();
@@ -3557,22 +3903,10 @@
             loadSavedGitHubConfig();
         }
 
-        function saveCmsToLocalPreview() {
-            localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(SITE_DATA));
-            document.getElementById('cmsPreviewBanner').classList.remove('hidden');
-            applyStoreSettingsToUI();
-            renderHeroSlides();
-            renderProducts();
-            updateDeliverySimulator(state.selectedCity);
-            refreshAllCmsPanels();
-            updateCmsHistoryButtons();
-            if (!silent) showToast("Modifications appliquées sur la boutique !");
-        }
-
         function openCmsProductEditor(productId) {
             const box = document.getElementById('cmsProductFormBox');
             const catSelect = document.getElementById('editProdCategory');
-            catSelect.innerHTML = SITE_DATA.rayons.filter(r => !r.isBudget).map(r => `<option value="${r.name}">${r.name}</option>`).join('');
+            catSelect.innerHTML = SITE_DATA.rayons.filter(r => !r.isBudget).map(r => `<option value="${escapeHtmlAttr(r.name)}">${escapeHtmlAttr(r.name)}</option>`).join('');
 
             if (productId) {
                 const p = SITE_DATA.products.find(x => x.id === productId);
@@ -3584,10 +3918,10 @@
                 document.getElementById('editProdName').value = p.name;
                 document.getElementById('editProdPrice').value = p.price;
                 document.getElementById('editProdOldPrice').value = p.oldPrice || '';
+                document.getElementById('editProdStockQty').value = getProductStockQty(p);
                 document.getElementById('editProdBadge').value = p.badge || '';
                 document.getElementById('editProdVolume').value = p.volume || '';
                 document.getElementById('editProdBenefit').value = p.benefit || '';
-                document.getElementById('editProdStock').value = p.stockStatus || 'good';
                 document.getElementById('editProdIsNew').checked = !!p.isNew;
                 document.getElementById('editProdDesc').value = p.description || '';
                 document.getElementById('editProdImageUrl').value = p.imageUrl || '';
@@ -3599,10 +3933,10 @@
                 document.getElementById('editProdName').value = '';
                 document.getElementById('editProdPrice').value = '';
                 document.getElementById('editProdOldPrice').value = '';
+                document.getElementById('editProdStockQty').value = 10;
                 document.getElementById('editProdBadge').value = '';
                 document.getElementById('editProdVolume').value = '50 ml';
                 document.getElementById('editProdBenefit').value = '';
-                document.getElementById('editProdStock').value = 'good';
                 document.getElementById('editProdIsNew').checked = true;
                 document.getElementById('editProdDesc').value = '';
                 document.getElementById('editProdImageUrl').value = '';
@@ -3635,7 +3969,6 @@
             updateEditProdImgPreview('');
         }
 
-        // Compression automatique intelligente des photos importées depuis téléphone/PC
         function compressImageToDataURL(file, maxDim, callback) {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -3676,8 +4009,9 @@
             const oldPriceVal = document.getElementById('editProdOldPrice').value;
             const badgeVal = document.getElementById('editProdBadge').value.trim();
             const isNewVal = document.getElementById('editProdIsNew').checked;
+            const stockQtyVal = Math.max(0, Math.floor(Number(document.getElementById('editProdStockQty').value) || 0));
 
-            const prodObj = {
+            const prodObj = syncProductStockFields({
                 id: idVal ? Number(idVal) : (Math.max(0, ...SITE_DATA.products.map(p => p.id)) + 1),
                 brand: document.getElementById('editProdBrand').value.trim(),
                 category: document.getElementById('editProdCategory').value,
@@ -3687,7 +4021,6 @@
                 badge: badgeVal || null,
                 badgeType: oldPriceVal ? 'promo' : (isNewVal ? 'new' : 'best'),
                 isNew: isNewVal,
-                stockStatus: document.getElementById('editProdStock').value,
                 volume: document.getElementById('editProdVolume').value.trim(),
                 benefit: document.getElementById('editProdBenefit').value.trim(),
                 description: document.getElementById('editProdDesc').value.trim(),
@@ -3698,7 +4031,7 @@
                 reviewsCount: 15,
                 color: "#5D9C2A",
                 shape: "bottle"
-            };
+            }, stockQtyVal);
 
             if (idVal) {
                 const idx = SITE_DATA.products.findIndex(p => p.id === Number(idVal));
@@ -3751,11 +4084,11 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         <div>
                             <label class="block text-[11px] font-bold text-slate-600 mb-1">Badge étiquette</label>
-                            <input type="text" value="${s.badge}" onchange="updateCmsSlideField(${idx}, 'badge', this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                            <input type="text" value="${escapeHtmlAttr(s.badge)}" onchange="updateCmsSlideField(${idx}, 'badge', this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
                         </div>
                         <div>
                             <label class="block text-[11px] font-bold text-slate-600 mb-1">Texte du bouton</label>
-                            <input type="text" value="${s.buttonText}" onchange="updateCmsSlideField(${idx}, 'buttonText', this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                            <input type="text" value="${escapeHtmlAttr(s.buttonText)}" onchange="updateCmsSlideField(${idx}, 'buttonText', this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
                         </div>
                         <div>
                             <label class="block text-[11px] font-bold text-slate-600 mb-1">Action au clic</label>
@@ -3769,15 +4102,15 @@
                         </div>
                         <div>
                             <label class="block text-[11px] font-bold text-slate-600 mb-1">Lien image (ou importée)</label>
-                            <input type="text" value="${s.imageUrl || ''}" placeholder="URL image..." onchange="updateCmsSlideField(${idx}, 'imageUrl', this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                            <input type="text" value="${escapeHtmlAttr(s.imageUrl || '')}" placeholder="URL image..." onchange="updateCmsSlideField(${idx}, 'imageUrl', this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
                         </div>
                         <div class="sm:col-span-2">
                             <label class="block text-[11px] font-bold text-slate-600 mb-1">Titre principal</label>
-                            <input type="text" value="${s.title}" onchange="updateCmsSlideField(${idx}, 'title', this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold">
+                            <input type="text" value="${escapeHtmlAttr(s.title)}" onchange="updateCmsSlideField(${idx}, 'title', this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold">
                         </div>
                         <div class="sm:col-span-2">
                             <label class="block text-[11px] font-bold text-slate-600 mb-1">Description courte</label>
-                            <input type="text" value="${s.subtitle}" onchange="updateCmsSlideField(${idx}, 'subtitle', this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                            <input type="text" value="${escapeHtmlAttr(s.subtitle)}" onchange="updateCmsSlideField(${idx}, 'subtitle', this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
                         </div>
                     </div>
                 </div>
@@ -3836,8 +4169,8 @@
             container.innerHTML = SITE_DATA.rayons.map((r, idx) => `
                 <div class="bg-white rounded-2xl border border-slate-200 p-3.5 flex items-center justify-between gap-2">
                     <div class="flex items-center gap-2 min-w-0">
-                        <input type="text" value="${r.icon}" maxlength="4" onchange="updateCmsRayon(${idx}, 'icon', this.value)" class="w-10 text-center bg-sage-50 rounded-lg py-1 text-sm">
-                        <input type="text" value="${r.name}" ${r.isBudget ? 'disabled' : ''} onchange="updateCmsRayon(${idx}, 'name', this.value)" class="font-bold text-xs text-slate-900 bg-transparent border-b border-transparent focus:border-sage-500 focus:outline-none truncate">
+                        <input type="text" value="${escapeHtmlAttr(r.icon)}" maxlength="4" onchange="updateCmsRayon(${idx}, 'icon', this.value)" class="w-10 text-center bg-sage-50 rounded-lg py-1 text-sm">
+                        <input type="text" value="${escapeHtmlAttr(r.name)}" ${r.isBudget ? 'disabled' : ''} onchange="updateCmsRayon(${idx}, 'name', this.value)" class="font-bold text-xs text-slate-900 bg-transparent border-b border-transparent focus:border-sage-500 focus:outline-none truncate">
                     </div>
                     ${!r.isBudget ? `<button onclick="deleteCmsRayon(${idx})" class="text-coral-600 hover:bg-coral-50 px-2 py-1 rounded-lg text-xs font-bold cursor-pointer">✕</button>` : '<span class="text-[10px] text-slate-400">Auto</span>'}
                 </div>
@@ -3932,7 +4265,6 @@
         }
 
         function buildUpdatedFullHtmlDocument() {
-            // Met à jour la balise script#parateams-site-data dans une copie propre du DOM
             const docClone = document.documentElement.cloneNode(true);
             const adminOverlay = docClone.querySelector('#adminCmsOverlay');
             if (adminOverlay) adminOverlay.classList.add('hidden');
@@ -3984,7 +4316,6 @@
                 const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
                 let currentSha = null;
 
-                // 1. Récupérer le SHA actuel du fichier s'il existe
                 const getRes = await fetch(apiUrl, {
                     headers: {
                         "Authorization": `Bearer ${token}`,
@@ -4000,12 +4331,11 @@
                     throw new Error(errData.message || `Erreur GitHub (${getRes.status})`);
                 }
 
-                // 2. Générer le fichier HTML complet avec les nouvelles données CMS
                 const updatedHtml = buildUpdatedFullHtmlDocument();
                 const base64Content = utf8ToBase64(updatedHtml);
 
                 const putBody = {
-                    message: "Mise à jour boutique via Parateams Studio CMS",
+                    message: "Mise à jour catalogue & stock via Parateams Studio CMS",
                     content: base64Content
                 };
                 if (currentSha) putBody.sha = currentSha;
@@ -4049,7 +4379,7 @@
             a.download = "index.html";
             a.click();
             URL.revokeObjectURL(url);
-            showToast("Fichier index.html prêt à être uploadé téléchargé !");
+            showToast("Fichier index.html complet téléchargé !");
         }
 
         function exportCmsJsonBackup() {
@@ -4097,17 +4427,31 @@
         }
 
         // =====================================================================
-        // MOTEUR D'IMPORTATION EN MASSE & EXTRACTION WEB (CSV / EXCEL / URL)
+        // MOTEUR D'IMPORTATION EN MASSE & EXTRACTION WEB MULTI-FICHIERS
         // =====================================================================
         let bulkStagedProducts = [];
 
-        function getValidRayonName(rawCat) {
+        function getDefaultBulkStockQty() {
+            const el = document.getElementById('bulkDefaultStockInput');
+            return el ? Math.max(0, Math.floor(Number(el.value) || 0)) : 10;
+        }
+
+        function getValidRayonName(rawCat, productHintObj = null) {
             const validRayons = SITE_DATA.rayons.filter(r => !r.isBudget).map(r => r.name);
-            const fallback = document.getElementById('bulkDefaultRayonSelect')?.value || validRayons[0] || "Visage";
-            if (!rawCat) return fallback;
-            const clean = rawCat.trim().toLowerCase();
-            const found = validRayons.find(r => r.toLowerCase() === clean || r.toLowerCase().includes(clean) || clean.includes(r.toLowerCase()));
-            return found || fallback;
+            const forcedOrAuto = document.getElementById('bulkDefaultRayonSelect')?.value || 'auto';
+
+            if (forcedOrAuto && forcedOrAuto !== 'auto') {
+                return forcedOrAuto;
+            }
+            if (rawCat && String(rawCat).trim() !== '') {
+                const clean = String(rawCat).trim().toLowerCase();
+                const directMatch = validRayons.find(r => r.toLowerCase() === clean);
+                if (directMatch) return directMatch;
+            }
+            if (productHintObj) {
+                return autoDetectProductRayon({ ...productHintObj, category: rawCat || '' });
+            }
+            return autoDetectProductRayon(rawCat || 'Visage');
         }
 
         function parsePriceNumber(val) {
@@ -4119,11 +4463,11 @@
         }
 
         function downloadCsvTemplate() {
-            const headers = "brand;name;price;oldPrice;category;image;badge;description";
+            const headers = "brand;name;price;oldPrice;category;image;stockQty;badge;description";
             const sampleRows = [
-                "La Roche-Posay;Cicaplast Baume B5+ Réparateur 100ml;179;215;Corps;;-17%;Baume ultra-réparateur apaisant pour peaux fragilisées.",
-                "CeraVe;Gel Moussant Nettoyant 473ml;165;;Visage;;Best-seller;Nettoie et purifie sans altérer la barrière cutanée.",
-                "ISDIN;FotoUltra 100 Spot Prevent Fusion Fluid SPF50+;245;290;Solaires;;Promo;Très haute protection solaire prévenant les taches pigmentaires."
+                "La Roche-Posay;Cicaplast Baume B5+ Réparateur 100ml;179;215;Corps & Hygiène;;15;-17%;Baume ultra-réparateur apaisant pour peaux fragilisées.",
+                "CeraVe;Gel Moussant Nettoyant 473ml;165;;Visage;;20;Best-seller;Nettoie et purifie sans altérer la barrière cutanée.",
+                "ISDIN;FotoUltra 100 Spot Prevent Fusion Fluid SPF50+;245;290;Solaires;;8;Promo;Très haute protection solaire prévenant les taches pigmentaires."
             ];
             const csvContent = "\uFEFF" + [headers, ...sampleRows].join("\n");
             const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -4155,47 +4499,61 @@
             return result;
         }
 
-        function handleBulkCsvUpload(event) {
-            const file = event.target.files && event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result || '';
-                const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-                if (lines.length === 0) {
-                    showToast("Fichier CSV vide.");
-                    return;
-                }
-                const delimiter = (lines[0].match(/;/g) || []).length >= (lines[0].match(/,/g) || []).length ? ';' : ',';
-                const firstCols = parseDelimitedLine(lines[0], delimiter).map(c => c.toLowerCase());
-                const hasHeader = firstCols.includes('name') || firstCols.includes('nom') || firstCols.includes('price') || firstCols.includes('prix');
-                const startIdx = hasHeader ? 1 : 0;
+        // Supporte la sélection de 1 ou plusieurs fichiers .CSV / .JSON en même temps
+        async function handleBulkCsvUpload(event) {
+            const files = Array.from(event.target.files || []);
+            if (files.length === 0) return;
 
-                const parsed = [];
-                for (let i = startIdx; i < lines.length; i++) {
-                    const cols = parseDelimitedLine(lines[i], delimiter);
-                    if (cols.length < 2) continue;
-                    const brand = cols[0] || "Parateams";
-                    const name = cols[1] || "";
-                    const price = parsePriceNumber(cols[2]) || 120;
-                    const oldPrice = parsePriceNumber(cols[3]) || null;
-                    const category = getValidRayonName(cols[4]);
-                    const imageUrl = cols[5] || "";
-                    const badge = cols[6] || (oldPrice && oldPrice > price ? `-${Math.round((1 - price / oldPrice) * 100)}%` : "");
-                    const description = cols[7] || `${brand} — ${name}`;
-                    if (name) {
-                        parsed.push({ selected: true, brand, name, price, oldPrice, category, imageUrl, badge, description });
+            const defaultStock = getDefaultBulkStockQty();
+            const combined = [];
+
+            for (const file of files) {
+                const text = await file.text();
+                const trimmed = (text || '').trim();
+                if (!trimmed) continue;
+
+                if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+                    const fromJson = parseProductsFromHtmlOrJson(trimmed);
+                    combined.push(...fromJson);
+                } else {
+                    const lines = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+                    if (lines.length === 0) continue;
+                    const delimiter = (lines[0].match(/;/g) || []).length >= (lines[0].match(/,/g) || []).length ? ';' : ',';
+                    const firstCols = parseDelimitedLine(lines[0], delimiter).map(c => c.toLowerCase());
+                    const hasHeader = firstCols.includes('name') || firstCols.includes('nom') || firstCols.includes('price') || firstCols.includes('prix');
+                    const startIdx = hasHeader ? 1 : 0;
+
+                    for (let i = startIdx; i < lines.length; i++) {
+                        const cols = parseDelimitedLine(lines[i], delimiter);
+                        if (cols.length < 2) continue;
+                        const brand = cols[0] || "Parateams";
+                        const name = cols[1] || "";
+                        const price = parsePriceNumber(cols[2]) || 120;
+                        const oldPrice = parsePriceNumber(cols[3]) || null;
+                        const imageUrl = cols[5] || "";
+                        const stockQty = cols[6] !== undefined && cols[6] !== '' ? parsePriceNumber(cols[6]) : defaultStock;
+                        const badge = cols[7] || (oldPrice && oldPrice > price ? `-${Math.round((1 - price / oldPrice) * 100)}%` : "");
+                        const description = cols[8] || `${brand} — ${name}`;
+                        const category = getValidRayonName(cols[4], { name, brand, description });
+                        if (name) {
+                            combined.push({ selected: true, brand, name, price, oldPrice, category, imageUrl, stockQty, badge, description });
+                        }
                     }
                 }
-                setBulkStagedProducts(parsed);
-                event.target.value = '';
-            };
-            reader.readAsText(file, 'UTF-8');
+            }
+
+            event.target.value = '';
+            if (combined.length > 0) {
+                setBulkStagedProducts(combined, true);
+            } else {
+                showToast("Aucun produit valide trouvé dans les fichiers.");
+            }
         }
 
         function parseRawLinesToProducts(rawText) {
             const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
             const items = [];
+            const defaultStock = getDefaultBulkStockQty();
             lines.forEach(line => {
                 let sep = '|';
                 if (line.includes('\t')) sep = '\t';
@@ -4206,8 +4564,9 @@
                     const name = parts[1];
                     const price = parsePriceNumber(parts[2]) || 120;
                     const oldPrice = parsePriceNumber(parts[3]) || null;
-                    const category = getValidRayonName(parts[4]);
                     const imageUrl = parts[5] || "";
+                    const stockQty = parts[6] !== undefined && parts[6] !== '' ? parsePriceNumber(parts[6]) : defaultStock;
+                    const category = getValidRayonName(parts[4], { name, brand });
                     if (name) {
                         items.push({
                             selected: true,
@@ -4217,6 +4576,7 @@
                             oldPrice,
                             category,
                             imageUrl,
+                            stockQty,
                             badge: oldPrice && oldPrice > price ? `-${Math.round((1 - price / oldPrice) * 100)}%` : "",
                             description: `${brand} — ${name}`
                         });
@@ -4239,40 +4599,47 @@
                 showToast("Aucune ligne valide détectée. Format : Marque | Nom | Prix");
                 return;
             }
-            setBulkStagedProducts(items);
+            setBulkStagedProducts(items, true);
         }
 
-        // EXTRACTION DEPUIS UN AUTRE SITE WEB (JSON-LD, SHOPIFY, OPENGRAPH, CARTES HTML)
+        // EXTRACTION DEPUIS UN AUTRE SITE WEB (JSON SHOPIFY, JSON-LD, CARTES HTML)
         function parseProductsFromHtmlOrJson(rawContent, sourceUrl = '') {
             const trimmed = rawContent.trim();
             const extracted = [];
             const seenNames = new Set();
+            const defaultStock = getDefaultBulkStockQty();
 
             const pushUnique = (item) => {
                 if (!item || !item.name) return;
-                const cleanName = item.name.replace(/\s+/g, ' ').trim();
+                const cleanName = String(item.name).replace(/\s+/g, ' ').trim();
                 if (cleanName.length < 3 || seenNames.has(cleanName.toLowerCase())) return;
+                const price = parsePriceNumber(item.price);
+                if (price <= 0) return;
                 seenNames.add(cleanName.toLowerCase());
-                let img = (item.imageUrl || '').trim();
+
+                let img = String(item.imageUrl || '').trim();
                 if (img && sourceUrl && img.startsWith('/')) {
                     try { img = new URL(img, sourceUrl).href; } catch (e) {}
                 }
-                const price = parsePriceNumber(item.price) || 150;
                 const oldPrice = parsePriceNumber(item.oldPrice) || null;
+                const brand = String(item.brand || cleanName.split(' ')[0] || 'Parateams').trim();
+                const description = String(item.description || cleanName).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 260);
+                const category = getValidRayonName(item.category, { name: cleanName, brand, description });
+
                 extracted.push({
                     selected: true,
-                    brand: (item.brand || 'Parateams').trim(),
+                    brand,
                     name: cleanName,
                     price,
                     oldPrice: oldPrice && oldPrice > price ? oldPrice : null,
-                    category: getValidRayonName(item.category),
+                    category,
                     imageUrl: img,
+                    stockQty: typeof item.stockQty === 'number' ? item.stockQty : defaultStock,
                     badge: oldPrice && oldPrice > price ? `-${Math.round((1 - price / oldPrice) * 100)}%` : 'Nouveau',
-                    description: (item.description || cleanName).replace(/\s+/g, ' ').trim().slice(0, 260)
+                    description
                 });
             };
 
-            // 1. Cas JSON brut (ex: Shopify /products.json ou tableau JSON)
             if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
                 try {
                     const data = JSON.parse(trimmed);
@@ -4287,95 +4654,20 @@
                             oldPrice: variant.compare_at_price || p.oldPrice,
                             category: p.product_type || p.category,
                             imageUrl: img,
-                            description: p.body_html ? p.body_html.replace(/<[^>]+>/g, ' ') : (p.description || '')
+                            stockQty: typeof p.stockQty === 'number' ? p.stockQty : defaultStock,
+                            description: p.body_html || p.description || ''
                         });
                     });
                     if (extracted.length > 0) return extracted;
                 } catch (e) {}
             }
 
-            // 2. Analyse DOM HTML (Next.js __NEXT_DATA__, JSON-LD Schema.org, Meta OpenGraph & Cartes Produits)
             const parser = new DOMParser();
             const doc = parser.parseFromString(trimmed, 'text/html');
 
-            // 2.0 Recherche récursive dans les scripts JSON internes (Next.js / React / Nuxt)
-            const walkJsonForProducts = (obj, depth = 0) => {
-                if (!obj || typeof obj !== 'object' || depth > 9) return;
-                if (Array.isArray(obj)) {
-                    obj.forEach(el => walkJsonForProducts(el, depth + 1));
-                    return;
-                }
-                const titleCand = obj.name || obj.title || obj.product_name;
-                const priceCand = obj.price || obj.sale_price || obj.regular_price || obj.min_price || obj.price_ttc;
-                if (typeof titleCand === 'string' && titleCand.length > 3 && priceCand !== undefined && priceCand !== null) {
-                    const imgCand = typeof obj.image === 'string' ? obj.image
-                        : (obj.image?.url || obj.image?.src || obj.thumbnail || obj.cover || (Array.isArray(obj.images) ? (obj.images[0]?.url || obj.images[0]?.src || obj.images[0]) : ''));
-                    const brandCand = typeof obj.brand === 'string' ? obj.brand : (obj.brand?.name || obj.vendor || obj.manufacturer || '');
-                    if (parsePriceNumber(priceCand) > 0) {
-                        pushUnique({
-                            brand: brandCand || titleCand.split(' ')[0] || 'Parateams',
-                            name: titleCand,
-                            price: priceCand,
-                            oldPrice: obj.oldPrice || obj.compare_at_price || obj.regular_price || null,
-                            category: obj.category?.name || obj.category || obj.product_type,
-                            imageUrl: imgCand,
-                            description: obj.description || obj.short_description || ''
-                        });
-                    }
-                }
-                Object.values(obj).forEach(val => {
-                    if (val && typeof val === 'object') walkJsonForProducts(val, depth + 1);
-                });
-            };
-
-            doc.querySelectorAll('script#__NEXT_DATA__, script[type="application/json"]').forEach(sc => {
-                try {
-                    walkJsonForProducts(JSON.parse(sc.textContent));
-                } catch (e) {}
-            });
-
-            // 2a. Scripts JSON-LD Schema.org/Product
-            doc.querySelectorAll('script[type="application/ld+json"]').forEach(sc => {
-                try {
-                    const json = JSON.parse(sc.textContent);
-                    const nodes = Array.isArray(json) ? json : (json['@graph'] ? json['@graph'] : [json]);
-                    nodes.forEach(node => {
-                        if (node['@type'] === 'Product') {
-                            const offer = Array.isArray(node.offers) ? node.offers[0] : (node.offers || {});
-                            const img = Array.isArray(node.image) ? node.image[0] : (node.image?.url || node.image || '');
-                            const brandName = typeof node.brand === 'object' ? node.brand?.name : node.brand;
-                            pushUnique({
-                                brand: brandName || 'Parateams',
-                                name: node.name,
-                                price: offer.price || offer.lowPrice,
-                                oldPrice: offer.highPrice,
-                                category: node.category,
-                                imageUrl: img,
-                                description: node.description
-                            });
-                        } else if (node['@type'] === 'ItemList' && Array.isArray(node.itemListElement)) {
-                            node.itemListElement.forEach(el => {
-                                const prod = el.item || el;
-                                if (prod && prod.name) {
-                                    const offer = Array.isArray(prod.offers) ? prod.offers[0] : (prod.offers || {});
-                                    pushUnique({
-                                        brand: typeof prod.brand === 'object' ? prod.brand?.name : (prod.brand || 'Parateams'),
-                                        name: prod.name,
-                                        price: offer.price,
-                                        imageUrl: Array.isArray(prod.image) ? prod.image[0] : prod.image,
-                                        description: prod.description
-                                    });
-                                }
-                            });
-                        }
-                    });
-                } catch (e) {}
-            });
-
-            // 2b. Cartes produits e-commerce (WooCommerce, Shopify, PrestaShop)
-            const cardSelectors = '.product, .product-card, .product-item, .grid-product, .product-miniature, li.product, [data-product-id]';
+            const cardSelectors = '.product, .product-card, .product-item, .grid-product, .product-miniature, li.product, [data-product-id], article';
             doc.querySelectorAll(cardSelectors).forEach(card => {
-                const titleEl = card.querySelector('h2, h3, h4, .product-title, .woocommerce-loop-product__title, .card__heading, .product-card__title, a[title]');
+                const titleEl = card.querySelector('h2, h3, h4, .product-title, .card__heading, .product-card__title, a[title]');
                 const priceEl = card.querySelector('.price ins .amount, .price .amount, .price, .product-price, .money, [data-price]');
                 const oldPriceEl = card.querySelector('.price del .amount, .regular-price, .compare-at-price, del');
                 const imgEl = card.querySelector('img');
@@ -4391,23 +4683,6 @@
                     pushUnique({ brand, name, price, oldPrice, imageUrl: img });
                 }
             });
-
-            // 2c. Secours fiche produit unique via balises OpenGraph (og:title, og:image)
-            if (extracted.length === 0) {
-                const ogTitle = doc.querySelector('meta[property="og:title"]')?.getAttribute('content') || doc.querySelector('h1')?.textContent || '';
-                const ogImg = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || '';
-                const ogDesc = doc.querySelector('meta[property="og:description"]')?.getAttribute('content') || '';
-                const ogPrice = doc.querySelector('meta[property="product:price:amount"], meta[property="og:price:amount"]')?.getAttribute('content') || '';
-                if (ogTitle.trim()) {
-                    pushUnique({
-                        brand: ogTitle.split('-')[0]?.trim() || 'Parateams',
-                        name: ogTitle,
-                        price: ogPrice || 150,
-                        imageUrl: ogImg,
-                        description: ogDesc
-                    });
-                }
-            }
 
             return extracted;
         }
@@ -4427,10 +4702,16 @@
             btn.disabled = true;
             btn.classList.add('opacity-60');
             statusEl.className = "text-[11px] font-semibold text-sage-800";
-            statusEl.textContent = "⏳ Récupération et analyse de la page en cours...";
+            statusEl.textContent = "⏳ Récupération et analyse de la collection en cours...";
 
             try {
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+                // Essai 1 : Endpoint JSON Shopify direct via proxy
+                const cleanUrl = targetUrl.split('?')[0].replace(/\/$/, '');
+                const shopifyJsonUrl = cleanUrl.includes('/collections/') && !cleanUrl.endsWith('.json')
+                    ? `${cleanUrl}/products.json?limit=250`
+                    : targetUrl;
+
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(shopifyJsonUrl)}`;
                 const res = await fetch(proxyUrl);
                 if (!res.ok) throw new Error("Accès bloqué par le site distant");
                 const data = await res.json();
@@ -4441,56 +4722,72 @@
                     throw new Error("Aucun produit détecté automatiquement sur ce lien");
                 }
 
-                setBulkStagedProducts(found);
+                setBulkStagedProducts(found, true);
                 statusEl.className = "text-[11px] font-bold text-[#166534]";
-                statusEl.textContent = `✅ ${found.length} produit(s) extrait(s) ! Vérifiez le tableau ci-dessous.`;
+                statusEl.textContent = `✅ ${found.length} produit(s) ajoutés au tableau de prévisualisation !`;
             } catch (err) {
                 statusEl.className = "text-[11px] font-semibold text-coral-600 leading-relaxed";
-                statusEl.innerHTML = `⚠️ Ce site protège son accès direct (${err.message}). <strong>Solution rapide :</strong> ouvrez la page dans votre navigateur, faites <strong>Ctrl+U</strong> → <strong>Ctrl+A</strong> → <strong>Ctrl+C</strong> et collez dans le <strong>Mode B</strong> à droite.`;
+                statusEl.innerHTML = `⚠️ Ce site protège son accès direct. Utilisez le bouton <strong>« 📋 Copier le script Console »</strong> dans le <strong>Mode B</strong> à droite pour tout aspirer en 1 clic.`;
             } finally {
                 btn.disabled = false;
                 btn.classList.remove('opacity-60');
             }
         }
 
-        function extractProductsFromPastedSource() {
+        function extractProductsFromPastedSource(appendToStaging = false) {
             const raw = document.getElementById('scrapeHtmlSourceInput').value;
             if (!raw || raw.trim().length < 10) {
-                showToast("Collez d'abord le code source HTML ou JSON de la page.");
+                showToast("Collez d'abord le JSON ou HTML copié depuis la Console.");
                 return;
             }
             const found = parseProductsFromHtmlOrJson(raw);
             if (found.length === 0) {
-                showToast("Aucun produit détecté dans ce code brut. Utilisez le bouton « Copier le script Console » sur la page ouverte !");
+                showToast("Aucun produit détecté. Utilisez le bouton « Copier le script Console ».");
                 return;
             }
-            setBulkStagedProducts(found);
+            setBulkStagedProducts(found, appendToStaging);
+            document.getElementById('scrapeHtmlSourceInput').value = '';
         }
 
         function copyUniversalConsoleExtractor() {
-            const snippet = `(() => {
-  const items = [];
-  const seen = new Set();
-  document.querySelectorAll('article, [class*="product"], [class*="card"], li').forEach(card => {
-    const img = card.querySelector('img');
-    const titleEl = card.querySelector('h2, h3, h4, a[title], [class*="title"], [class*="name"]');
-    if (!img || !titleEl) return;
-    const name = (titleEl.innerText || titleEl.getAttribute('title') || '').trim().replace(/\\s+/g, ' ');
-    const text = card.innerText || '';
-    const prices = [...text.matchAll(/(\\d+(?:[.,]\\d+)?)\\s*(?:DH|MAD|Dhs)/gi)].map(m => parseFloat(m[1].replace(',', '.')));
-    if (name.length < 4 || prices.length === 0 || seen.has(name.toLowerCase())) return;
-    seen.add(name.toLowerCase());
-    const price = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
-    const brandEl = card.querySelector('[class*="brand"], [class*="vendor"], [class*="marque"]');
-    const brand = brandEl ? brandEl.innerText.trim() : name.split(' ')[0];
-    const image = img.getAttribute('data-src') || img.currentSrc || img.src || '';
-    items.push({ brand, name, price, oldPrice: maxPrice > price ? maxPrice : null, category: 'Visage', image, description: name });
-  });
-  const out = JSON.stringify(items, null, 2);
-  if (typeof copy === 'function') copy(out);
-  else navigator.clipboard?.writeText(out);
-  console.log('✅ ' + items.length + ' produits copiés ! Retournez dans le CMS et faites Ctrl+V.');
+            const snippet = `(async () => {
+  const baseUrl = window.location.origin + window.location.pathname.replace(/\\/$/, '') + '/products.json';
+  let all = [];
+  try {
+    for (let p = 1; p <= 10; p++) {
+      const res = await fetch(baseUrl + '?limit=250&page=' + p);
+      if (!res.ok) break;
+      const data = await res.json();
+      if (!data.products || data.products.length === 0) break;
+      all = all.concat(data.products);
+    }
+  } catch (e) {}
+  if (all.length === 0) {
+    const seen = new Set();
+    document.querySelectorAll('article, [class*="product"], [class*="card"]').forEach(card => {
+      const img = card.querySelector('img');
+      const titleEl = card.querySelector('h2, h3, h4, a[title], [class*="title"], [class*="name"]');
+      if (!img || !titleEl) return;
+      const name = (titleEl.innerText || titleEl.getAttribute('title') || '').trim().replace(/\\s+/g, ' ');
+      const text = card.innerText || '';
+      const prices = [...text.matchAll(/(\\d+(?:[.,]\\d+)?)\\s*(?:DH|MAD|Dhs)/gi)].map(m => parseFloat(m[1].replace(',', '.')));
+      if (name.length < 4 || prices.length === 0 || seen.has(name.toLowerCase())) return;
+      seen.add(name.toLowerCase());
+      const price = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+      const brandEl = card.querySelector('[class*="brand"], [class*="vendor"], [class*="marque"]');
+      const brand = brandEl ? brandEl.innerText.trim() : name.split(' ')[0];
+      const image = img.getAttribute('data-src') || img.currentSrc || img.src || '';
+      all.push({ vendor: brand, title: name, price, oldPrice: maxPrice > price ? maxPrice : null, image });
+    });
+  }
+  const json = JSON.stringify({ products: all });
+  const btn = document.createElement('button');
+  btn.textContent = '📋 CLIQUER ICI POUR COPIER ' + all.length + ' PRODUITS';
+  btn.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999999;padding:18px 28px;background:#16a34a;color:#fff;font-size:18px;font-weight:bold;border:none;border-radius:12px;cursor:pointer;box-shadow:0 10px 25px rgba(0,0,0,0.4);';
+  btn.onclick = () => { navigator.clipboard.writeText(json); btn.textContent = '✅ ' + all.length + ' PRODUITS COPIÉS !'; btn.style.background = '#0f172a'; };
+  document.body.appendChild(btn);
+  console.log('✅ ' + all.length + ' produits prêts ! Cliquez sur le bouton vert en haut de la page.');
 })();`;
             const ta = document.createElement('textarea');
             ta.value = snippet;
@@ -4498,16 +4795,22 @@
             ta.select();
             document.execCommand('copy');
             document.body.removeChild(ta);
-            showToast("📋 Script Console copié ! Collez-le dans F12 → Console sur l'autre site.");
+            showToast("📋 Script Console universel copié ! Collez-le dans la Console du site cible.");
         }
 
-        function setBulkStagedProducts(items) {
-            bulkStagedProducts = items;
+        function setBulkStagedProducts(items, append = false) {
+            if (append && bulkStagedProducts.length > 0) {
+                const existingNames = new Set(bulkStagedProducts.map(p => p.name.toLowerCase()));
+                const uniqueNew = items.filter(p => !existingNames.has(p.name.toLowerCase()));
+                bulkStagedProducts = [...bulkStagedProducts, ...uniqueNew];
+            } else {
+                bulkStagedProducts = items;
+            }
             const box = document.getElementById('bulkStagingBox');
             box.classList.remove('hidden');
             renderBulkStagingTable();
             box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            showToast(`${items.length} produit(s) prêt(s) à être importé(s) !`);
+            showToast(`${bulkStagedProducts.length} produit(s) dans le tableau de prévisualisation !`);
         }
 
         function clearBulkStaging() {
@@ -4522,8 +4825,8 @@
 
         function updateBulkStagedField(idx, field, val) {
             if (!bulkStagedProducts[idx]) return;
-            if (field === 'price' || field === 'oldPrice') {
-                bulkStagedProducts[idx][field] = parsePriceNumber(val) || (field === 'price' ? 100 : null);
+            if (field === 'price' || field === 'oldPrice' || field === 'stockQty') {
+                bulkStagedProducts[idx][field] = parsePriceNumber(val);
             } else {
                 bulkStagedProducts[idx][field] = val;
             }
@@ -4539,31 +4842,31 @@
             document.getElementById('bulkStagingSelectedCount').textContent = selectedCount;
             document.getElementById('bulkStagingTotalCount').textContent = bulkStagedProducts.length;
 
-            tbody.innerHTML = bulkStagedProducts.map((p, idx) => `
+            tbody.innerHTML = bulkStagedProducts.slice(0, 250).map((p, idx) => `
                 <tr class="${p.selected ? 'bg-white' : 'bg-slate-50 opacity-55'}">
                     <td class="p-2.5">
                         <input type="checkbox" ${p.selected ? 'checked' : ''} onchange="updateBulkStagedField(${idx}, 'selected', this.checked)" class="accent-sage-700">
                     </td>
                     <td class="p-2.5">
                         <div class="w-10 h-10 rounded-lg bg-sage-50 border border-slate-200 flex items-center justify-center overflow-hidden">
-                            ${p.imageUrl ? `<img src="${p.imageUrl}" class="max-h-full max-w-full object-contain" onerror="this.style.display='none'">` : `<span class="text-[10px] font-bold text-sage-700">IMG</span>`}
+                            ${p.imageUrl ? `<img src="${escapeHtmlAttr(p.imageUrl)}" class="max-h-full max-w-full object-contain" onerror="this.style.display='none'">` : `<span class="text-[10px] font-bold text-sage-700">IMG</span>`}
                         </div>
                     </td>
                     <td class="p-2.5">
-                        <input type="text" value="${p.brand.replace(/"/g, '&quot;')}" onchange="updateBulkStagedField(${idx}, 'brand', this.value)" class="w-28 px-2 py-1 rounded border border-slate-200 text-xs font-semibold">
+                        <input type="text" value="${escapeHtmlAttr(p.brand)}" onchange="updateBulkStagedField(${idx}, 'brand', this.value)" class="w-28 px-2 py-1 rounded border border-slate-200 text-xs font-semibold">
                     </td>
                     <td class="p-2.5">
-                        <input type="text" value="${p.name.replace(/"/g, '&quot;')}" onchange="updateBulkStagedField(${idx}, 'name', this.value)" class="w-full min-w-[180px] px-2 py-1 rounded border border-slate-200 text-xs">
+                        <input type="text" value="${escapeHtmlAttr(p.name)}" onchange="updateBulkStagedField(${idx}, 'name', this.value)" class="w-full min-w-[180px] px-2 py-1 rounded border border-slate-200 text-xs">
                     </td>
                     <td class="p-2.5">
                         <input type="number" value="${p.price}" onchange="updateBulkStagedField(${idx}, 'price', this.value)" class="w-20 px-2 py-1 rounded border border-slate-200 text-xs font-bold text-sage-900">
                     </td>
                     <td class="p-2.5">
-                        <input type="number" value="${p.oldPrice || ''}" placeholder="-" onchange="updateBulkStagedField(${idx}, 'oldPrice', this.value)" class="w-20 px-2 py-1 rounded border border-slate-200 text-xs text-slate-500">
+                        <input type="number" min="0" value="${typeof p.stockQty === 'number' ? p.stockQty : 10}" onchange="updateBulkStagedField(${idx}, 'stockQty', this.value)" class="w-20 px-2 py-1 rounded border-2 border-sage-400 bg-sage-50/40 text-xs font-extrabold text-center text-sage-900">
                     </td>
                     <td class="p-2.5">
                         <select onchange="updateBulkStagedField(${idx}, 'category', this.value)" class="px-2 py-1 rounded border border-slate-200 text-xs bg-white">
-                            ${validRayons.map(r => `<option value="${r}" ${p.category === r ? 'selected' : ''}>${r}</option>`).join('')}
+                            ${validRayons.map(r => `<option value="${escapeHtmlAttr(r)}" ${p.category === r ? 'selected' : ''}>${escapeHtmlAttr(r)}</option>`).join('')}
                         </select>
                     </td>
                 </tr>
@@ -4579,40 +4882,45 @@
             pushCmsUndoSnapshot();
             const mode = document.getElementById('bulkImportModeSelect').value;
             let nextId = mode === 'replace' ? 1 : (Math.max(0, ...SITE_DATA.products.map(p => p.id)) + 1);
+            const defaultStock = getDefaultBulkStockQty();
 
-            const formatted = chosen.map(item => ({
-                id: nextId++,
-                brand: item.brand || "Parateams",
-                name: item.name,
-                category: item.category || "Visage",
-                concern: "Hydratation",
-                skinType: "Tous types",
-                benefit: item.badge || "Soin dermo-cosmétique",
-                price: Number(item.price) || 120,
-                oldPrice: item.oldPrice ? Number(item.oldPrice) : null,
-                badge: item.badge || (item.oldPrice ? "Promo" : "Nouveau"),
-                badgeType: item.oldPrice ? "promo" : "new",
-                isNew: true,
-                stockStatus: "good",
-                rating: 4.9,
-                reviewsCount: 12,
-                volume: "",
-                color: "#5D9C2A",
-                shape: "bottle",
-                imageUrl: item.imageUrl || "",
-                description: item.description || `${item.brand} — ${item.name}`,
-                usage: "Appliquer selon les recommandations de votre pharmacien Parateams.",
-                ingredients: ""
-            }));
+            const formatted = chosen.map(item => {
+                const qty = typeof item.stockQty === 'number' ? item.stockQty : defaultStock;
+                return syncProductStockFields({
+                    id: nextId++,
+                    brand: item.brand || "Parateams",
+                    name: item.name,
+                    category: normalizeCategoryName(item.category),
+                    concern: "Hydratation",
+                    skinType: "Tous types",
+                    benefit: item.badge || "Soin dermo-cosmétique",
+                    price: Number(item.price) || 120,
+                    oldPrice: item.oldPrice ? Number(item.oldPrice) : null,
+                    badge: item.badge || (item.oldPrice ? "Promo" : "Nouveau"),
+                    badgeType: item.oldPrice ? "promo" : "new",
+                    isNew: true,
+                    rating: 4.9,
+                    reviewsCount: 12,
+                    volume: "",
+                    color: "#5D9C2A",
+                    shape: "bottle",
+                    imageUrl: item.imageUrl || "",
+                    description: item.description || `${item.brand} — ${item.name}`,
+                    usage: "Appliquer selon les recommandations de votre pharmacien Parateams.",
+                    ingredients: ""
+                }, qty);
+            });
 
             if (mode === 'replace') {
                 SITE_DATA.products = formatted;
             } else {
-                SITE_DATA.products = [...formatted, ...SITE_DATA.products];
+                const existingNames = new Set(SITE_DATA.products.map(x => x.name.toLowerCase()));
+                const uniqueNew = formatted.filter(x => !existingNames.has(x.name.toLowerCase()));
+                SITE_DATA.products = [...uniqueNew, ...SITE_DATA.products];
             }
 
             clearBulkStaging();
-            saveCmsToLocalPreview();
+            saveCmsToLocalPreview(true);
             switchCmsTab('products');
             showToast(`🎉 ${formatted.length} produit(s) importé(s) avec succès !`);
         }
