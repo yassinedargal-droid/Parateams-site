@@ -914,44 +914,78 @@
 
                     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200">
                         <div>
-                            <div class="flex flex-wrap items-center gap-2">
-                                <h3 class="font-display font-bold text-lg text-slate-900">Tableau d'Inventaire & Contrôle du Stock</h3>
-                                <div class="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200">
-                                    <button type="button" id="cmsViewModeTableBtn" onclick="setCmsProductsViewMode('table')" class="px-3 py-1 rounded-lg bg-sage-700 text-white text-xs font-extrabold transition cursor-pointer">
-                                        📋 Tableau Complet (Saisie Stock)
-                                    </button>
-                                    <button type="button" id="cmsViewModeCardsBtn" onclick="setCmsProductsViewMode('cards')" class="px-3 py-1 rounded-lg text-slate-700 hover:text-slate-900 text-xs font-bold transition cursor-pointer">
-                                        🗂️ Vue Cartes
-                                    </button>
-                                </div>
-                            </div>
-                            <p class="text-xs text-slate-500 mt-1">Tapez la quantité dans la colonne <strong>« Mon Stock »</strong> puis appuyez sur <strong>Entrée ↵</strong> pour descendre automatiquement à l'article suivant.</p>
+                            <h3 class="font-display font-bold text-lg text-slate-900">Tableau d'Inventaire & Contrôle du Stock</h3>
+                            <p class="text-xs text-slate-500">Saisissez vos quantités dans la colonne <strong>« 📦 Mon Stock »</strong> et appuyez sur <strong>Entrée ↵</strong> pour passer automatiquement à la ligne suivante.</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
-                            <button type="button" onclick="resetAllProductsStockToZero()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-coral-50 text-slate-700 hover:text-coral-600 border border-slate-200 text-xs font-bold whitespace-nowrap cursor-pointer" title="Mettre tous les stocks à 0 pour saisir uniquement ce que vous avez">
-                                🔄 Tout remettre à 0
-                            </button>
+                            <div class="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200">
+                                <button type="button" id="viewModeTableBtn" onclick="setCmsProductsViewMode('table')" class="px-3 py-1.5 rounded-lg bg-sage-700 text-white text-xs font-extrabold transition cursor-pointer">
+                                    📋 Tableau Stock
+                                </button>
+                                <button type="button" id="viewModeGridBtn" onclick="setCmsProductsViewMode('grid')" class="px-3 py-1.5 rounded-lg text-slate-700 hover:text-slate-900 text-xs font-bold transition cursor-pointer">
+                                    🗂️ Cartes
+                                </button>
+                            </div>
                             <button type="button" onclick="recategorizeAllExistingProducts()" class="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-[#0D1310] text-xs font-extrabold shadow-xs whitespace-nowrap cursor-pointer">
                                 ✨ Auto-catégoriser tout
                             </button>
                             <select id="cmsProdStockFilter" onchange="cmsProductsCurrentPage=1; renderCmsProductsList()" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold bg-sage-50 text-sage-900">
                                 <option value="all">Tous les stocks</option>
-                                <option value="out">🔴 Quantité à 0 (À remplir)</option>
+                                <option value="out">🔴 Quantité à 0 (Rupture)</option>
                                 <option value="low">🟠 Stock faible (1 à 3)</option>
                                 <option value="in">🟢 En stock (4 et +)</option>
                             </select>
                             <select id="cmsProdRayonFilter" onchange="cmsProductsCurrentPage=1; renderCmsProductsList()" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold bg-sand-50">
                                 <option value="all">Tous les rayons</option>
                             </select>
-                            <select id="cmsProdPerPageSelect" onchange="changeCmsProductsPerPage(this.value)" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold bg-white text-slate-800">
-                                <option value="9999" selected>Tout afficher (1 seul tableau)</option>
-                                <option value="50">50 / page</option>
-                                <option value="20">20 / page</option>
-                            </select>
-                            <input type="text" id="cmsProdSearch" oninput="cmsProductsCurrentPage=1; renderCmsProductsList()" placeholder="Rechercher marque ou article..." class="px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-sage-600">
+                            <input type="text" id="cmsProdSearch" oninput="cmsProductsCurrentPage=1; renderCmsProductsList()" placeholder="Rechercher un produit..." class="px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-sage-600">
                             <button onclick="openCmsProductEditor(null)" class="px-4 py-2 rounded-xl bg-sage-700 hover:bg-sage-800 text-white text-xs font-bold whitespace-nowrap cursor-pointer">
                                 + Nouveau produit
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- ZONE D'AJOUT MASSIF DIRECT DANS LE TABLEAU (PALMAROSA / PARAPHARMA / BEAUTYMARKET) -->
+                    <div class="bg-gradient-to-r from-[#FDF2F8] via-white to-sage-50 rounded-3xl border-2 border-pink-300/80 p-4 sm:p-5 shadow-xs space-y-3">
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                            <div class="flex items-start gap-3">
+                                <span class="w-10 h-10 rounded-2xl bg-pink-600 text-white flex items-center justify-center text-lg font-extrabold shrink-0 shadow-xs">🌸</span>
+                                <div>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <h4 class="font-display font-extrabold text-sm sm:text-base text-slate-900">Ajouter les produits de Palmarosa, Parapharma ou BeautyMarket dans ce tableau</h4>
+                                        <span class="px-2.5 py-0.5 rounded-full bg-pink-100 text-pink-800 text-[10px] font-extrabold uppercase">2 Méthodes au choix</span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 mt-0.5">
+                                        <strong>Méthode 1 (Sans Console) :</strong> Sur Palmarosa ou Parapharma, faites <strong>Ctrl + A</strong> (tout sélectionner) puis <strong>Ctrl + C</strong> (copier), cliquez dans la case ci-dessous et faites <strong>Ctrl + V</strong> !
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 shrink-0">
+                                <button type="button" onclick="copyPalmarosaConsoleScraper()" class="px-3.5 py-2 rounded-xl bg-[#0D1310] hover:bg-black text-amber-300 text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 shadow-xs">
+                                    <span>⚡</span>
+                                    <span>Méthode 2 : Copier Script Console Multi-Pages</span>
+                                </button>
+                                <button type="button" onclick="exportInventoryTableToCsv()" class="px-3 py-2 rounded-xl bg-white hover:bg-sage-50 text-sage-900 border border-slate-200 text-xs font-bold transition cursor-pointer">
+                                    📥 Exporter ce tableau (.CSV)
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
+                            <div class="lg:col-span-9">
+                                <div id="quickClipboardDropzone" contenteditable="true" onpaste="handleDirectTablePaste(event)" class="w-full min-h-[54px] max-h-[90px] overflow-y-auto px-4 py-3 rounded-2xl bg-white border-2 border-dashed border-pink-400 hover:border-sage-600 focus:border-sage-700 focus:outline-none text-xs text-slate-500 cursor-text flex items-center">
+                                    👉 Cliquez ici et appuyez sur Ctrl + V pour coller toute une page Palmarosa / Parapharma (ou le JSON Console)...
+                                </div>
+                            </div>
+                            <div class="lg:col-span-3 flex items-center justify-between lg:justify-end gap-2">
+                                <div class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                                    <span class="font-bold text-slate-600">Stock initial :</span>
+                                    <input type="number" id="quickPasteInitialStock" min="0" value="0" class="w-14 px-1.5 py-0.5 rounded border border-sage-400 font-extrabold text-center text-sage-900">
+                                </div>
+                                <button type="button" onclick="triggerManualQuickPasteParse()" class="px-4 py-3 rounded-xl bg-pink-600 hover:bg-pink-700 text-white font-extrabold text-xs shadow-sm transition cursor-pointer whitespace-nowrap">
+                                    + Insérer au tableau
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -1074,30 +1108,7 @@
                     </div>
 
                     <!-- Liste des produits -->
-                    <div id="cmsInventoryTableWrapper" class="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
-                        <div class="overflow-x-auto max-h-[650px] overflow-y-auto">
-                            <table class="w-full text-left border-collapse text-xs">
-                                <thead class="bg-[#0D1310] text-white sticky top-0 z-10">
-                                    <tr>
-                                        <th class="p-3 w-9 text-center">
-                                            <input type="checkbox" onchange="if(this.checked) selectAllFilteredCmsProducts(); else deselectAllCmsProducts();" class="accent-sage-500 w-4 h-4 cursor-pointer">
-                                        </th>
-                                        <th class="p-3 w-14">Photo</th>
-                                        <th class="p-3 w-36">Marque</th>
-                                        <th class="p-3 min-w-[220px]">Nom de l'article</th>
-                                        <th class="p-3 w-40">Rayon</th>
-                                        <th class="p-3 w-28">Prix (DH)</th>
-                                        <th class="p-3 w-44 bg-sage-800 text-amber-300 font-extrabold text-center">📦 Mon Stock (Quantité)</th>
-                                        <th class="p-3 w-28 text-center">Statut Site</th>
-                                        <th class="p-3 w-24 text-right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="cmsInventoryTableBody" class="divide-y divide-slate-100"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div id="cmsProductsList" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                    <div id="cmsProductsList" class="w-full"></div>
 
                     <!-- Pagination CMS -->
                     <div id="cmsProductsPagination" class="mt-6 flex items-center justify-center"></div>
@@ -1107,14 +1118,14 @@
                 <div id="cmsPanel-bulk" class="cms-panel hidden space-y-6">
                     <div class="bg-gradient-to-r from-sage-900 to-sage-800 text-white p-5 sm:p-6 rounded-3xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <span class="inline-block px-2.5 py-0.5 rounded-full bg-amber-400 text-[#0D1310] text-[10px] font-extrabold uppercase tracking-wider">Spécial Palmarosa Shop & BeautyMarket</span>
-                            <h3 class="font-display font-extrabold text-lg sm:text-2xl mt-1">Insérer tous les produits & remplir vos quantités après</h3>
-                            <p class="text-xs sm:text-sm text-sage-100/90 mt-0.5">Le stock initial est réglé sur <strong>0</strong> par défaut : importez tout le catalogue d'un coup, puis saisissez vos quantités réelles dans le Tableau d'Inventaire.</p>
+                            <span class="inline-block px-2.5 py-0.5 rounded-full bg-amber-400 text-[#0D1310] text-[10px] font-extrabold uppercase tracking-wider">Catégorisation & Stock Intelligents</span>
+                            <h3 class="font-display font-extrabold text-lg sm:text-2xl mt-1">Insérer tout votre catalogue & gérer vos quantités</h3>
+                            <p class="text-xs sm:text-sm text-sage-100/90 mt-0.5">Importez tous vos produits d'un coup (avec un stock initial au choix, ex: 10 ou 0), puis ajustez simplement vos quantités dans l'onglet Produits.</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2 shrink-0">
                             <div class="bg-white/10 border border-white/20 rounded-xl px-3 py-1.5 flex items-center gap-2">
-                                <label for="bulkDefaultStockInput" class="text-[11px] font-bold text-sage-100">Stock initial à l'import :</label>
-                                <input type="number" id="bulkDefaultStockInput" min="0" value="0" class="w-16 px-2 py-1 rounded-lg bg-white text-sage-900 font-extrabold text-xs text-center">
+                                <label for="bulkDefaultStockInput" class="text-[11px] font-bold text-sage-100">Stock initial par défaut :</label>
+                                <input type="number" id="bulkDefaultStockInput" min="0" value="10" class="w-16 px-2 py-1 rounded-lg bg-white text-sage-900 font-extrabold text-xs text-center">
                             </div>
                             <button type="button" onclick="downloadCsvTemplate()" class="px-4 py-2.5 rounded-xl bg-white hover:bg-sage-50 text-sage-900 font-extrabold text-xs shadow-sm transition cursor-pointer">
                                 📄 Modèle Excel (.csv)
@@ -1194,15 +1205,15 @@
                             <!-- Mode B : Par Code Source HTML ou Flux JSON -->
                             <div class="lg:col-span-7 bg-sand-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
                                 <div class="flex flex-wrap items-center justify-between gap-2">
-                                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-coral-600">Mode B • Extracteur Spécial Palmarosa Shop & BeautyMarket</span>
-                                    <button type="button" onclick="copyUniversalConsoleExtractor()" class="px-3 py-1.5 rounded-lg bg-[#e11d48] hover:bg-[#be123c] text-white text-xs font-extrabold shadow-xs transition cursor-pointer">
-                                        🌸 Copier le Script Palmarosa Shop (Auto-Scroll + Copier)
+                                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-coral-600">Mode B • Extraction massive (Page catalogue entière)</span>
+                                    <button type="button" onclick="copyUniversalConsoleExtractor()" class="px-2.5 py-1 rounded-lg bg-[#0D1310] hover:bg-black text-amber-300 text-[10.5px] font-bold transition cursor-pointer">
+                                        📋 Copier le script Console (Bouton Vert)
                                     </button>
                                 </div>
                                 <p class="text-[11px] text-slate-600 leading-relaxed">
-                                    <strong>Sur palmarosashop.com :</strong> Ouvrez la catégorie (Visage, Maquillage, Cheveux...), faites <strong>Clic droit → Inspecter → Console</strong>, collez le script rose ci-dessus et appuyez sur <strong>Entrée</strong>. Une barre s'affiche en haut de Palmarosa pour <strong>tout dérouler et copier tous les produits</strong> d'un coup. Collez ensuite (<strong>Ctrl + V</strong>) ici :
+                                    Ouvrez la catégorie sur l'autre site, faites <strong>Clic droit → Inspecter → Console</strong>, collez le script copié ci-dessus, cliquez sur le bouton vert, puis faites <strong>Ctrl + V</strong> ici :
                                 </p>
-                                <textarea id="scrapeHtmlSourceInput" rows="3" placeholder="Collez ici (Ctrl+V) les produits copiés depuis Palmarosa Shop..." class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-mono focus:outline-none focus:border-sage-600"></textarea>
+                                <textarea id="scrapeHtmlSourceInput" rows="3" placeholder="Collez ici le JSON ou HTML copié depuis la Console..." class="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-mono focus:outline-none focus:border-sage-600"></textarea>
                                 <div class="flex flex-wrap justify-end gap-2">
                                     <button type="button" onclick="extractProductsFromPastedSource(true)" class="px-3.5 py-2 rounded-xl bg-sage-700 hover:bg-sage-800 text-white font-bold text-xs transition cursor-pointer">
                                         ➕ Cumuler avec la liste ci-dessous
@@ -3549,81 +3560,23 @@
         let cmsRedoStack = [];
         let selectedCmsProductIds = new Set();
         let cmsProductsCurrentPage = 1;
-        let cmsProductsPerPage = 9999;
         let cmsProductsViewMode = 'table';
+        const CMS_PRODUCTS_PER_PAGE = 50;
         const MAX_CMS_HISTORY = 40;
 
         function setCmsProductsViewMode(mode) {
-            cmsProductsViewMode = mode === 'cards' ? 'cards' : 'table';
-            const tableWrapper = document.getElementById('cmsInventoryTableWrapper');
-            const cardsWrapper = document.getElementById('cmsProductsList');
-            const tableBtn = document.getElementById('cmsViewModeTableBtn');
-            const cardsBtn = document.getElementById('cmsViewModeCardsBtn');
-
-            if (tableWrapper) tableWrapper.classList.toggle('hidden', cmsProductsViewMode !== 'table');
-            if (cardsWrapper) cardsWrapper.classList.toggle('hidden', cmsProductsViewMode !== 'cards');
-
-            if (tableBtn) {
-                tableBtn.className = cmsProductsViewMode === 'table'
-                    ? 'px-3 py-1 rounded-lg bg-sage-700 text-white text-xs font-extrabold transition cursor-pointer'
-                    : 'px-3 py-1 rounded-lg text-slate-700 hover:text-slate-900 text-xs font-bold transition cursor-pointer';
-            }
-            if (cardsBtn) {
-                cardsBtn.className = cmsProductsViewMode === 'cards'
-                    ? 'px-3 py-1 rounded-lg bg-sage-700 text-white text-xs font-extrabold transition cursor-pointer'
-                    : 'px-3 py-1 rounded-lg text-slate-700 hover:text-slate-900 text-xs font-bold transition cursor-pointer';
+            cmsProductsViewMode = mode;
+            const tableBtn = document.getElementById('viewModeTableBtn');
+            const gridBtn = document.getElementById('viewModeGridBtn');
+            if (tableBtn && gridBtn) {
+                tableBtn.className = mode === 'table'
+                    ? "px-3 py-1.5 rounded-lg bg-sage-700 text-white text-xs font-extrabold transition cursor-pointer"
+                    : "px-3 py-1.5 rounded-lg text-slate-700 hover:text-slate-900 text-xs font-bold transition cursor-pointer";
+                gridBtn.className = mode === 'grid'
+                    ? "px-3 py-1.5 rounded-lg bg-sage-700 text-white text-xs font-extrabold transition cursor-pointer"
+                    : "px-3 py-1.5 rounded-lg text-slate-700 hover:text-slate-900 text-xs font-bold transition cursor-pointer";
             }
             renderCmsProductsList();
-        }
-
-        function changeCmsProductsPerPage(val) {
-            cmsProductsPerPage = Math.max(1, Number(val) || 9999);
-            cmsProductsCurrentPage = 1;
-            renderCmsProductsList();
-        }
-
-        function resetAllProductsStockToZero() {
-            if (!SITE_DATA.products || SITE_DATA.products.length === 0) return;
-            pushCmsUndoSnapshot();
-            SITE_DATA.products = SITE_DATA.products.map(p => syncProductStockFields({ ...p }, 0));
-            saveCmsToLocalPreview(true);
-            showToast("🔄 Tous les stocks ont été mis à 0. Saisissez maintenant vos quantités dans le tableau !");
-        }
-
-        function updateCmsInlineProductField(id, field, rawVal) {
-            const p = SITE_DATA.products.find(x => x.id === id);
-            if (!p) return;
-            pushCmsUndoSnapshot();
-            if (field === 'price') {
-                p.price = Math.max(1, parsePriceNumber(rawVal) || p.price);
-            } else if (field === 'category') {
-                p.category = rawVal;
-            } else if (field === 'brand') {
-                p.brand = String(rawVal || '').trim() || p.brand;
-            } else if (field === 'name') {
-                p.name = String(rawVal || '').trim() || p.name;
-            }
-            saveCmsToLocalPreview(true);
-        }
-
-        function handleStockInputKeydown(event, currentIndex) {
-            if (event.key === 'Enter' || event.key === 'ArrowDown') {
-                event.preventDefault();
-                event.target.blur();
-                const nextInput = document.querySelector(`input[data-stock-row="${currentIndex + 1}"]`);
-                if (nextInput) {
-                    nextInput.focus();
-                    nextInput.select();
-                }
-            } else if (event.key === 'ArrowUp') {
-                event.preventDefault();
-                event.target.blur();
-                const prevInput = document.querySelector(`input[data-stock-row="${currentIndex - 1}"]`);
-                if (prevInput) {
-                    prevInput.focus();
-                    prevInput.select();
-                }
-            }
         }
 
         function pushCmsUndoSnapshot() {
@@ -3678,7 +3631,7 @@
             const overlay = document.getElementById('adminCmsOverlay');
             if (!isCmsAuthenticated || !overlay || overlay.classList.contains('hidden')) return;
             const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : '';
-            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target?.isContentEditable) return;
 
             const isMod = e.ctrlKey || e.metaKey;
             if (isMod && e.key.toLowerCase() === 'z' && !e.shiftKey) {
@@ -3714,6 +3667,35 @@
             }
         }
 
+        function submitCmsLogin(e) {
+            e.preventDefault();
+            const entered = document.getElementById('cmsPasswordInput').value;
+            const expected = SITE_DATA.adminPassword || "parateams2026";
+            if (entered === expected) {
+                isCmsAuthenticated = true;
+                document.getElementById('cmsLoginScreen').classList.add('hidden');
+                document.getElementById('cmsDashboardScreen').classList.remove('hidden');
+                refreshAllCmsPanels();
+                updateCmsHistoryButtons();
+                showToast("Bienvenue dans Parateams Studio CMS !");
+            } else {
+                document.getElementById('cmsLoginError').classList.remove('hidden');
+            }
+        }
+
+        function switchCmsTab(tabName) {
+            document.querySelectorAll('.cms-tab-btn').forEach(btn => {
+                const active = btn.dataset.cmstab === tabName;
+                btn.classList.toggle('bg-sage-700', active);
+                btn.classList.toggle('text-white', active);
+                btn.classList.toggle('bg-slate-100', !active);
+                btn.classList.toggle('text-slate-700', !active);
+            });
+            document.querySelectorAll('.cms-panel').forEach(panel => {
+                panel.classList.toggle('hidden', panel.id !== `cmsPanel-${tabName}`);
+            });
+        }
+
         function saveCmsToLocalPreview(silent = false) {
             try {
                 localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(SITE_DATA));
@@ -3730,65 +3712,32 @@
             if (!silent) showToast("Modifications appliquées sur la boutique !");
         }
 
-        function setCmsStockFilterQuick(val) {
-            const sel = document.getElementById('cmsProdStockFilter');
-            if (sel) {
-                sel.value = val;
-                cmsProductsCurrentPage = 1;
-                renderCmsProductsList();
-            }
-        }
-
         function updateCmsInventoryStats() {
-            const prods = SITE_DATA.products || [];
-            let inCount = 0, lowCount = 0, outCount = 0;
-            prods.forEach(p => {
+            const total = SITE_DATA.products.length;
+            let inStock = 0, lowStock = 0, outStock = 0;
+            SITE_DATA.products.forEach(p => {
                 const q = getProductStockQty(p);
-                if (q === 0) outCount++;
-                else if (q <= 3) lowCount++;
-                else inCount++;
+                if (q === 0) outStock++;
+                else if (q <= 3) lowStock++;
+                else inStock++;
             });
             const elTotal = document.getElementById('cmsStatTotalProd');
             const elIn = document.getElementById('cmsStatInStock');
             const elLow = document.getElementById('cmsStatLowStock');
             const elOut = document.getElementById('cmsStatOutStock');
-            if (elTotal) elTotal.textContent = prods.length;
-            if (elIn) elIn.textContent = inCount;
-            if (elLow) elLow.textContent = lowCount;
-            if (elOut) elOut.textContent = outCount;
+            if (elTotal) elTotal.textContent = total;
+            if (elIn) elIn.textContent = inStock;
+            if (elLow) elLow.textContent = lowStock;
+            if (elOut) elOut.textContent = outStock;
         }
 
-        function adjustCmsProductStock(id, delta) {
-            const p = SITE_DATA.products.find(x => x.id === id);
-            if (!p) return;
-            pushCmsUndoSnapshot();
-            syncProductStockFields(p, getProductStockQty(p) + delta);
-            saveCmsToLocalPreview(true);
-        }
-
-        function setCmsProductStockDirect(id, rawVal) {
-            const p = SITE_DATA.products.find(x => x.id === id);
-            if (!p) return;
-            pushCmsUndoSnapshot();
-            syncProductStockFields(p, rawVal);
-            saveCmsToLocalPreview(true);
-            showToast(`Stock mis à jour : ${p.stockQty} unité(s)`);
-        }
-
-        function bulkSetSelectedStockQty() {
-            if (selectedCmsProductIds.size === 0) {
-                showToast("Sélectionnez d'abord au moins un produit.");
-                return;
+        function setCmsStockFilterQuick(filterVal) {
+            const sel = document.getElementById('cmsProdStockFilter');
+            if (sel) {
+                sel.value = filterVal;
+                cmsProductsCurrentPage = 1;
+                renderCmsProductsList();
             }
-            const qty = Math.max(0, Math.floor(Number(document.getElementById('cmsBulkStockQtyInput')?.value) || 0));
-            pushCmsUndoSnapshot();
-            const count = selectedCmsProductIds.size;
-            SITE_DATA.products = SITE_DATA.products.map(p =>
-                selectedCmsProductIds.has(p.id) ? syncProductStockFields({ ...p }, qty) : p
-            );
-            selectedCmsProductIds.clear();
-            saveCmsToLocalPreview(true);
-            showToast(`📦 Stock fixé à ${qty} unité(s) pour ${count} produit(s) !`);
         }
 
         function recategorizeAllExistingProducts() {
@@ -3824,7 +3773,67 @@
             showToast(`📂 ${count} produit(s) déplacé(s) vers "${targetRayon}"`);
         }
 
-        // --- CMS ONGLET 1 : PRODUITS ---
+        function adjustCmsProductStock(id, delta) {
+            const p = SITE_DATA.products.find(x => x.id === id);
+            if (!p) return;
+            pushCmsUndoSnapshot();
+            syncProductStockFields(p, getProductStockQty(p) + delta);
+            saveCmsToLocalPreview(true);
+        }
+
+        function setCmsProductStockDirect(id, rawVal) {
+            const p = SITE_DATA.products.find(x => x.id === id);
+            if (!p) return;
+            pushCmsUndoSnapshot();
+            syncProductStockFields(p, rawVal);
+            saveCmsToLocalPreview(true);
+            showToast(`Stock mis à jour : ${p.stockQty} unité(s)`);
+        }
+
+        function updateCmsProductInlineField(id, field, value) {
+            const p = SITE_DATA.products.find(x => x.id === id);
+            if (!p) return;
+            pushCmsUndoSnapshot();
+            if (field === 'price') {
+                p.price = Math.max(1, parsePriceNumber(value) || p.price);
+            } else if (field === 'category') {
+                p.category = value;
+            } else if (field === 'name') {
+                p.name = String(value).trim() || p.name;
+            } else if (field === 'brand') {
+                p.brand = String(value).trim() || p.brand;
+            }
+            saveCmsToLocalPreview(true);
+        }
+
+        function handleStockInputKeydown(event, idxOnPage) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                event.target.blur();
+                const nextInput = document.querySelector(`[data-stock-row="${idxOnPage + 1}"]`);
+                if (nextInput) {
+                    nextInput.focus();
+                    nextInput.select();
+                }
+            }
+        }
+
+        function bulkSetSelectedStockQty() {
+            if (selectedCmsProductIds.size === 0) {
+                showToast("Sélectionnez d'abord un ou plusieurs produits.");
+                return;
+            }
+            const qty = Math.max(0, Math.floor(Number(document.getElementById('cmsBulkStockQtyInput')?.value) || 0));
+            pushCmsUndoSnapshot();
+            const count = selectedCmsProductIds.size;
+            SITE_DATA.products = SITE_DATA.products.map(p =>
+                selectedCmsProductIds.has(p.id) ? syncProductStockFields({ ...p }, qty) : p
+            );
+            selectedCmsProductIds.clear();
+            saveCmsToLocalPreview(true);
+            showToast(`📦 Stock fixé à ${qty} unité(s) pour ${count} produit(s) !`);
+        }
+
         function getFilteredCmsProducts() {
             const q = (document.getElementById('cmsProdSearch')?.value || '').trim().toLowerCase();
             const rayonFilter = document.getElementById('cmsProdRayonFilter')?.value || 'all';
@@ -3886,165 +3895,154 @@
 
         function renderCmsProductsList() {
             const container = document.getElementById('cmsProductsList');
-            const tableBody = document.getElementById('cmsInventoryTableBody');
             const paginationEl = document.getElementById('cmsProductsPagination');
             const list = getFilteredCmsProducts();
             updateCmsBulkSelectionUI();
             updateCmsInventoryStats();
 
-            const totalPages = Math.max(1, Math.ceil(list.length / cmsProductsPerPage));
+            const totalPages = Math.max(1, Math.ceil(list.length / CMS_PRODUCTS_PER_PAGE));
             if (cmsProductsCurrentPage > totalPages) cmsProductsCurrentPage = totalPages;
             if (cmsProductsCurrentPage < 1) cmsProductsCurrentPage = 1;
 
-            const startIdx = (cmsProductsCurrentPage - 1) * cmsProductsPerPage;
-            const paginated = list.slice(startIdx, startIdx + cmsProductsPerPage);
+            const startIdx = (cmsProductsCurrentPage - 1) * CMS_PRODUCTS_PER_PAGE;
+            const paginated = list.slice(startIdx, startIdx + CMS_PRODUCTS_PER_PAGE);
             const activeRayons = SITE_DATA.rayons.filter(r => !r.isBudget).map(r => r.name);
 
-            // RENDU DU GRAND TABLEAU D'INVENTAIRE UNIFIÉ (FAÇON EXCEL)
-            if (tableBody) {
-                if (paginated.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400 font-semibold">Aucun article trouvé pour ce filtre.</td></tr>`;
-                } else {
-                    tableBody.innerHTML = paginated.map((p, rowIdx) => {
-                        const isSelected = selectedCmsProductIds.has(p.id);
-                        const qty = getProductStockQty(p);
-                        const statusPill = qty === 0
-                            ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-coral-50 text-coral-600 text-[10.5px] font-extrabold">🔴 Rupture (0)</span>`
-                            : (qty <= 3
-                                ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-[10.5px] font-extrabold">🟠 Faible (${qty})</span>`
-                                : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-sage-50 text-sage-700 text-[10.5px] font-extrabold">🟢 En stock (${qty})</span>`);
+            if (cmsProductsViewMode === 'table') {
+                container.className = "w-full bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden";
+                const allPageSelected = paginated.length > 0 && paginated.every(p => selectedCmsProductIds.has(p.id));
+                container.innerHTML = `
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="bg-[#0D1310] text-white">
+                                <tr>
+                                    <th class="p-3.5 w-10 text-center">
+                                        <input type="checkbox" ${allPageSelected ? 'checked' : ''} onchange="if(this.checked){selectAllFilteredCmsProducts()}else{deselectAllCmsProducts()}" class="w-4 h-4 rounded accent-sage-500 cursor-pointer">
+                                    </th>
+                                    <th class="p-3.5 w-16">Photo</th>
+                                    <th class="p-3.5 w-36">Marque</th>
+                                    <th class="p-3.5 min-w-[220px]">Nom de l'article</th>
+                                    <th class="p-3.5 w-44">Rayon</th>
+                                    <th class="p-3.5 w-28">Prix (DH)</th>
+                                    <th class="p-3.5 w-44 text-center text-amber-300 font-extrabold">📦 Mon Stock (Quantité)</th>
+                                    <th class="p-3.5 w-32 text-center">Statut Site</th>
+                                    <th class="p-3.5 w-24 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                ${paginated.map((p, rowIdx) => {
+                                    const isSelected = selectedCmsProductIds.has(p.id);
+                                    const qty = getProductStockQty(p);
+                                    const statusBadge = qty === 0
+                                        ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-coral-50 text-coral-600 text-[11px] font-extrabold">🔴 Rupture (0)</span>`
+                                        : (qty <= 3
+                                            ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-[11px] font-extrabold">🟠 Faible (${qty})</span>`
+                                            : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-sage-50 text-sage-700 text-[11px] font-extrabold">🟢 En stock (${qty})</span>`);
 
-                        return `
-                        <tr class="${isSelected ? 'bg-sage-50/70' : (qty === 0 ? 'bg-coral-50/20 hover:bg-slate-50' : 'bg-white hover:bg-slate-50')} transition">
-                            <td class="p-2.5 text-center">
-                                <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleCmsProductSelection(${p.id}, this.checked)" class="w-4 h-4 rounded accent-sage-700 cursor-pointer">
-                            </td>
-                            <td class="p-2.5">
-                                <div class="w-11 h-11 rounded-xl bg-sage-50 border border-slate-200 flex items-center justify-center overflow-hidden p-1">
-                                    ${p.imageUrl ? `<img src="${escapeHtmlAttr(p.imageUrl)}" class="max-h-full max-w-full object-contain" onerror="this.style.display='none'">` : `<span class="text-[10px] font-extrabold text-sage-700">${escapeHtmlAttr(p.brand.slice(0, 3))}</span>`}
-                                </div>
-                            </td>
-                            <td class="p-2.5">
-                                <input type="text" value="${escapeHtmlAttr(p.brand)}" onchange="updateCmsInlineProductField(${p.id}, 'brand', this.value)" class="w-full px-2 py-1 rounded-lg border border-transparent hover:border-slate-200 focus:border-sage-500 focus:bg-white bg-transparent font-bold text-sage-800 text-xs focus:outline-none">
-                            </td>
-                            <td class="p-2.5">
-                                <input type="text" value="${escapeHtmlAttr(p.name)}" onchange="updateCmsInlineProductField(${p.id}, 'name', this.value)" class="w-full px-2 py-1 rounded-lg border border-transparent hover:border-slate-200 focus:border-sage-500 focus:bg-white bg-transparent font-semibold text-slate-900 text-xs focus:outline-none">
-                            </td>
-                            <td class="p-2.5">
-                                <select onchange="updateCmsInlineProductField(${p.id}, 'category', this.value)" class="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:border-sage-500">
-                                    ${activeRayons.map(r => `<option value="${escapeHtmlAttr(r)}" ${p.category === r ? 'selected' : ''}>${escapeHtmlAttr(r)}</option>`).join('')}
-                                </select>
-                            </td>
-                            <td class="p-2.5">
-                                <div class="flex items-center gap-1">
-                                    <input type="number" min="1" value="${p.price}" onchange="updateCmsInlineProductField(${p.id}, 'price', this.value)" class="w-20 px-2 py-1.5 rounded-lg border border-slate-200 bg-white font-display font-extrabold text-xs text-sage-900 text-right focus:outline-none focus:border-sage-500">
-                                    <span class="text-[10px] font-bold text-slate-400">DH</span>
-                                </div>
-                            </td>
-                            <td class="p-2.5 bg-sage-50/50">
-                                <div class="flex items-center justify-center gap-1.5">
-                                    <button type="button" onclick="adjustCmsProductStock(${p.id}, -1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-coral-50 hover:text-coral-600 font-extrabold text-sm flex items-center justify-center cursor-pointer shadow-2xs">-</button>
-                                    <input type="number" min="0" value="${qty}" data-stock-row="${rowIdx}" onfocus="this.select()" onkeydown="handleStockInputKeydown(event, ${rowIdx})" onchange="setCmsProductStockDirect(${p.id}, this.value)" class="w-20 py-1.5 px-2 rounded-xl border-2 ${qty === 0 ? 'border-coral-400 bg-white text-coral-600' : 'border-sage-500 bg-white text-sage-900'} text-center font-display font-extrabold text-sm focus:outline-none focus:ring-2 focus:ring-sage-400">
-                                    <button type="button" onclick="adjustCmsProductStock(${p.id}, 1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-sage-100 hover:text-sage-800 font-extrabold text-sm flex items-center justify-center cursor-pointer shadow-2xs">+</button>
-                                </div>
-                            </td>
-                            <td class="p-2.5 text-center">
-                                ${statusPill}
-                            </td>
-                            <td class="p-2.5 text-right whitespace-nowrap">
-                                <button onclick="openCmsProductEditor(${p.id})" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-sage-100 text-slate-700 hover:text-sage-900 text-xs font-bold cursor-pointer" title="Modifier tous les détails">✏️</button>
-                                <button onclick="deleteCmsProduct(${p.id})" class="px-2 py-1 rounded-lg bg-coral-50 hover:bg-coral-100 text-coral-600 text-xs font-bold cursor-pointer ml-1" title="Supprimer">🗑️</button>
-                            </td>
-                        </tr>
-                        `;
-                    }).join('');
-                }
-            }
-
-            // RENDU DE LA VUE CARTES
-            container.innerHTML = paginated.map(p => {
-                const isSelected = selectedCmsProductIds.has(p.id);
-                const qty = getProductStockQty(p);
-                const stockBadge = qty === 0
-                    ? `<span class="px-2 py-0.5 rounded-full bg-coral-50 text-coral-600 text-[10px] font-extrabold">Rupture (0)</span>`
-                    : (qty <= 3
-                        ? `<span class="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-extrabold">Stock faible (${qty})</span>`
-                        : `<span class="px-2 py-0.5 rounded-full bg-sage-50 text-sage-700 text-[10px] font-extrabold">En stock (${qty})</span>`);
-
-                return `
-                <div class="bg-white rounded-2xl border-2 ${isSelected ? 'border-sage-600 bg-sage-50/35 shadow-sm' : (qty === 0 ? 'border-coral-200/80' : 'border-slate-200')} p-4 flex flex-col justify-between gap-3 transition">
-                    <div class="flex items-start gap-3">
-                        <label class="pt-0.5 cursor-pointer shrink-0 flex items-center" title="Sélectionner ce produit">
-                            <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleCmsProductSelection(${p.id}, this.checked)" class="w-4 h-4 rounded accent-sage-700 cursor-pointer">
-                        </label>
-                        <div class="w-14 h-14 rounded-xl bg-sage-50 border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden p-1">
-                            ${p.imageUrl ? `<img src="${escapeHtmlAttr(p.imageUrl)}" class="max-h-full max-w-full object-contain">` : `<span class="text-xs font-extrabold text-sage-700">${escapeHtmlAttr(p.brand.slice(0, 4))}</span>`}
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <div class="flex items-center justify-between gap-1">
-                                <span class="text-[10px] font-bold uppercase text-sage-600 truncate">${escapeHtmlAttr(p.brand)} • ${escapeHtmlAttr(p.category)}</span>
-                                ${stockBadge}
-                            </div>
-                            <h4 class="font-bold text-xs sm:text-sm text-slate-900 line-clamp-2 mt-0.5">${escapeHtmlAttr(p.name)}</h4>
-                            <p class="font-display font-extrabold text-sm text-sage-900 mt-1">
-                                ${p.price} DH ${p.oldPrice ? `<span class="text-xs font-normal text-slate-400 line-through">${p.oldPrice} DH</span>` : ''}
-                            </p>
-                        </div>
+                                    return `
+                                    <tr class="${isSelected ? 'bg-sage-50/60' : (qty === 0 ? 'bg-coral-50/20 hover:bg-slate-50' : 'hover:bg-slate-50/80')} transition">
+                                        <td class="p-3 text-center">
+                                            <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleCmsProductSelection(${p.id}, this.checked)" class="w-4 h-4 rounded accent-sage-700 cursor-pointer">
+                                        </td>
+                                        <td class="p-3">
+                                            <div class="w-11 h-11 rounded-xl bg-sage-50 border border-slate-200/80 flex items-center justify-center overflow-hidden p-1">
+                                                ${p.imageUrl ? `<img src="${escapeHtmlAttr(p.imageUrl)}" class="max-h-full max-w-full object-contain">` : `<span class="text-[10px] font-extrabold text-sage-700">${escapeHtmlAttr(p.brand.slice(0, 3))}</span>`}
+                                            </div>
+                                        </td>
+                                        <td class="p-3 font-extrabold text-slate-900">
+                                            ${escapeHtmlAttr(p.brand)}
+                                        </td>
+                                        <td class="p-3 font-semibold text-slate-800">
+                                            <div class="line-clamp-2 leading-snug">${escapeHtmlAttr(p.name)}</div>
+                                        </td>
+                                        <td class="p-3">
+                                            <select onchange="updateCmsProductInlineField(${p.id}, 'category', this.value)" class="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:border-sage-600 focus:outline-none cursor-pointer">
+                                                ${activeRayons.map(r => `<option value="${escapeHtmlAttr(r)}" ${p.category === r ? 'selected' : ''}>${escapeHtmlAttr(r)}</option>`).join('')}
+                                            </select>
+                                        </td>
+                                        <td class="p-3">
+                                            <div class="flex items-center gap-1">
+                                                <input type="number" min="1" value="${p.price}" onchange="updateCmsProductInlineField(${p.id}, 'price', this.value)" class="w-20 px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-display font-extrabold text-xs text-slate-900 text-right focus:border-sage-600 focus:outline-none">
+                                                <span class="text-[10px] font-bold text-slate-400">DH</span>
+                                            </div>
+                                        </td>
+                                        <td class="p-3 bg-sage-50/40">
+                                            <div class="flex items-center justify-center gap-1.5">
+                                                <button type="button" onclick="adjustCmsProductStock(${p.id}, -1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-coral-50 hover:text-coral-600 font-extrabold text-sm flex items-center justify-center cursor-pointer shadow-2xs">-</button>
+                                                <input type="number" min="0" value="${qty}" data-stock-row="${rowIdx}" onkeydown="handleStockInputKeydown(event, ${rowIdx})" onchange="setCmsProductStockDirect(${p.id}, this.value)" class="w-20 py-1.5 rounded-xl border-2 ${qty === 0 ? 'border-coral-400 bg-white text-coral-700' : 'border-sage-500 bg-white text-sage-900'} text-center font-display font-extrabold text-sm focus:ring-2 focus:ring-sage-300 focus:outline-none">
+                                                <button type="button" onclick="adjustCmsProductStock(${p.id}, 1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-sage-100 hover:text-sage-800 font-extrabold text-sm flex items-center justify-center cursor-pointer shadow-2xs">+</button>
+                                            </div>
+                                        </td>
+                                        <td class="p-3 text-center">
+                                            ${statusBadge}
+                                        </td>
+                                        <td class="p-3 text-right">
+                                            <div class="inline-flex items-center gap-1">
+                                                <button onclick="openCmsProductEditor(${p.id})" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-sage-100 text-slate-700 hover:text-sage-900 flex items-center justify-center cursor-pointer" title="Modifier">✏️</button>
+                                                <button onclick="deleteCmsProduct(${p.id})" class="w-8 h-8 rounded-lg bg-coral-50 hover:bg-coral-100 text-coral-600 flex items-center justify-center cursor-pointer" title="Supprimer">🗑️</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
                     </div>
-
-                    <!-- Contrôleur intelligent de quantité en stock -->
-                    <div class="flex items-center justify-between gap-2 bg-sand-50 px-3 py-2 rounded-xl border border-slate-200/80">
-                        <span class="text-[11px] font-bold text-slate-700">Quantité en stock :</span>
-                        <div class="flex items-center gap-1.5">
-                            <button type="button" onclick="adjustCmsProductStock(${p.id}, -1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-coral-50 hover:text-coral-600 font-extrabold text-sm flex items-center justify-center cursor-pointer">-</button>
-                            <input type="number" min="0" value="${qty}" onchange="setCmsProductStockDirect(${p.id}, this.value)" class="w-16 py-1 rounded-lg border border-sage-300 bg-white text-center font-display font-extrabold text-xs text-sage-900">
-                            <button type="button" onclick="adjustCmsProductStock(${p.id}, 1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-sage-100 hover:text-sage-800 font-extrabold text-sm flex items-center justify-center cursor-pointer">+</button>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
-                        <button onclick="openCmsProductEditor(${p.id})" class="px-3 py-1.5 rounded-lg bg-sage-50 hover:bg-sage-100 text-sage-800 text-xs font-bold cursor-pointer">✏️ Modifier</button>
-                        <button onclick="duplicateCmsProduct(${p.id})" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer" title="Dupliquer">📋</button>
-                        <button onclick="deleteCmsProduct(${p.id})" class="px-3 py-1.5 rounded-lg bg-coral-50 hover:bg-coral-100 text-coral-600 text-xs font-bold cursor-pointer">🗑️</button>
-                    </div>
-                </div>
                 `;
-            }).join('');
+            } else {
+                container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4";
+                container.innerHTML = paginated.map((p, rowIdx) => {
+                    const isSelected = selectedCmsProductIds.has(p.id);
+                    const qty = getProductStockQty(p);
+                    const stockBadge = qty === 0
+                        ? `<span class="px-2 py-0.5 rounded-full bg-coral-50 text-coral-600 text-[10px] font-extrabold">Rupture (0)</span>`
+                        : (qty <= 3
+                            ? `<span class="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-extrabold">Stock faible (${qty})</span>`
+                            : `<span class="px-2 py-0.5 rounded-full bg-sage-50 text-sage-700 text-[10px] font-extrabold">En stock (${qty})</span>`);
+
+                    return `
+                    <div class="bg-white rounded-2xl border-2 ${isSelected ? 'border-sage-600 bg-sage-50/35 shadow-sm' : (qty === 0 ? 'border-coral-200/80' : 'border-slate-200')} p-4 flex flex-col justify-between gap-3 transition">
+                        <div class="flex items-start gap-3">
+                            <label class="pt-0.5 cursor-pointer shrink-0 flex items-center" title="Sélectionner ce produit">
+                                <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleCmsProductSelection(${p.id}, this.checked)" class="w-4 h-4 rounded accent-sage-700 cursor-pointer">
+                            </label>
+                            <div class="w-14 h-14 rounded-xl bg-sage-50 border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden p-1">
+                                ${p.imageUrl ? `<img src="${escapeHtmlAttr(p.imageUrl)}" class="max-h-full max-w-full object-contain">` : `<span class="text-xs font-extrabold text-sage-700">${escapeHtmlAttr(p.brand.slice(0, 4))}</span>`}
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between gap-1">
+                                    <span class="text-[10px] font-bold uppercase text-sage-600 truncate">${escapeHtmlAttr(p.brand)} • ${escapeHtmlAttr(p.category)}</span>
+                                    ${stockBadge}
+                                </div>
+                                <h4 class="font-bold text-xs sm:text-sm text-slate-900 line-clamp-2 mt-0.5">${escapeHtmlAttr(p.name)}</h4>
+                                <p class="font-display font-extrabold text-sm text-sage-900 mt-1">
+                                    ${p.price} DH ${p.oldPrice ? `<span class="text-xs font-normal text-slate-400 line-through">${p.oldPrice} DH</span>` : ''}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between gap-2 bg-sand-50 px-3 py-2 rounded-xl border border-slate-200/80">
+                            <span class="text-[11px] font-bold text-slate-700">Quantité en stock :</span>
+                            <div class="flex items-center gap-1.5">
+                                <button type="button" onclick="adjustCmsProductStock(${p.id}, -1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-coral-50 hover:text-coral-600 font-extrabold text-sm flex items-center justify-center cursor-pointer">-</button>
+                                <input type="number" min="0" value="${qty}" data-stock-row="${rowIdx}" onkeydown="handleStockInputKeydown(event, ${rowIdx})" onchange="setCmsProductStockDirect(${p.id}, this.value)" class="w-16 py-1 rounded-lg border border-sage-300 bg-white text-center font-display font-extrabold text-xs text-sage-900">
+                                <button type="button" onclick="adjustCmsProductStock(${p.id}, 1)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-sage-100 hover:text-sage-800 font-extrabold text-sm flex items-center justify-center cursor-pointer">+</button>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
+                            <button onclick="openCmsProductEditor(${p.id})" class="px-3 py-1.5 rounded-lg bg-sage-50 hover:bg-sage-100 text-sage-800 text-xs font-bold cursor-pointer">✏️ Modifier</button>
+                            <button onclick="duplicateCmsProduct(${p.id})" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer" title="Dupliquer">📋</button>
+                            <button onclick="deleteCmsProduct(${p.id})" class="px-3 py-1.5 rounded-lg bg-coral-50 hover:bg-coral-100 text-coral-600 text-xs font-bold cursor-pointer">🗑️</button>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+            }
 
             if (paginationEl) {
-                paginationEl.innerHTML = totalPages > 1
-                    ? buildMinimalCirclePaginationHTML(cmsProductsCurrentPage, totalPages, 'goToCmsProductsPage')
-                    : '';
+                paginationEl.innerHTML = buildMinimalCirclePaginationHTML(cmsProductsCurrentPage, totalPages, 'goToCmsProductsPage');
             }
-        }
-
-        function submitCmsLogin(e) {
-            e.preventDefault();
-            const entered = document.getElementById('cmsPasswordInput').value;
-            const expected = SITE_DATA.adminPassword || "parateams2026";
-            if (entered === expected) {
-                isCmsAuthenticated = true;
-                document.getElementById('cmsLoginScreen').classList.add('hidden');
-                document.getElementById('cmsDashboardScreen').classList.remove('hidden');
-                refreshAllCmsPanels();
-                updateCmsHistoryButtons();
-                showToast("Bienvenue dans Parateams Studio CMS !");
-            } else {
-                document.getElementById('cmsLoginError').classList.remove('hidden');
-            }
-        }
-
-        function switchCmsTab(tabName) {
-            document.querySelectorAll('.cms-tab-btn').forEach(btn => {
-                const active = btn.dataset.cmstab === tabName;
-                btn.classList.toggle('bg-sage-700', active);
-                btn.classList.toggle('text-white', active);
-                btn.classList.toggle('bg-slate-100', !active);
-                btn.classList.toggle('text-slate-700', !active);
-            });
-            document.querySelectorAll('.cms-panel').forEach(panel => {
-                panel.classList.toggle('hidden', panel.id !== `cmsPanel-${tabName}`);
-            });
         }
 
         function refreshAllCmsPanels() {
@@ -4056,8 +4054,10 @@
 
             const bulkRayonSel = document.getElementById('bulkDefaultRayonSelect');
             if (bulkRayonSel) {
+                const prevVal = bulkRayonSel.value || 'auto';
                 bulkRayonSel.innerHTML = `<option value="auto">✨ Détection automatique du rayon (Recommandé)</option>` +
                     activeRayons.map(r => `<option value="${escapeHtmlAttr(r.name)}">Forcer le rayon : ${escapeHtmlAttr(r.name)}</option>`).join('');
+                bulkRayonSel.value = prevVal;
             }
 
             const cmsFilterSel = document.getElementById('cmsProdRayonFilter');
@@ -4608,11 +4608,11 @@
         }
 
         // =====================================================================
-        // MOTEUR D'IMPORTATION EN MASSE & EXTRACTION WEB MULTI-FICHIERS
+        // MOTEUR D'IMPORTATION EN MASSE & EXTRACTION DEPUIS UN AUTRE SITE WEB
         // =====================================================================
         let bulkStagedProducts = [];
 
-        function getDefaultBulkStockQty() {
+        function getDefaultInitialStock() {
             const el = document.getElementById('bulkDefaultStockInput');
             return el ? Math.max(0, Math.floor(Number(el.value) || 0)) : 10;
         }
@@ -4644,11 +4644,11 @@
         }
 
         function downloadCsvTemplate() {
-            const headers = "brand;name;price;oldPrice;category;image;stockQty;badge;description";
+            const headers = "brand;name;price;oldPrice;category;image;badge;stockQty;description";
             const sampleRows = [
-                "La Roche-Posay;Cicaplast Baume B5+ Réparateur 100ml;179;215;Corps & Hygiène;;15;-17%;Baume ultra-réparateur apaisant pour peaux fragilisées.",
-                "CeraVe;Gel Moussant Nettoyant 473ml;165;;Visage;;20;Best-seller;Nettoie et purifie sans altérer la barrière cutanée.",
-                "ISDIN;FotoUltra 100 Spot Prevent Fusion Fluid SPF50+;245;290;Solaires;;8;Promo;Très haute protection solaire prévenant les taches pigmentaires."
+                "La Roche-Posay;Cicaplast Baume B5+ Réparateur 100ml;179;215;Corps & Hygiène;;-17%;15;Baume ultra-réparateur apaisant pour peaux fragilisées.",
+                "CeraVe;Gel Moussant Nettoyant 473ml;165;;Visage;;Best-seller;20;Nettoie et purifie sans altérer la barrière cutanée.",
+                "ISDIN;FotoUltra 100 Spot Prevent Fusion Fluid SPF50+;245;290;Solaires;;Promo;8;Très haute protection solaire prévenant les taches pigmentaires."
             ];
             const csvContent = "\uFEFF" + [headers, ...sampleRows].join("\n");
             const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -4680,75 +4680,73 @@
             return result;
         }
 
-        // Supporte la sélection de 1 ou plusieurs fichiers .CSV / .JSON en même temps
         async function handleBulkCsvUpload(event) {
             const files = Array.from(event.target.files || []);
             if (files.length === 0) return;
 
-            const defaultStock = getDefaultBulkStockQty();
-            const combined = [];
+            const defaultStock = getDefaultInitialStock();
+            const parsedItems = [];
 
             for (const file of files) {
-                const text = await file.text();
-                const trimmed = (text || '').trim();
+                const text = (await file.text()).replace(/^\uFEFF/, '');
+                const trimmed = text.trim();
                 if (!trimmed) continue;
 
                 if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
                     const fromJson = parseProductsFromHtmlOrJson(trimmed);
-                    combined.push(...fromJson);
-                } else {
-                    const lines = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-                    if (lines.length === 0) continue;
-                    const delimiter = (lines[0].match(/;/g) || []).length >= (lines[0].match(/,/g) || []).length ? ';' : ',';
-                    const firstCols = parseDelimitedLine(lines[0], delimiter).map(c => c.toLowerCase());
-                    const hasHeader = firstCols.includes('name') || firstCols.includes('nom') || firstCols.includes('price') || firstCols.includes('prix');
-                    const startIdx = hasHeader ? 1 : 0;
+                    parsedItems.push(...fromJson);
+                    continue;
+                }
 
-                    for (let i = startIdx; i < lines.length; i++) {
-                        const cols = parseDelimitedLine(lines[i], delimiter);
-                        if (cols.length < 2) continue;
-                        const brand = cols[0] || "Parateams";
-                        const name = cols[1] || "";
-                        const price = parsePriceNumber(cols[2]) || 120;
-                        const oldPrice = parsePriceNumber(cols[3]) || null;
-                        const imageUrl = cols[5] || "";
-                        const stockQty = cols[6] !== undefined && cols[6] !== '' ? parsePriceNumber(cols[6]) : defaultStock;
-                        const badge = cols[7] || (oldPrice && oldPrice > price ? `-${Math.round((1 - price / oldPrice) * 100)}%` : "");
-                        const description = cols[8] || `${brand} — ${name}`;
-                        const category = getValidRayonName(cols[4], { name, brand, description });
-                        if (name) {
-                            combined.push({ selected: true, brand, name, price, oldPrice, category, imageUrl, stockQty, badge, description });
-                        }
+                const lines = trimmed.split(/\r?\n/).filter(l => l.trim().length > 0);
+                if (lines.length === 0) continue;
+
+                const firstLine = lines[0];
+                const delimiter = firstLine.includes(';') ? ';' : (firstLine.includes('\t') ? '\t' : ',');
+                const lowerFirst = firstLine.toLowerCase();
+                const hasHeader = lowerFirst.includes('name') || lowerFirst.includes('nom') || lowerFirst.includes('brand') || lowerFirst.includes('marque') || lowerFirst.includes('price') || lowerFirst.includes('prix');
+                const startIdx = hasHeader ? 1 : 0;
+
+                for (let i = startIdx; i < lines.length; i++) {
+                    const cols = parseDelimitedLine(lines[i], delimiter);
+                    if (cols.length < 2) continue;
+                    const brand = cols[0] || "Parateams";
+                    const name = cols[1] || "";
+                    const price = parsePriceNumber(cols[2]);
+                    const oldPrice = parsePriceNumber(cols[3]) || null;
+                    const category = getValidRayonName(cols[4], { name, brand });
+                    const imageUrl = cols[5] || "";
+                    const badge = cols[6] || (oldPrice && oldPrice > price ? `-${Math.round((1 - price / oldPrice) * 100)}%` : "");
+                    const stockQty = cols[7] !== undefined && cols[7] !== '' ? parsePriceNumber(cols[7]) : defaultStock;
+                    const description = cols[8] || `${brand} — ${name}`;
+
+                    if (name && price > 0) {
+                        parsedItems.push({ selected: true, brand, name, price, oldPrice, category, imageUrl, badge, stockQty, description });
                     }
                 }
             }
 
             event.target.value = '';
-            if (combined.length > 0) {
-                setBulkStagedProducts(combined, true);
-            } else {
-                showToast("Aucun produit valide trouvé dans les fichiers.");
-            }
+            stageProductsForPreview(parsedItems, true);
         }
 
-        function parseRawLinesToProducts(rawText) {
-            const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        function parseRawLinesToProductObjects(rawText) {
+            const lines = (rawText || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
             const items = [];
-            const defaultStock = getDefaultBulkStockQty();
-            lines.forEach(line => {
-                let sep = '|';
-                if (line.includes('\t')) sep = '\t';
-                else if (line.includes(';')) sep = ';';
-                const parts = line.split(sep).map(s => s.trim());
-                if (parts.length >= 2) {
-                    const brand = parts[0] || "Parateams";
-                    const name = parts[1];
-                    const price = parsePriceNumber(parts[2]) || 120;
-                    const oldPrice = parsePriceNumber(parts[3]) || null;
-                    const imageUrl = parts[5] || "";
-                    const stockQty = parts[6] !== undefined && parts[6] !== '' ? parsePriceNumber(parts[6]) : defaultStock;
-                    const category = getValidRayonName(parts[4], { name, brand });
-                    if (name) {
+            const defaultStock = getDefaultInitialStock();
+
+            for (const line of lines) {
+                const delimiter = line.includes('|') ? '|' : (line.includes('\t') ? '\t' : ';');
+                const cols = line.split(delimiter).map(c => c.trim());
+                if (cols.length >= 3) {
+                    const brand = cols[0] || "Parateams";
+                    const name = cols[1] || "";
+                    const price = parsePriceNumber(cols[2]);
+                    const oldPrice = parsePriceNumber(cols[3]) || null;
+                    const category = getValidRayonName(cols[4], { name, brand });
+                    const imageUrl = cols[5] || "";
+                    const stockQty = cols[6] !== undefined && cols[6] !== '' ? parsePriceNumber(cols[6]) : defaultStock;
+                    if (name && price > 0) {
                         items.push({
                             selected: true,
                             brand,
@@ -4763,81 +4761,92 @@
                         });
                     }
                 }
-            });
+            }
             return items;
         }
 
         function previewBulkPasteLines() {
-            const val = document.getElementById('bulkPasteTextarea').value;
-            const count = parseRawLinesToProducts(val).length;
-            document.getElementById('bulkPasteCounter').textContent = `${count} détecté${count > 1 ? 's' : ''}`;
+            const text = document.getElementById('bulkPasteTextarea').value;
+            const items = parseRawLinesToProductObjects(text);
+            document.getElementById('bulkPasteCounter').textContent = `${items.length} détecté${items.length > 1 ? 's' : ''}`;
         }
 
         function loadBulkPasteIntoStaging() {
-            const val = document.getElementById('bulkPasteTextarea').value;
-            const items = parseRawLinesToProducts(val);
+            const text = document.getElementById('bulkPasteTextarea').value;
+            const items = parseRawLinesToProductObjects(text);
             if (items.length === 0) {
-                showToast("Aucune ligne valide détectée. Format : Marque | Nom | Prix");
+                showToast("Format attendu : Marque | Nom | Prix | AncienPrix | Rayon | URL Photo | Quantité");
                 return;
             }
-            setBulkStagedProducts(items, true);
+            stageProductsForPreview(items, true);
         }
 
-        // EXTRACTION DEPUIS UN AUTRE SITE WEB (JSON SHOPIFY, JSON-LD, CARTES HTML)
-        function parseProductsFromHtmlOrJson(rawContent, sourceUrl = '') {
-            const trimmed = rawContent.trim();
+        function parseProductsFromHtmlOrJson(rawContent) {
             const extracted = [];
             const seenNames = new Set();
-            const defaultStock = getDefaultBulkStockQty();
+            const defaultStock = getDefaultInitialStock();
 
-            const pushUnique = (item) => {
+            function pushUnique(item) {
                 if (!item || !item.name) return;
                 const cleanName = String(item.name).replace(/\s+/g, ' ').trim();
-                if (cleanName.length < 3 || seenNames.has(cleanName.toLowerCase())) return;
-                const price = parsePriceNumber(item.price);
-                if (price <= 0) return;
-                seenNames.add(cleanName.toLowerCase());
+                const numPrice = parsePriceNumber(item.price);
+                if (cleanName.length < 3 || numPrice <= 0) return;
+                const key = cleanName.toLowerCase();
+                if (seenNames.has(key)) return;
+                seenNames.add(key);
 
-                let img = String(item.imageUrl || '').trim();
-                if (img && sourceUrl && img.startsWith('/')) {
-                    try { img = new URL(img, sourceUrl).href; } catch (e) {}
-                }
-                const oldPrice = parsePriceNumber(item.oldPrice) || null;
-                const brand = String(item.brand || cleanName.split(' ')[0] || 'Parateams').trim();
-                const description = String(item.description || cleanName).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 260);
-                const category = getValidRayonName(item.category, { name: cleanName, brand, description });
+                const numOld = parsePriceNumber(item.oldPrice);
+                const validOld = numOld > numPrice ? numOld : null;
+                const cleanBrand = String(item.brand || cleanName.split(' ')[0] || 'Parateams').trim();
 
                 extracted.push({
                     selected: true,
-                    brand,
+                    brand: cleanBrand,
                     name: cleanName,
-                    price,
-                    oldPrice: oldPrice && oldPrice > price ? oldPrice : null,
-                    category,
-                    imageUrl: img,
+                    price: numPrice,
+                    oldPrice: validOld,
+                    category: getValidRayonName(item.category, { name: cleanName, brand: cleanBrand, description: item.description }),
+                    imageUrl: String(item.imageUrl || item.image || '').trim(),
                     stockQty: typeof item.stockQty === 'number' ? item.stockQty : defaultStock,
-                    badge: oldPrice && oldPrice > price ? `-${Math.round((1 - price / oldPrice) * 100)}%` : 'Nouveau',
-                    description
+                    badge: validOld ? `-${Math.round((1 - numPrice / validOld) * 100)}%` : "",
+                    description: String(item.description || `${cleanBrand} — ${cleanName}`).trim()
                 });
-            };
+            }
+
+            const trimmed = (rawContent || '').trim();
+            if (!trimmed) return extracted;
 
             if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
                 try {
-                    const data = JSON.parse(trimmed);
-                    const arr = Array.isArray(data) ? data : (data.products || data.items || [data]);
-                    arr.forEach(p => {
-                        const variant = Array.isArray(p.variants) && p.variants[0] ? p.variants[0] : {};
-                        const img = Array.isArray(p.images) && p.images[0] ? (p.images[0].src || p.images[0]) : (p.image?.src || p.image || p.imageUrl || '');
-                        pushUnique({
-                            brand: p.vendor || p.brand || 'Parateams',
-                            name: p.title || p.name,
-                            price: variant.price || p.price,
-                            oldPrice: variant.compare_at_price || p.oldPrice,
-                            category: p.product_type || p.category,
-                            imageUrl: img,
-                            stockQty: typeof p.stockQty === 'number' ? p.stockQty : defaultStock,
-                            description: p.body_html || p.description || ''
-                        });
+                    const json = JSON.parse(trimmed);
+                    const arr = Array.isArray(json) ? json : (json.products || json.items || [json]);
+                    arr.forEach(obj => {
+                        if (!obj) return;
+                        if (obj.variants && Array.isArray(obj.variants) && obj.variants[0]) {
+                            const v = obj.variants[0];
+                            const img = (obj.images && obj.images[0] && obj.images[0].src) || (obj.image && obj.image.src) || '';
+                            pushUnique({
+                                brand: obj.vendor || "Parateams",
+                                name: obj.title,
+                                price: v.price,
+                                oldPrice: v.compare_at_price,
+                                category: obj.product_type,
+                                imageUrl: img,
+                                stockQty: obj.stockQty,
+                                description: (obj.body_html || '').replace(/<[^>]*>/g, ' ').slice(0, 220)
+                            });
+                        } else if (obj.name || obj.title) {
+                            pushUnique({
+                                brand: obj.brand && typeof obj.brand === 'object' ? obj.brand.name : (obj.brand || obj.vendor),
+                                name: obj.name || obj.title,
+                                price: obj.price || (obj.offers && obj.offers.price),
+                                oldPrice: obj.oldPrice || obj.compare_at_price,
+                                category: obj.category,
+                                imageUrl: Array.isArray(obj.image) ? obj.image[0] : (obj.imageUrl || obj.image),
+                                stockQty: obj.stockQty,
+                                description: obj.description
+                            });
+                        }
                     });
                     if (extracted.length > 0) return extracted;
                 } catch (e) {}
@@ -4846,302 +4855,117 @@
             const parser = new DOMParser();
             const doc = parser.parseFromString(trimmed, 'text/html');
 
-            const cardSelectors = '.product, .product-card, .product-item, .grid-product, .product-miniature, li.product, [data-product-id], article';
+            // Détection élargie pour Palmarosa Shop, Parapharma.ma, PrestaShop, WooCommerce & Shopify
+            const cardSelectors = 'article, .product, .product-card, .product-item, .grid-product, .product-miniature, .js-product-miniature, .item-product, li.product, [data-product-id], [class*="product-card"], [class*="product-item"], [class*="product"]';
             doc.querySelectorAll(cardSelectors).forEach(card => {
-                const titleEl = card.querySelector('h2, h3, h4, .product-title, .card__heading, .product-card__title, a[title]');
-                const priceEl = card.querySelector('.price ins .amount, .price .amount, .price, .product-price, .money, [data-price]');
-                const oldPriceEl = card.querySelector('.price del .amount, .regular-price, .compare-at-price, del');
+                const text = (card.innerText || card.textContent || '').trim();
+                const priceMatches = [...text.matchAll(/(\d+(?:[\s.,]\d+)?)\s*(?:MAD|DH|Dhs|د\.م\.)/gi)]
+                    .map(m => parseFloat(m[1].replace(/\s/g, '').replace(',', '.')))
+                    .filter(n => !isNaN(n) && n > 5 && n < 15000);
+
+                if (priceMatches.length === 0) return;
+
+                const titleEl = card.querySelector('h2, h3, h4, .product-title, .card__heading, .product-card__title, .product-name, a[title], [class*="title"], [class*="name"]');
                 const imgEl = card.querySelector('img');
-                const brandEl = card.querySelector('.brand, .product-brand, .vendor');
+                const brandEl = card.querySelector('.brand, .product-brand, .vendor, .manufacturer, [class*="brand"], [class*="vendor"], [class*="marque"]');
 
-                const name = titleEl ? (titleEl.textContent || titleEl.getAttribute('title') || '') : '';
-                const price = priceEl ? priceEl.textContent : '';
-                const oldPrice = oldPriceEl ? oldPriceEl.textContent : '';
-                const img = imgEl ? (imgEl.getAttribute('data-src') || imgEl.getAttribute('src') || '') : '';
-                const brand = brandEl ? brandEl.textContent : (name.split(' ')[0] || 'Parateams');
+                let name = titleEl ? (titleEl.textContent || titleEl.getAttribute('title') || '').trim() : '';
+                if (!name || name.length < 4) {
+                    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 4 && !/rupture|epuise|épuisé|ajouter|panier|mad|dh/i.test(l));
+                    name = lines[1] || lines[0] || '';
+                }
 
-                if (name.trim().length > 3 && parsePriceNumber(price) > 0) {
+                const price = Math.min(...priceMatches);
+                const maxPrice = Math.max(...priceMatches);
+                const oldPrice = maxPrice > price ? maxPrice : null;
+                const img = imgEl ? (imgEl.getAttribute('data-src') || imgEl.getAttribute('data-lazy-src') || imgEl.getAttribute('src') || '') : '';
+                let brand = brandEl ? brandEl.textContent.trim() : '';
+                if (!brand) {
+                    brand = name.includes('–') ? name.split('–')[0].trim() : (name.includes('-') ? name.split('-')[0].trim() : name.split(' ')[0]);
+                }
+
+                if (name.length > 3 && price > 0) {
                     pushUnique({ brand, name, price, oldPrice, imageUrl: img });
                 }
             });
 
+            // Si c'est un Copier-Coller direct de texte (Ctrl+A puis Ctrl+C sur Palmarosa ou Parapharma)
+            if (extracted.length === 0) {
+                const lines = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+                for (let i = 0; i < lines.length; i++) {
+                    const priceMatch = lines[i].match(/^(\d+(?:[.,]\d+)?)\s*(?:MAD|DH|Dhs)\b/i);
+                    if (priceMatch && i >= 1) {
+                        const price = parseFloat(priceMatch[1].replace(',', '.'));
+                        let nameLine = '';
+                        let brandLine = '';
+                        for (let j = i - 1; j >= Math.max(0, i - 5); j--) {
+                            const candidate = lines[j];
+                            if (/^[\d.,\s★☆()]+$/.test(candidate) || /rupture|épuisé|epuise|ajouter|aperçu/i.test(candidate)) continue;
+                            if (!nameLine) {
+                                nameLine = candidate;
+                            } else if (!brandLine && candidate.length <= 30) {
+                                brandLine = candidate;
+                                break;
+                            }
+                        }
+                        if (nameLine && nameLine.length > 3 && price > 0) {
+                            const brand = brandLine || (nameLine.includes('–') ? nameLine.split('–')[0].trim() : nameLine.split(' ')[0]);
+                            pushUnique({ brand, name: nameLine, price });
+                        }
+                    }
+                }
+            }
+
             return extracted;
         }
 
-        async function extractFromExternalUrl() {
-            const urlInput = document.getElementById('scrapeUrlInput');
-            const statusEl = document.getElementById('scrapeUrlStatus');
-            const btn = document.getElementById('scrapeUrlBtn');
-            const targetUrl = (urlInput.value || '').trim();
+        // COLLAGE DIRECT (CTRL+V) DANS LE TABLEAU D'INVENTAIRE (SANS PASSER PAR LA CONSOLE)
+        function handleDirectTablePaste(event) {
+            event.preventDefault();
+            const htmlData = event.clipboardData ? event.clipboardData.getData('text/html') : '';
+            const textData = event.clipboardData ? event.clipboardData.getData('text/plain') : '';
+            const rawToParse = (htmlData && htmlData.trim().length > 20) ? htmlData : textData;
 
-            if (!targetUrl || !targetUrl.startsWith('http')) {
-                statusEl.className = "text-[11px] font-bold text-coral-600";
-                statusEl.textContent = "⚠️ Veuillez entrer une adresse URL valide commençant par https://";
+            const dropzone = document.getElementById('quickClipboardDropzone');
+            if (!rawToParse || rawToParse.trim().length < 5) {
+                showToast("Presse-papiers vide. Faites Ctrl+A puis Ctrl+C sur Palmarosa ou Parapharma.");
                 return;
             }
 
-            btn.disabled = true;
-            btn.classList.add('opacity-60');
-            statusEl.className = "text-[11px] font-semibold text-sage-800";
-            statusEl.textContent = "⏳ Récupération et analyse de la collection en cours...";
-
-            try {
-                // Essai 1 : Endpoint JSON Shopify direct via proxy
-                const cleanUrl = targetUrl.split('?')[0].replace(/\/$/, '');
-                const shopifyJsonUrl = cleanUrl.includes('/collections/') && !cleanUrl.endsWith('.json')
-                    ? `${cleanUrl}/products.json?limit=250`
-                    : targetUrl;
-
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(shopifyJsonUrl)}`;
-                const res = await fetch(proxyUrl);
-                if (!res.ok) throw new Error("Accès bloqué par le site distant");
-                const data = await res.json();
-                if (!data || !data.contents) throw new Error("Contenu vide");
-
-                const found = parseProductsFromHtmlOrJson(data.contents, targetUrl);
-                if (found.length === 0) {
-                    throw new Error("Aucun produit détecté automatiquement sur ce lien");
-                }
-
-                setBulkStagedProducts(found, true);
-                statusEl.className = "text-[11px] font-bold text-[#166534]";
-                statusEl.textContent = `✅ ${found.length} produit(s) ajoutés au tableau de prévisualisation !`;
-            } catch (err) {
-                statusEl.className = "text-[11px] font-semibold text-coral-600 leading-relaxed";
-                statusEl.innerHTML = `⚠️ Ce site protège son accès direct. Utilisez le bouton <strong>« 📋 Copier le script Console »</strong> dans le <strong>Mode B</strong> à droite pour tout aspirer en 1 clic.`;
-            } finally {
-                btn.disabled = false;
-                btn.classList.remove('opacity-60');
+            const insertedCount = insertExtractedItemsDirectlyIntoTable(rawToParse);
+            if (insertedCount === 0 && dropzone) {
+                dropzone.textContent = textData.slice(0, 300);
+            } else if (dropzone) {
+                dropzone.innerHTML = `<span class="text-sage-700 font-extrabold">✅ ${insertedCount} produit(s) Palmarosa / Parapharma ajoutés directement dans votre tableau ci-dessous ! Saisissez maintenant vos quantités.</span>`;
             }
         }
 
-        function extractProductsFromPastedSource(appendToStaging = false) {
-            const raw = document.getElementById('scrapeHtmlSourceInput').value;
-            if (!raw || raw.trim().length < 10) {
-                showToast("Collez d'abord le JSON ou HTML copié depuis la Console.");
-                return;
+        function triggerManualQuickPasteParse() {
+            const dropzone = document.getElementById('quickClipboardDropzone');
+            if (!dropzone) return;
+            const raw = dropzone.innerHTML || dropzone.textContent || '';
+            const count = insertExtractedItemsDirectlyIntoTable(raw);
+            if (count === 0) {
+                showToast("Collez d'abord (Ctrl+V) les produits copiés depuis Palmarosa ou Parapharma dans la case pointillée.");
             }
-            const found = parseProductsFromHtmlOrJson(raw);
-            if (found.length === 0) {
-                showToast("Aucun produit détecté. Utilisez le bouton « Copier le script Console ».");
-                return;
-            }
-            setBulkStagedProducts(found, appendToStaging);
-            document.getElementById('scrapeHtmlSourceInput').value = '';
         }
 
-        function copyUniversalConsoleExtractor() {
-            const snippet = `(() => {
-  window.__palmarosaMap = window.__palmarosaMap || new Map();
+        function insertExtractedItemsDirectlyIntoTable(rawContent) {
+            const items = parseProductsFromHtmlOrJson(rawContent);
+            if (!items || items.length === 0) return 0;
 
-  function scanPageProducts() {
-    const priceRegex = /(\\d[\\d\\s.,]*)\\s*(?:MAD|DH|Dhs)/gi;
-    const allEls = Array.from(document.querySelectorAll('div, article, li, a'));
+            const initialStockEl = document.getElementById('quickPasteInitialStock');
+            const initialStock = initialStockEl ? Math.max(0, Math.floor(Number(initialStockEl.value) || 0)) : 0;
 
-    allEls.forEach(card => {
-      const txt = (card.innerText || '').trim();
-      if (!txt || txt.length > 550) return;
-      const matches = [...txt.matchAll(priceRegex)];
-      if (matches.length === 0 || matches.length > 3) return;
-
-      const imgs = card.querySelectorAll('img');
-      if (imgs.length !== 1) return;
-      const img = imgs[0];
-
-      const prices = matches.map(m => parseFloat(m[1].replace(/\\s+/g, '').replace(',', '.'))).filter(n => n > 5 && n < 25000);
-      if (prices.length === 0) return;
-
-      const lines = txt.split(/\\r?\\n/).map(l => l.trim()).filter(l =>
-        l.length > 1 &&
-        !/^(rupture|epuise|épuisé|ajouter|acheter|panier|promo|nouveau)$/i.test(l) &&
-        !/^\\d+(\\.\\d+)?\\s*\\(\\d+\\)$/.test(l) &&
-        !/^(\\d[\\d\\s.,]*)\\s*(?:MAD|DH|Dhs)$/i.test(l) &&
-        !/^-\\s*\\d+\\s*%$/.test(l)
-      );
-
-      if (lines.length === 0) return;
-      let brand = 'Parateams';
-      let name = lines[0];
-
-      if (lines.length >= 2 && lines[0].length <= 28 && lines[1].length > lines[0].length) {
-        brand = lines[0];
-        name = lines[1];
-      } else if (name.includes(' - ')) {
-        brand = name.split(' - ')[0].trim();
-      } else {
-        brand = name.split(' ')[0].trim();
-      }
-
-      if (!name || name.length < 4) return;
-      const key = name.toLowerCase();
-      const price = Math.min(...prices);
-      const maxPrice = Math.max(...prices);
-      const imageUrl = img.currentSrc || img.getAttribute('src') || img.getAttribute('data-src') || '';
-
-      if (!window.__palmarosaMap.has(key)) {
-        window.__palmarosaMap.set(key, {
-          vendor: brand,
-          title: name,
-          price: price,
-          oldPrice: maxPrice > price ? maxPrice : null,
-          image: imageUrl,
-          stockQty: 0,
-          category: document.title || window.location.pathname
-        });
-      }
-    });
-
-    const countEl = document.getElementById('__palmarosaCount');
-    if (countEl) countEl.textContent = window.__palmarosaMap.size;
-  }
-
-  scanPageProducts();
-  window.addEventListener('scroll', scanPageProducts, { passive: true });
-
-  let bar = document.getElementById('__palmarosaBar');
-  if (!bar) {
-    bar = document.createElement('div');
-    bar.id = '__palmarosaBar';
-    bar.style.cssText = 'position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:9999999;background:#0f172a;color:#fff;padding:12px 18px;border-radius:16px;box-shadow:0 15px 35px rgba(0,0,0,0.45);display:flex;align-items:center;gap:10px;font-family:sans-serif;border:2px solid #22c55e;';
-    bar.innerHTML = \`
-      <span style="font-size:14px;font-weight:bold;">🌸 <span id="__palmarosaCount">\${window.__palmarosaMap.size}</span> produits détectés</span>
-      <button id="__palmarosaScrollBtn" style="padding:8px 12px;background:#334155;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:bold;cursor:pointer;">⏬ Dérouler la page auto</button>
-      <button id="__palmarosaCopyBtn" style="padding:10px 16px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;">📋 COPIER TOUT</button>
-      <button id="__palmarosaDlBtn" style="padding:10px 12px;background:#e11d48;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:bold;cursor:pointer;">⬇️ Fichier .JSON</button>
-    \`;
-    document.body.appendChild(bar);
-
-    document.getElementById('__palmarosaScrollBtn').onclick = async function() {
-      this.textContent = '⏳ Défilement en cours...';
-      for (let i = 0; i < 18; i++) {
-        window.scrollBy(0, 750);
-        const moreBtn = Array.from(document.querySelectorAll('button, a')).find(b => /voir plus|charger plus|plus de produits|afficher plus/i.test(b.innerText || ''));
-        if (moreBtn) moreBtn.click();
-        await new Promise(r => setTimeout(r, 450));
-        scanPageProducts();
-      }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      this.textContent = '✅ Page déroulée !';
-    };
-
-    document.getElementById('__palmarosaCopyBtn').onclick = function() {
-      scanPageProducts();
-      const arr = Array.from(window.__palmarosaMap.values());
-      const json = JSON.stringify({ products: arr }, null, 2);
-      navigator.clipboard.writeText(json);
-      this.textContent = '✅ ' + arr.length + ' PRODUITS COPIÉS !';
-      this.style.background = '#2563eb';
-    };
-
-    document.getElementById('__palmarosaDlBtn').onclick = function() {
-      scanPageProducts();
-      const arr = Array.from(window.__palmarosaMap.values());
-      const blob = new Blob([JSON.stringify({ products: arr }, null, 2)], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'palmarosa-produits.json';
-      a.click();
-    };
-  }
-})();`;
-            const ta = document.createElement('textarea');
-            ta.value = snippet;
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand('copy');
-            document.body.removeChild(ta);
-            showToast("🌸 Script spécial Palmarosa Shop copié ! Collez-le dans la Console sur palmarosashop.com.");
-        }
-
-        function setBulkStagedProducts(items, append = false) {
-            if (append && bulkStagedProducts.length > 0) {
-                const existingNames = new Set(bulkStagedProducts.map(p => p.name.toLowerCase()));
-                const uniqueNew = items.filter(p => !existingNames.has(p.name.toLowerCase()));
-                bulkStagedProducts = [...bulkStagedProducts, ...uniqueNew];
-            } else {
-                bulkStagedProducts = items;
-            }
-            const box = document.getElementById('bulkStagingBox');
-            box.classList.remove('hidden');
-            renderBulkStagingTable();
-            box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            showToast(`${bulkStagedProducts.length} produit(s) dans le tableau de prévisualisation !`);
-        }
-
-        function clearBulkStaging() {
-            bulkStagedProducts = [];
-            document.getElementById('bulkStagingBox').classList.add('hidden');
-        }
-
-        function toggleAllBulkStaged(checked) {
-            bulkStagedProducts.forEach(p => p.selected = checked);
-            renderBulkStagingTable();
-        }
-
-        function updateBulkStagedField(idx, field, val) {
-            if (!bulkStagedProducts[idx]) return;
-            if (field === 'price' || field === 'oldPrice' || field === 'stockQty') {
-                bulkStagedProducts[idx][field] = parsePriceNumber(val);
-            } else {
-                bulkStagedProducts[idx][field] = val;
-            }
-            const selectedCount = bulkStagedProducts.filter(p => p.selected).length;
-            document.getElementById('bulkStagingSelectedCount').textContent = selectedCount;
-        }
-
-        function renderBulkStagingTable() {
-            const tbody = document.getElementById('bulkStagingTableBody');
-            const validRayons = SITE_DATA.rayons.filter(r => !r.isBudget).map(r => r.name);
-            const selectedCount = bulkStagedProducts.filter(p => p.selected).length;
-
-            document.getElementById('bulkStagingSelectedCount').textContent = selectedCount;
-            document.getElementById('bulkStagingTotalCount').textContent = bulkStagedProducts.length;
-
-            tbody.innerHTML = bulkStagedProducts.slice(0, 250).map((p, idx) => `
-                <tr class="${p.selected ? 'bg-white' : 'bg-slate-50 opacity-55'}">
-                    <td class="p-2.5">
-                        <input type="checkbox" ${p.selected ? 'checked' : ''} onchange="updateBulkStagedField(${idx}, 'selected', this.checked)" class="accent-sage-700">
-                    </td>
-                    <td class="p-2.5">
-                        <div class="w-10 h-10 rounded-lg bg-sage-50 border border-slate-200 flex items-center justify-center overflow-hidden">
-                            ${p.imageUrl ? `<img src="${escapeHtmlAttr(p.imageUrl)}" class="max-h-full max-w-full object-contain" onerror="this.style.display='none'">` : `<span class="text-[10px] font-bold text-sage-700">IMG</span>`}
-                        </div>
-                    </td>
-                    <td class="p-2.5">
-                        <input type="text" value="${escapeHtmlAttr(p.brand)}" onchange="updateBulkStagedField(${idx}, 'brand', this.value)" class="w-28 px-2 py-1 rounded border border-slate-200 text-xs font-semibold">
-                    </td>
-                    <td class="p-2.5">
-                        <input type="text" value="${escapeHtmlAttr(p.name)}" onchange="updateBulkStagedField(${idx}, 'name', this.value)" class="w-full min-w-[180px] px-2 py-1 rounded border border-slate-200 text-xs">
-                    </td>
-                    <td class="p-2.5">
-                        <input type="number" value="${p.price}" onchange="updateBulkStagedField(${idx}, 'price', this.value)" class="w-20 px-2 py-1 rounded border border-slate-200 text-xs font-bold text-sage-900">
-                    </td>
-                    <td class="p-2.5">
-                        <input type="number" min="0" value="${typeof p.stockQty === 'number' ? p.stockQty : 10}" onchange="updateBulkStagedField(${idx}, 'stockQty', this.value)" class="w-20 px-2 py-1 rounded border-2 border-sage-400 bg-sage-50/40 text-xs font-extrabold text-center text-sage-900">
-                    </td>
-                    <td class="p-2.5">
-                        <select onchange="updateBulkStagedField(${idx}, 'category', this.value)" class="px-2 py-1 rounded border border-slate-200 text-xs bg-white">
-                            ${validRayons.map(r => `<option value="${escapeHtmlAttr(r)}" ${p.category === r ? 'selected' : ''}>${escapeHtmlAttr(r)}</option>`).join('')}
-                        </select>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function commitBulkStagedProducts() {
-            const chosen = bulkStagedProducts.filter(p => p.selected && p.name.trim() !== '');
-            if (chosen.length === 0) {
-                showToast("Sélectionnez au moins un produit à importer.");
-                return;
-            }
             pushCmsUndoSnapshot();
-            const mode = document.getElementById('bulkImportModeSelect').value;
-            let nextId = mode === 'replace' ? 1 : (Math.max(0, ...SITE_DATA.products.map(p => p.id)) + 1);
-            const defaultStock = getDefaultBulkStockQty();
+            let nextId = Math.max(0, ...SITE_DATA.products.map(p => p.id)) + 1;
+            const existingNames = new Set(SITE_DATA.products.map(p => p.name.toLowerCase()));
+            const newProducts = [];
 
-            const formatted = chosen.map(item => {
-                const qty = typeof item.stockQty === 'number' ? item.stockQty : defaultStock;
-                return syncProductStockFields({
+            items.forEach(item => {
+                if (existingNames.has(item.name.toLowerCase())) return;
+                existingNames.add(item.name.toLowerCase());
+                newProducts.push(syncProductStockFields({
                     id: nextId++,
                     brand: item.brand || "Parateams",
                     name: item.name,
@@ -5155,7 +4979,7 @@
                     badgeType: item.oldPrice ? "promo" : "new",
                     isNew: true,
                     rating: 4.9,
-                    reviewsCount: 12,
+                    reviewsCount: 14,
                     volume: "",
                     color: "#5D9C2A",
                     shape: "bottle",
@@ -5163,37 +4987,336 @@
                     description: item.description || `${item.brand} — ${item.name}`,
                     usage: "Appliquer selon les recommandations de votre pharmacien Parateams.",
                     ingredients: ""
-                }, qty);
+                }, initialStock));
             });
 
+            if (newProducts.length > 0) {
+                SITE_DATA.products = [...newProducts, ...SITE_DATA.products];
+                cmsProductsCurrentPage = 1;
+                cmsProductsViewMode = 'table';
+                saveCmsToLocalPreview(true);
+                showToast(`🎉 ${newProducts.length} nouveaux produits ajoutés dans le tableau !`);
+            } else {
+                showToast(`Tous ces produits (${items.length}) figurent déjà dans votre tableau.`);
+            }
+            return newProducts.length;
+        }
+
+        function exportInventoryTableToCsv() {
+            const headers = "id;brand;name;category;price;oldPrice;stockQty;imageUrl";
+            const rows = SITE_DATA.products.map(p =>
+                `${p.id};"${(p.brand || '').replace(/"/g, '""')}";"${(p.name || '').replace(/"/g, '""')}";"${p.category}";${p.price};${p.oldPrice || ''};${getProductStockQty(p)};"${p.imageUrl || ''}"`
+            );
+            const csv = "\uFEFF" + [headers, ...rows].join("\n");
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `inventaire-parateams-${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast("📥 Tableau d'inventaire exporté en CSV (Excel) !");
+        }
+
+        function copyUniversalConsoleExtractor() {
+            const snippet = `(async () => {
+  window.__PARATEAMS_BAG = window.__PARATEAMS_BAG || new Map();
+  const addItem = (item) => {
+    if (!item || !item.name || !item.price) return;
+    const key = item.name.trim().toLowerCase();
+    if (!window.__PARATEAMS_BAG.has(key)) window.__PARATEAMS_BAG.set(key, item);
+  };
+  try {
+    const baseUrl = window.location.origin + window.location.pathname.replace(/\\/$/, '') + '/products.json';
+    for (let p = 1; p <= 10; p++) {
+      const res = await fetch(baseUrl + '?limit=250&page=' + p);
+      if (!res.ok) break;
+      const data = await res.json();
+      if (!data.products || data.products.length === 0) break;
+      data.products.forEach(prod => {
+        const v = prod.variants?.[0] || {};
+        addItem({
+          brand: prod.vendor || prod.title.split(' ')[0],
+          name: prod.title,
+          price: parseFloat(v.price || 0),
+          oldPrice: parseFloat(v.compare_at_price || 0) || null,
+          category: prod.product_type || '',
+          image: prod.images?.[0]?.src || ''
+        });
+      });
+    }
+  } catch (e) {}
+  document.querySelectorAll('article, [class*="product"], [class*="card"], li.product').forEach(card => {
+    const img = card.querySelector('img');
+    const titleEl = card.querySelector('h2, h3, h4, a[title], [class*="title"], [class*="name"]');
+    if (!img || !titleEl) return;
+    const name = (titleEl.innerText || titleEl.getAttribute('title') || '').trim().replace(/\\s+/g, ' ');
+    const text = card.innerText || '';
+    const prices = [...text.matchAll(/(\\d+(?:[.,]\\d+)?)\\s*(?:MAD|DH|Dhs)/gi)].map(m => parseFloat(m[1].replace(',', '.')));
+    if (name.length < 4 || prices.length === 0) return;
+    const price = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const brandEl = card.querySelector('[class*="brand"], [class*="vendor"], [class*="marque"]');
+    const brand = brandEl ? brandEl.innerText.trim() : (name.includes('–') ? name.split('–')[0].trim() : name.split(' ')[0]);
+    const image = img.getAttribute('data-src') || img.currentSrc || img.src || '';
+    addItem({ brand, name, price, oldPrice: maxPrice > price ? maxPrice : null, image });
+  });
+  const all = Array.from(window.__PARATEAMS_BAG.values());
+  const json = JSON.stringify(all, null, 2);
+  let bar = document.getElementById('pt-extract-bar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'pt-extract-bar';
+    bar.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:999999;display:flex;gap:10px;padding:12px 20px;background:#0D1310;color:#fff;border-radius:16px;box-shadow:0 15px 35px rgba(0,0,0,0.45);align-items:center;font-family:sans-serif;';
+    document.body.appendChild(bar);
+  }
+  bar.innerHTML = '';
+  const copyBtn = document.createElement('button');
+  copyBtn.textContent = '📋 COPIER ' + all.length + ' PRODUITS';
+  copyBtn.style.cssText = 'padding:10px 18px;background:#16a34a;color:#fff;font-weight:bold;border:none;border-radius:10px;cursor:pointer;font-size:14px;';
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(json);
+    copyBtn.textContent = '✅ ' + all.length + ' PRODUITS COPIÉS !';
+    copyBtn.style.background = '#2563eb';
+  };
+  bar.appendChild(copyBtn);
+})();`;
+            navigator.clipboard.writeText(snippet).then(() => {
+                showToast("📋 Script Console copié ! Collez-le dans la Console du site cible.");
+            }).catch(() => {
+                showToast("Impossible de copier automatiquement.");
+            });
+        }
+
+        function copyPalmarosaConsoleScraper() {
+            copyUniversalConsoleExtractor();
+        }
+
+        async function extractFromExternalUrl() {
+            const urlInput = document.getElementById('scrapeUrlInput');
+            const statusEl = document.getElementById('scrapeUrlStatus');
+            const btn = document.getElementById('scrapeUrlBtn');
+            const targetUrl = (urlInput.value || '').trim();
+
+            if (!targetUrl) {
+                showToast("Veuillez entrer un lien URL valide.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = "⏳ Extraction en cours...";
+            statusEl.innerHTML = "Connexion au site distant et recherche des produits...";
+
+            try {
+                const parsedUrl = new URL(targetUrl);
+                const cleanPath = parsedUrl.pathname.replace(/\/$/, '');
+                const candidates = [
+                    `https://api.allorigins.win/raw?url=${encodeURIComponent(parsedUrl.origin + cleanPath + '/products.json?limit=250')}`,
+                    `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
+                    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`
+                ];
+
+                let items = [];
+                for (const proxyUrl of candidates) {
+                    try {
+                        const res = await fetch(proxyUrl);
+                        if (res.ok) {
+                            const text = await res.text();
+                            if (text && text.length > 50) {
+                                items = parseProductsFromHtmlOrJson(text);
+                                if (items.length > 0) break;
+                            }
+                        }
+                    } catch (err) {}
+                }
+
+                if (items.length === 0) {
+                    throw new Error("Ce site charge ses produits dynamiquement.");
+                }
+
+                stageProductsForPreview(items, true);
+                statusEl.innerHTML = `<span class="text-sage-700 font-bold">✅ ${items.length} produit(s) extrait(s) et ajoutés à la liste ci-dessous !</span>`;
+            } catch (err) {
+                statusEl.innerHTML = `<span class="text-coral-600 font-bold">⚠️ Utilisez le Mode B à droite (bouton "Copier le script Console") pour extraire tous les produits en 1 clic.</span>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "🔍 Extraire depuis ce lien URL";
+            }
+        }
+
+        function extractProductsFromPastedSource(appendMode = false) {
+            const raw = document.getElementById('scrapeHtmlSourceInput').value;
+            if (!raw || raw.trim() === '') {
+                showToast("Collez d'abord le résultat du script Console ou le JSON.");
+                return;
+            }
+            const items = parseProductsFromHtmlOrJson(raw);
+            if (items.length === 0) {
+                showToast("Aucun produit détecté.");
+                return;
+            }
+            stageProductsForPreview(items, appendMode);
+            document.getElementById('scrapeHtmlSourceInput').value = '';
+        }
+
+        function stageProductsForPreview(items, appendMode = false) {
+            if (!items || items.length === 0) {
+                showToast("Aucun produit valide détecté.");
+                return;
+            }
+            if (appendMode && bulkStagedProducts.length > 0) {
+                const existingNames = new Set(bulkStagedProducts.map(p => p.name.toLowerCase()));
+                const uniqueNew = items.filter(p => !existingNames.has(p.name.toLowerCase()));
+                bulkStagedProducts = [...bulkStagedProducts, ...uniqueNew.map(x => ({ ...x, selected: true }))];
+            } else {
+                bulkStagedProducts = items.map(x => ({ ...x, selected: true }));
+            }
+            document.getElementById('bulkStagingBox').classList.remove('hidden');
+            renderBulkStagingTable();
+            document.getElementById('bulkStagingBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            showToast(`${bulkStagedProducts.length} produit(s) prêts dans la liste d'importation !`);
+        }
+
+        function renderBulkStagingTable() {
+            const tbody = document.getElementById('bulkStagingTableBody');
+            const rayons = SITE_DATA.rayons.filter(r => !r.isBudget).map(r => r.name);
+
+            document.getElementById('bulkStagingTotalCount').textContent = bulkStagedProducts.length;
+            document.getElementById('bulkStagingSelectedCount').textContent = bulkStagedProducts.filter(p => p.selected).length;
+
+            tbody.innerHTML = bulkStagedProducts.slice(0, 200).map((item, idx) => `
+                <tr class="hover:bg-sage-50/40">
+                    <td class="p-2.5">
+                        <input type="checkbox" ${item.selected ? 'checked' : ''} onchange="bulkStagedProducts[${idx}].selected = this.checked; updateBulkStagingCounts();" class="accent-sage-700">
+                    </td>
+                    <td class="p-2.5">
+                        <div class="w-10 h-10 rounded-lg bg-sage-50 border border-slate-200 flex items-center justify-center overflow-hidden p-0.5">
+                            ${item.imageUrl ? `<img src="${escapeHtmlAttr(item.imageUrl)}" class="max-h-full max-w-full object-contain">` : '<span class="text-[10px] text-slate-400">Auto</span>'}
+                        </div>
+                    </td>
+                    <td class="p-2.5">
+                        <input type="text" value="${escapeHtmlAttr(item.brand)}" onchange="bulkStagedProducts[${idx}].brand = this.value" class="w-28 px-2 py-1 rounded border border-slate-200 text-xs font-bold">
+                    </td>
+                    <td class="p-2.5">
+                        <input type="text" value="${escapeHtmlAttr(item.name)}" onchange="bulkStagedProducts[${idx}].name = this.value" class="w-full min-w-[180px] px-2 py-1 rounded border border-slate-200 text-xs">
+                    </td>
+                    <td class="p-2.5">
+                        <input type="number" value="${item.price}" onchange="bulkStagedProducts[${idx}].price = Number(this.value)" class="w-20 px-2 py-1 rounded border border-slate-200 text-xs font-bold text-sage-900">
+                    </td>
+                    <td class="p-2.5">
+                        <input type="number" min="0" value="${item.stockQty ?? 10}" onchange="bulkStagedProducts[${idx}].stockQty = Math.max(0, Number(this.value))" class="w-16 px-2 py-1 rounded border border-sage-400 bg-sage-50/50 text-xs font-extrabold text-center text-sage-900">
+                    </td>
+                    <td class="p-2.5">
+                        <select onchange="bulkStagedProducts[${idx}].category = this.value" class="px-2 py-1 rounded border border-slate-200 text-xs bg-white">
+                            ${rayons.map(r => `<option value="${escapeHtmlAttr(r)}" ${item.category === r ? 'selected' : ''}>${escapeHtmlAttr(r)}</option>`).join('')}
+                        </select>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateBulkStagingCounts() {
+            const selEl = document.getElementById('bulkStagingSelectedCount');
+            if (selEl) selEl.textContent = bulkStagedProducts.filter(p => p.selected).length;
+        }
+
+        function toggleAllBulkStaged(checked) {
+            bulkStagedProducts.forEach(item => item.selected = checked);
+            renderBulkStagingTable();
+        }
+
+        function clearBulkStaging() {
+            bulkStagedProducts = [];
+            document.getElementById('bulkStagingBox').classList.add('hidden');
+        }
+
+        function commitBulkStagedProducts() {
+            const selected = bulkStagedProducts.filter(p => p.selected && p.name && p.price > 0);
+            if (selected.length === 0) {
+                showToast("Sélectionnez au moins un produit valide à importer.");
+                return;
+            }
+
+            pushCmsUndoSnapshot();
+            const mode = document.getElementById('bulkImportModeSelect').value;
+            let nextId = mode === 'replace' ? 1 : (Math.max(0, ...SITE_DATA.products.map(p => p.id)) + 1);
+
+            const newProducts = selected.map(item => syncProductStockFields({
+                id: nextId++,
+                brand: item.brand || "Parateams",
+                name: item.name,
+                category: normalizeCategoryName(item.category),
+                concern: "Hydratation",
+                skinType: "Tous types",
+                benefit: item.badge || "Soin dermo-cosmétique",
+                price: Number(item.price),
+                oldPrice: item.oldPrice ? Number(item.oldPrice) : null,
+                badge: item.badge || (item.oldPrice ? "Promo" : "Nouveau"),
+                badgeType: item.oldPrice ? "promo" : "new",
+                isNew: true,
+                rating: 4.9,
+                reviewsCount: 14,
+                volume: "",
+                color: "#5D9C2A",
+                shape: "bottle",
+                imageUrl: item.imageUrl || "",
+                description: item.description || `${item.brand} — ${item.name}`,
+                usage: "Appliquer selon les recommandations de votre pharmacien Parateams.",
+                ingredients: ""
+            }, item.stockQty ?? getDefaultInitialStock()));
+
             if (mode === 'replace') {
-                SITE_DATA.products = formatted;
+                SITE_DATA.products = newProducts;
             } else {
                 const existingNames = new Set(SITE_DATA.products.map(x => x.name.toLowerCase()));
-                const uniqueNew = formatted.filter(x => !existingNames.has(x.name.toLowerCase()));
+                const uniqueNew = newProducts.filter(x => !existingNames.has(x.name.toLowerCase()));
                 SITE_DATA.products = [...uniqueNew, ...SITE_DATA.products];
             }
 
             clearBulkStaging();
             saveCmsToLocalPreview(true);
             switchCmsTab('products');
-            showToast(`🎉 ${formatted.length} produit(s) importé(s) avec succès !`);
+            showToast(`🎉 ${newProducts.length} produit(s) importés ! Vous pouvez ajuster vos quantités.`);
         }
 
-        // INITIALISATION AU CHARGEMENT
+        // INITIALISATION GLOBALE
         window.addEventListener('DOMContentLoaded', () => {
             applyStoreSettingsToUI();
             renderHeroSlides();
-            syncMobileTopPadding();
-            window.addEventListener('resize', syncMobileTopPadding);
-            updateWishlistBadge();
             renderProducts();
+            updateCartBadge();
+            updateWishlistBadge();
             updateDeliverySimulator('Casablanca');
             initHeroSliderInteractions();
+            syncMobileTopPadding();
+            window.addEventListener('resize', syncMobileTopPadding);
+
+            const dropZone = document.getElementById('waDropZone');
+            if (dropZone) {
+                ['dragenter', 'dragover'].forEach(evtName => {
+                    dropZone.addEventListener(evtName, (e) => {
+                        e.preventDefault(); e.stopPropagation();
+                        dropZone.classList.add('border-[#25D366]', 'bg-[#F0FDF4]');
+                    });
+                });
+                ['dragleave', 'drop'].forEach(evtName => {
+                    dropZone.addEventListener(evtName, (e) => {
+                        e.preventDefault(); e.stopPropagation();
+                        dropZone.classList.remove('border-[#25D366]', 'bg-[#F0FDF4]');
+                    });
+                });
+                dropZone.addEventListener('drop', (e) => {
+                    const files = e.dataTransfer && e.dataTransfer.files;
+                    if (files && files.length > 0) processUploadedImageFile(files[0]);
+                });
+            }
 
             if (window.location.hash === '#admin') {
                 openAdminCMS();
             }
+            window.addEventListener('hashchange', () => {
+                if (window.location.hash === '#admin') openAdminCMS();
+            });
         });
     </script>
 </body>
