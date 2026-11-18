@@ -973,9 +973,7 @@
 
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
                             <div class="lg:col-span-9">
-                                <div id="quickClipboardDropzone" contenteditable="true" onpaste="handleDirectTablePaste(event)" class="w-full min-h-[54px] max-h-[90px] overflow-y-auto px-4 py-3 rounded-2xl bg-white border-2 border-dashed border-pink-400 hover:border-sage-600 focus:border-sage-700 focus:outline-none text-xs text-slate-500 cursor-text flex items-center">
-                                    👉 Cliquez ici et appuyez sur Ctrl + V pour coller toute une page Palmarosa / Parapharma (ou le JSON Console)...
-                                </div>
+                                <textarea id="quickClipboardDropzone" rows="2" onpaste="handleDirectTablePaste(event)" placeholder="👉 Cliquez ici puis appuyez sur Ctrl + V pour coller les produits copiés depuis Palmarosa Shop, Parapharma ou la Console..." class="w-full px-4 py-3 rounded-2xl bg-white border-2 border-dashed border-pink-400 hover:border-sage-600 focus:border-sage-700 focus:outline-none text-xs text-slate-700 placeholder-slate-400 cursor-text resize-none"></textarea>
                             </div>
                             <div class="lg:col-span-3 flex items-center justify-between lg:justify-end gap-2">
                                 <div class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-xl border border-slate-200 text-xs">
@@ -4855,7 +4853,70 @@
             const parser = new DOMParser();
             const doc = parser.parseFromString(trimmed, 'text/html');
 
-            // Détection élargie pour Palmarosa Shop, Parapharma.ma, PrestaShop, WooCommerce & Shopify
+            function normalizePalmarosaImg(rawSrc) {
+                if (!rawSrc) return '';
+                let s = rawSrc.trim();
+                if (s.startsWith('data:image')) return '';
+                if (s.startsWith('//')) return 'https:' + s;
+                if (s.startsWith('/')) return 'https://www.palmarosashop.com' + s;
+                return s;
+            }
+
+            // 1. Détection universelle par carte image + prix MAD/DH (spécial Palmarosa Shop Tailwind & Parapharma)
+            doc.querySelectorAll('img').forEach(imgEl => {
+                const rawSrc = imgEl.getAttribute('data-src') || imgEl.getAttribute('data-lazy-src') || imgEl.getAttribute('src') || '';
+                if (/logo|icon|avatar|banner|flag|payment/i.test(rawSrc)) return;
+
+                let card = imgEl.parentElement;
+                let foundCard = null;
+                for (let depth = 0; depth < 5 && card && card.tagName !== 'BODY'; depth++) {
+                    const cardText = (card.innerText || card.textContent || '').trim();
+                    const hasPrice = /(\d+(?:[\s.,]\d+)?)\s*(?:MAD|DH|Dhs)\b/i.test(cardText);
+                    const imgsInCard = card.querySelectorAll('img').length;
+                    if (hasPrice && imgsInCard <= 3) {
+                        foundCard = card;
+                        break;
+                    }
+                    card = card.parentElement;
+                }
+
+                if (!foundCard) return;
+                const text = (foundCard.innerText || foundCard.textContent || '').trim();
+                const priceMatches = [...text.matchAll(/(\d+(?:[\s.,]\d+)?)\s*(?:MAD|DH|Dhs)\b/gi)]
+                    .map(m => parseFloat(m[1].replace(/\s/g, '').replace(',', '.')))
+                    .filter(n => !isNaN(n) && n > 5 && n < 15000);
+                if (priceMatches.length === 0) return;
+
+                const cleanLines = text.split(/\r?\n/)
+                    .map(l => l.replace(/\s+/g, ' ').trim())
+                    .filter(l => l.length > 1 && !/^(rupture de stock|épuisé|epuise|ajouter au panier|ajouter|aperçu|favoris|\d+(?:[.,]\d+)?\s*(?:mad|dh|dhs)|★+|\d+[.,]\d+\s*\(\d+\))$/i.test(l));
+
+                let brand = '';
+                let name = '';
+                if (cleanLines.length >= 2 && cleanLines[0].length <= 28 && cleanLines[1].length > cleanLines[0].length) {
+                    brand = cleanLines[0];
+                    name = cleanLines[1];
+                } else if (cleanLines.length >= 1) {
+                    name = cleanLines.find(l => l.length > 6) || cleanLines[0];
+                    brand = name.includes('–') ? name.split('–')[0].trim() : (name.includes('-') ? name.split('-')[0].trim() : name.split(' ')[0]);
+                }
+
+                const price = Math.min(...priceMatches);
+                const maxPrice = Math.max(...priceMatches);
+                const oldPrice = maxPrice > price ? maxPrice : null;
+
+                if (name && name.length > 3 && price > 0) {
+                    pushUnique({
+                        brand,
+                        name,
+                        price,
+                        oldPrice,
+                        imageUrl: normalizePalmarosaImg(rawSrc)
+                    });
+                }
+            });
+
+            // 2. Détection par sélecteurs e-commerce classiques
             const cardSelectors = 'article, .product, .product-card, .product-item, .grid-product, .product-miniature, .js-product-miniature, .item-product, li.product, [data-product-id], [class*="product-card"], [class*="product-item"], [class*="product"]';
             doc.querySelectorAll(cardSelectors).forEach(card => {
                 const text = (card.innerText || card.textContent || '').trim();
@@ -4878,7 +4939,7 @@
                 const price = Math.min(...priceMatches);
                 const maxPrice = Math.max(...priceMatches);
                 const oldPrice = maxPrice > price ? maxPrice : null;
-                const img = imgEl ? (imgEl.getAttribute('data-src') || imgEl.getAttribute('data-lazy-src') || imgEl.getAttribute('src') || '') : '';
+                const img = imgEl ? normalizePalmarosaImg(imgEl.getAttribute('data-src') || imgEl.getAttribute('data-lazy-src') || imgEl.getAttribute('src') || '') : '';
                 let brand = brandEl ? brandEl.textContent.trim() : '';
                 if (!brand) {
                     brand = name.includes('–') ? name.split('–')[0].trim() : (name.includes('-') ? name.split('-')[0].trim() : name.split(' ')[0]);
@@ -4889,29 +4950,32 @@
                 }
             });
 
-            // Si c'est un Copier-Coller direct de texte (Ctrl+A puis Ctrl+C sur Palmarosa ou Parapharma)
-            if (extracted.length === 0) {
-                const lines = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-                for (let i = 0; i < lines.length; i++) {
-                    const priceMatch = lines[i].match(/^(\d+(?:[.,]\d+)?)\s*(?:MAD|DH|Dhs)\b/i);
-                    if (priceMatch && i >= 1) {
-                        const price = parseFloat(priceMatch[1].replace(',', '.'));
-                        let nameLine = '';
-                        let brandLine = '';
-                        for (let j = i - 1; j >= Math.max(0, i - 5); j--) {
-                            const candidate = lines[j];
-                            if (/^[\d.,\s★☆()]+$/.test(candidate) || /rupture|épuisé|epuise|ajouter|aperçu/i.test(candidate)) continue;
-                            if (!nameLine) {
-                                nameLine = candidate;
-                            } else if (!brandLine && candidate.length <= 30) {
-                                brandLine = candidate;
-                                break;
-                            }
+            // 3. Analyse ligne par ligne du texte visible (quand on fait Ctrl+A puis Ctrl+C sur Palmarosa Shop)
+            const plainTextBody = (doc.body ? (doc.body.innerText || doc.body.textContent || '') : '') + '\n' + trimmed.replace(/<[^>]+>/g, '\n');
+            const lines = plainTextBody.split(/\r?\n/).map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
+            for (let i = 0; i < lines.length; i++) {
+                const priceMatch = lines[i].match(/(\d+(?:[.,]\d+)?)\s*(?:MAD|DH|Dhs)\b/i);
+                if (priceMatch && i >= 1) {
+                    const price = parseFloat(priceMatch[1].replace(',', '.'));
+                    if (isNaN(price) || price <= 5) continue;
+                    let nameLine = '';
+                    let brandLine = '';
+                    for (let j = i - 1; j >= Math.max(0, i - 6); j--) {
+                        const candidate = lines[j];
+                        if (candidate.length < 2) continue;
+                        if (/^[\d.,\s★☆()/]+$/.test(candidate)) continue;
+                        if (/^(rupture de stock|épuisé|epuise|ajouter|aperçu|accueil|maquillage|visage|cheveux|corps|parfum|bébé|bien-être|panier|catégories|rechercher|favoris)$/i.test(candidate)) continue;
+                        if (/(\d+(?:[.,]\d+)?)\s*(?:MAD|DH|Dhs)\b/i.test(candidate)) break;
+                        if (!nameLine) {
+                            nameLine = candidate;
+                        } else if (!brandLine && candidate.length <= 32) {
+                            brandLine = candidate;
+                            break;
                         }
-                        if (nameLine && nameLine.length > 3 && price > 0) {
-                            const brand = brandLine || (nameLine.includes('–') ? nameLine.split('–')[0].trim() : nameLine.split(' ')[0]);
-                            pushUnique({ brand, name: nameLine, price });
-                        }
+                    }
+                    if (nameLine && nameLine.length > 3) {
+                        const brand = brandLine || (nameLine.includes('–') ? nameLine.split('–')[0].trim() : (nameLine.includes('-') ? nameLine.split('-')[0].trim() : nameLine.split(' ')[0]));
+                        pushUnique({ brand, name: nameLine, price });
                     }
                 }
             }
@@ -4921,33 +4985,138 @@
 
         // COLLAGE DIRECT (CTRL+V) DANS LE TABLEAU D'INVENTAIRE (SANS PASSER PAR LA CONSOLE)
         function handleDirectTablePaste(event) {
-            event.preventDefault();
             const htmlData = event.clipboardData ? event.clipboardData.getData('text/html') : '';
             const textData = event.clipboardData ? event.clipboardData.getData('text/plain') : '';
-            const rawToParse = (htmlData && htmlData.trim().length > 20) ? htmlData : textData;
+            const combinedRaw = (htmlData && htmlData.trim().length > 20)
+                ? (htmlData + "\n" + textData)
+                : textData;
 
+            if (!combinedRaw || combinedRaw.trim().length < 5) return;
+
+            event.preventDefault();
             const dropzone = document.getElementById('quickClipboardDropzone');
-            if (!rawToParse || rawToParse.trim().length < 5) {
-                showToast("Presse-papiers vide. Faites Ctrl+A puis Ctrl+C sur Palmarosa ou Parapharma.");
-                return;
-            }
+            const insertedCount = insertExtractedItemsDirectlyIntoTable(combinedRaw);
 
-            const insertedCount = insertExtractedItemsDirectlyIntoTable(rawToParse);
-            if (insertedCount === 0 && dropzone) {
-                dropzone.textContent = textData.slice(0, 300);
-            } else if (dropzone) {
-                dropzone.innerHTML = `<span class="text-sage-700 font-extrabold">✅ ${insertedCount} produit(s) Palmarosa / Parapharma ajoutés directement dans votre tableau ci-dessous ! Saisissez maintenant vos quantités.</span>`;
+            if (dropzone) {
+                if (insertedCount > 0) {
+                    dropzone.value = `✅ ${insertedCount} produit(s) Palmarosa ajoutés dans votre tableau ci-dessous ! Saisissez maintenant vos quantités dans la colonne "Mon Stock".`;
+                } else {
+                    dropzone.value = textData;
+                }
             }
         }
 
         function triggerManualQuickPasteParse() {
             const dropzone = document.getElementById('quickClipboardDropzone');
             if (!dropzone) return;
-            const raw = dropzone.innerHTML || dropzone.textContent || '';
-            const count = insertExtractedItemsDirectlyIntoTable(raw);
-            if (count === 0) {
-                showToast("Collez d'abord (Ctrl+V) les produits copiés depuis Palmarosa ou Parapharma dans la case pointillée.");
+            const raw = dropzone.value || dropzone.textContent || '';
+            if (!raw.trim()) {
+                showToast("Collez d'abord (Ctrl+V) les produits copiés depuis Palmarosa dans la case rose.");
+                return;
             }
+            const count = insertExtractedItemsDirectlyIntoTable(raw);
+            if (count > 0) {
+                dropzone.value = `✅ ${count} produit(s) ajoutés au tableau !`;
+            } else {
+                showToast("Aucun nouveau produit détecté (vérifiez qu'il y a bien les prix en MAD ou DH).");
+            }
+        }
+        function copyTextWithFallback(textToCopy, successMsg) {
+            const ta = document.createElement('textarea');
+            ta.value = textToCopy;
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            let copied = false;
+            try {
+                copied = document.execCommand('copy');
+            } catch (e) {}
+            document.body.removeChild(ta);
+
+            if (copied) {
+                showToast(successMsg);
+            } else if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(textToCopy).then(() => showToast(successMsg));
+            }
+        }
+
+        function copyUniversalConsoleExtractor() {
+            const snippet = `(async () => {
+  window.__PARATEAMS_BAG = window.__PARATEAMS_BAG || new Map();
+  const addItem = (item) => {
+    if (!item || !item.name || !item.price) return;
+    const key = item.name.trim().toLowerCase();
+    if (!window.__PARATEAMS_BAG.has(key)) window.__PARATEAMS_BAG.set(key, item);
+  };
+  const scanPage = () => {
+    document.querySelectorAll('img').forEach(img => {
+      const src = img.getAttribute('data-src') || img.currentSrc || img.src || '';
+      if (!src || /logo|icon|avatar|flag/i.test(src)) return;
+      let card = img.parentElement;
+      let found = null;
+      for (let d = 0; d < 5 && card && card.tagName !== 'BODY'; d++) {
+        const t = card.innerText || '';
+        if (/(\\d+(?:[.,]\\d+)?)\\s*(?:MAD|DH|Dhs)/i.test(t) && card.querySelectorAll('img').length <= 3) {
+          found = card; break;
+        }
+        card = card.parentElement;
+      }
+      if (!found) return;
+      const text = found.innerText || '';
+      const prices = [...text.matchAll(/(\\d+(?:[.,]\\d+)?)\\s*(?:MAD|DH|Dhs)/gi)].map(m => parseFloat(m[1].replace(',', '.')));
+      if (prices.length === 0) return;
+      const lines = text.split(/\\r?\\n/).map(l => l.trim()).filter(l => l.length > 2 && !/^(rupture de stock|épuisé|epuise|ajouter|aperçu|\\d+(?:[.,]\\d+)?\\s*(?:mad|dh|dhs)|★+|\\d+[.,]\\d+\\s*\\(\\d+\\))$/i.test(l));
+      let brand = '', name = '';
+      if (lines.length >= 2 && lines[0].length <= 28 && lines[1].length > lines[0].length) {
+        brand = lines[0]; name = lines[1];
+      } else if (lines.length >= 1) {
+        name = lines[0];
+        brand = name.includes('-') ? name.split('-')[0].trim() : name.split(' ')[0];
+      }
+      if (name.length > 3) {
+        addItem({ brand, name, price: Math.min(...prices), oldPrice: Math.max(...prices) > Math.min(...prices) ? Math.max(...prices) : null, image: src });
+      }
+    });
+  };
+  scanPage();
+  let bar = document.getElementById('pt-extract-bar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'pt-extract-bar';
+    bar.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:999999;display:flex;gap:10px;padding:12px 20px;background:#0D1310;color:#fff;border-radius:16px;box-shadow:0 15px 35px rgba(0,0,0,0.45);align-items:center;font-family:sans-serif;';
+    document.body.appendChild(bar);
+  }
+  const renderBar = () => {
+    const all = Array.from(window.__PARATEAMS_BAG.values());
+    bar.innerHTML = '';
+    const scrollBtn = document.createElement('button');
+    scrollBtn.textContent = '⏬ Dérouler la page (+ produits)';
+    scrollBtn.style.cssText = 'padding:10px 14px;background:#e11d48;color:#fff;font-weight:bold;border:none;border-radius:10px;cursor:pointer;font-size:13px;';
+    scrollBtn.onclick = async () => {
+      for (let i = 0; i < 6; i++) {
+        window.scrollBy({ top: 900, behavior: 'smooth' });
+        await new Promise(r => setTimeout(r, 650));
+        scanPage();
+        renderBar();
+      }
+    };
+    const copyBtn = document.createElement('button');
+    copyBtn.textContent = '📋 COPIER ' + all.length + ' PRODUITS PALMAROSA';
+    copyBtn.style.cssText = 'padding:10px 18px;background:#16a34a;color:#fff;font-weight:bold;border:none;border-radius:10px;cursor:pointer;font-size:14px;';
+    copyBtn.onclick = () => {
+      const json = JSON.stringify(all, null, 2);
+      const ta = document.createElement('textarea');
+      ta.value = json; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+      copyBtn.textContent = '✅ ' + all.length + ' PRODUITS COPIÉS !';
+      copyBtn.style.background = '#2563eb';
+    };
+    bar.appendChild(scrollBtn);
+    bar.appendChild(copyBtn);
+  };
+  renderBar();
+})();`;
+            copyTextWithFallback(snippet, "📋 Script Palmarosa copié ! Collez-le dans la Console de Palmarosa Shop.");
         }
 
         function insertExtractedItemsDirectlyIntoTable(rawContent) {
@@ -5016,76 +5185,6 @@
             a.click();
             URL.revokeObjectURL(url);
             showToast("📥 Tableau d'inventaire exporté en CSV (Excel) !");
-        }
-
-        function copyUniversalConsoleExtractor() {
-            const snippet = `(async () => {
-  window.__PARATEAMS_BAG = window.__PARATEAMS_BAG || new Map();
-  const addItem = (item) => {
-    if (!item || !item.name || !item.price) return;
-    const key = item.name.trim().toLowerCase();
-    if (!window.__PARATEAMS_BAG.has(key)) window.__PARATEAMS_BAG.set(key, item);
-  };
-  try {
-    const baseUrl = window.location.origin + window.location.pathname.replace(/\\/$/, '') + '/products.json';
-    for (let p = 1; p <= 10; p++) {
-      const res = await fetch(baseUrl + '?limit=250&page=' + p);
-      if (!res.ok) break;
-      const data = await res.json();
-      if (!data.products || data.products.length === 0) break;
-      data.products.forEach(prod => {
-        const v = prod.variants?.[0] || {};
-        addItem({
-          brand: prod.vendor || prod.title.split(' ')[0],
-          name: prod.title,
-          price: parseFloat(v.price || 0),
-          oldPrice: parseFloat(v.compare_at_price || 0) || null,
-          category: prod.product_type || '',
-          image: prod.images?.[0]?.src || ''
-        });
-      });
-    }
-  } catch (e) {}
-  document.querySelectorAll('article, [class*="product"], [class*="card"], li.product').forEach(card => {
-    const img = card.querySelector('img');
-    const titleEl = card.querySelector('h2, h3, h4, a[title], [class*="title"], [class*="name"]');
-    if (!img || !titleEl) return;
-    const name = (titleEl.innerText || titleEl.getAttribute('title') || '').trim().replace(/\\s+/g, ' ');
-    const text = card.innerText || '';
-    const prices = [...text.matchAll(/(\\d+(?:[.,]\\d+)?)\\s*(?:MAD|DH|Dhs)/gi)].map(m => parseFloat(m[1].replace(',', '.')));
-    if (name.length < 4 || prices.length === 0) return;
-    const price = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
-    const brandEl = card.querySelector('[class*="brand"], [class*="vendor"], [class*="marque"]');
-    const brand = brandEl ? brandEl.innerText.trim() : (name.includes('–') ? name.split('–')[0].trim() : name.split(' ')[0]);
-    const image = img.getAttribute('data-src') || img.currentSrc || img.src || '';
-    addItem({ brand, name, price, oldPrice: maxPrice > price ? maxPrice : null, image });
-  });
-  const all = Array.from(window.__PARATEAMS_BAG.values());
-  const json = JSON.stringify(all, null, 2);
-  let bar = document.getElementById('pt-extract-bar');
-  if (!bar) {
-    bar = document.createElement('div');
-    bar.id = 'pt-extract-bar';
-    bar.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:999999;display:flex;gap:10px;padding:12px 20px;background:#0D1310;color:#fff;border-radius:16px;box-shadow:0 15px 35px rgba(0,0,0,0.45);align-items:center;font-family:sans-serif;';
-    document.body.appendChild(bar);
-  }
-  bar.innerHTML = '';
-  const copyBtn = document.createElement('button');
-  copyBtn.textContent = '📋 COPIER ' + all.length + ' PRODUITS';
-  copyBtn.style.cssText = 'padding:10px 18px;background:#16a34a;color:#fff;font-weight:bold;border:none;border-radius:10px;cursor:pointer;font-size:14px;';
-  copyBtn.onclick = () => {
-    navigator.clipboard.writeText(json);
-    copyBtn.textContent = '✅ ' + all.length + ' PRODUITS COPIÉS !';
-    copyBtn.style.background = '#2563eb';
-  };
-  bar.appendChild(copyBtn);
-})();`;
-            navigator.clipboard.writeText(snippet).then(() => {
-                showToast("📋 Script Console copié ! Collez-le dans la Console du site cible.");
-            }).catch(() => {
-                showToast("Impossible de copier automatiquement.");
-            });
         }
 
         function copyPalmarosaConsoleScraper() {
