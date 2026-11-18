@@ -953,10 +953,10 @@
                                 <div>
                                     <div class="flex flex-wrap items-center gap-2">
                                         <h4 class="font-display font-extrabold text-sm sm:text-base text-slate-900">Ajouter les produits de Palmarosa, Parapharma ou BeautyMarket dans ce tableau</h4>
-                                        <span class="px-2.5 py-0.5 rounded-full bg-pink-100 text-pink-800 text-[10px] font-extrabold uppercase">2 Méthodes au choix</span>
+                                        <span class="px-2.5 py-0.5 rounded-full bg-pink-100 text-pink-800 text-[10px] font-extrabold uppercase">Auto-Pagination 1 → Fin</span>
                                     </div>
                                     <p class="text-xs text-slate-600 mt-0.5">
-                                        <strong>Méthode 1 (Sans Console) :</strong> Sur Palmarosa ou Parapharma, faites <strong>Ctrl + A</strong> (tout sélectionner) puis <strong>Ctrl + C</strong> (copier), cliquez dans la case ci-dessous et faites <strong>Ctrl + V</strong> !
+                                        <strong>Pour aspirer toutes les pages (1, 2, 3... 7) :</strong> Cliquez sur le bouton noir <strong>« ⚡ Copier Script Console Multi-Pages »</strong>, collez-le dans la Console de Palmarosa puis cliquez sur <strong>« 🚀 Aspirer TOUTES les pages »</strong>.
                                     </p>
                                 </div>
                             </div>
@@ -5043,19 +5043,36 @@
 
         function copyUniversalConsoleExtractor() {
             const snippet = `(async () => {
+  const STORAGE_KEY = '__PARATEAMS_PALMAROSA_BAG_V2';
   window.__PARATEAMS_BAG = window.__PARATEAMS_BAG || new Map();
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    saved.forEach(it => { if (it && it.name) window.__PARATEAMS_BAG.set(it.name.trim().toLowerCase(), it); });
+  } catch (e) {}
+
+  const saveBag = () => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(window.__PARATEAMS_BAG.values())));
+    } catch (e) {}
+  };
+
   const addItem = (item) => {
     if (!item || !item.name || !item.price) return;
     const key = item.name.trim().toLowerCase();
-    if (!window.__PARATEAMS_BAG.has(key)) window.__PARATEAMS_BAG.set(key, item);
+    const existing = window.__PARATEAMS_BAG.get(key);
+    if (!existing || (!existing.image && item.image)) {
+      window.__PARATEAMS_BAG.set(key, item);
+    }
   };
+
   const scanPage = () => {
+    let addedNow = 0;
     document.querySelectorAll('img').forEach(img => {
-      const src = img.getAttribute('data-src') || img.currentSrc || img.src || '';
-      if (!src || /logo|icon|avatar|flag/i.test(src)) return;
+      const src = img.getAttribute('data-src') || img.getAttribute('data-lazy-src') || img.currentSrc || img.src || '';
+      if (!src || /logo|icon|avatar|flag|payment/i.test(src)) return;
       let card = img.parentElement;
       let found = null;
-      for (let d = 0; d < 5 && card && card.tagName !== 'BODY'; d++) {
+      for (let d = 0; d < 6 && card && card.tagName !== 'BODY'; d++) {
         const t = card.innerText || '';
         if (/(\\d+(?:[.,]\\d+)?)\\s*(?:MAD|DH|Dhs)/i.test(t) && card.querySelectorAll('img').length <= 3) {
           found = card; break;
@@ -5064,59 +5081,127 @@
       }
       if (!found) return;
       const text = found.innerText || '';
-      const prices = [...text.matchAll(/(\\d+(?:[.,]\\d+)?)\\s*(?:MAD|DH|Dhs)/gi)].map(m => parseFloat(m[1].replace(',', '.')));
+      const prices = [...text.matchAll(/(\\d+(?:[.,]\\d+)?)\\s*(?:MAD|DH|Dhs)/gi)]
+        .map(m => parseFloat(m[1].replace(',', '.')))
+        .filter(n => !isNaN(n) && n > 5);
       if (prices.length === 0) return;
-      const lines = text.split(/\\r?\\n/).map(l => l.trim()).filter(l => l.length > 2 && !/^(rupture de stock|épuisé|epuise|ajouter|aperçu|\\d+(?:[.,]\\d+)?\\s*(?:mad|dh|dhs)|★+|\\d+[.,]\\d+\\s*\\(\\d+\\))$/i.test(l));
+      const lines = text.split(/\\r?\\n/)
+        .map(l => l.replace(/\\s+/g, ' ').trim())
+        .filter(l => l.length > 2 && !/^(rupture de stock|épuisé|epuise|ajouter|aperçu|favoris|\\d+(?:[.,]\\d+)?\\s*(?:mad|dh|dhs)|★+|\\d+[.,]\\d+\\s*\\(\\d+\\))$/i.test(l));
       let brand = '', name = '';
       if (lines.length >= 2 && lines[0].length <= 28 && lines[1].length > lines[0].length) {
         brand = lines[0]; name = lines[1];
       } else if (lines.length >= 1) {
-        name = lines[0];
-        brand = name.includes('-') ? name.split('-')[0].trim() : name.split(' ')[0];
+        name = lines.find(l => l.length > 5) || lines[0];
+        brand = name.includes('–') ? name.split('–')[0].trim() : (name.includes('-') ? name.split('-')[0].trim() : name.split(' ')[0]);
       }
-      if (name.length > 3) {
-        addItem({ brand, name, price: Math.min(...prices), oldPrice: Math.max(...prices) > Math.min(...prices) ? Math.max(...prices) : null, image: src });
+      if (name && name.length > 3) {
+        const before = window.__PARATEAMS_BAG.size;
+        addItem({
+          brand,
+          name,
+          price: Math.min(...prices),
+          oldPrice: Math.max(...prices) > Math.min(...prices) ? Math.max(...prices) : null,
+          image: src.startsWith('data:') ? '' : src
+        });
+        if (window.__PARATEAMS_BAG.size > before) addedNow++;
       }
     });
+    saveBag();
+    return addedNow;
   };
+
+  const findNextPageButton = () => {
+    const candidates = Array.from(document.querySelectorAll('button, a'));
+    for (const el of candidates) {
+      const txt = (el.innerText || el.textContent || '').replace(/\\s+/g, ' ').trim();
+      if (/^(suivant|suivant\\s*→|suivant\\s*>|next|›|»)$/i.test(txt) || txt.toLowerCase().includes('suivant')) {
+        const isDisabled = el.disabled || el.getAttribute('disabled') !== null || el.getAttribute('aria-disabled') === 'true' || el.className.includes('disabled') || el.className.includes('opacity-50') || el.className.includes('cursor-not-allowed') || el.className.includes('pointer-events-none');
+        const style = window.getComputedStyle(el);
+        if (!isDisabled && style.pointerEvents !== 'none' && parseFloat(style.opacity || '1') > 0.4) {
+          return el;
+        }
+      }
+    }
+    return null;
+  };
+
   scanPage();
+
   let bar = document.getElementById('pt-extract-bar');
   if (!bar) {
     bar = document.createElement('div');
     bar.id = 'pt-extract-bar';
-    bar.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:999999;display:flex;gap:10px;padding:12px 20px;background:#0D1310;color:#fff;border-radius:16px;box-shadow:0 15px 35px rgba(0,0,0,0.45);align-items:center;font-family:sans-serif;';
+    bar.style.cssText = 'position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:999999;display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;background:#0D1310;color:#fff;border-radius:16px;box-shadow:0 15px 35px rgba(0,0,0,0.5);align-items:center;font-family:sans-serif;border:2px solid #5D9C2A;';
     document.body.appendChild(bar);
   }
-  const renderBar = () => {
+
+  let isAutoRunning = false;
+
+  const renderBar = (statusText = '') => {
     const all = Array.from(window.__PARATEAMS_BAG.values());
     bar.innerHTML = '';
-    const scrollBtn = document.createElement('button');
-    scrollBtn.textContent = '⏬ Dérouler la page (+ produits)';
-    scrollBtn.style.cssText = 'padding:10px 14px;background:#e11d48;color:#fff;font-weight:bold;border:none;border-radius:10px;cursor:pointer;font-size:13px;';
-    scrollBtn.onclick = async () => {
-      for (let i = 0; i < 6; i++) {
-        window.scrollBy({ top: 900, behavior: 'smooth' });
-        await new Promise(r => setTimeout(r, 650));
+
+    const autoAllBtn = document.createElement('button');
+    autoAllBtn.textContent = isAutoRunning ? ('⏳ ' + (statusText || 'Aspiration des pages...')) : '🚀 Aspirer TOUTES les pages (1 → Fin)';
+    autoAllBtn.style.cssText = 'padding:10px 15px;background:#e11d48;color:#fff;font-weight:bold;border:none;border-radius:10px;cursor:pointer;font-size:13px;';
+    autoAllBtn.onclick = async () => {
+      if (isAutoRunning) return;
+      isAutoRunning = true;
+      for (let pageLoop = 1; pageLoop <= 40; pageLoop++) {
+        renderBar('Page ' + pageLoop + ' en cours...');
+        const steps = 4;
+        for (let s = 1; s <= steps; s++) {
+          window.scrollTo({ top: (document.body.scrollHeight / steps) * s, behavior: 'smooth' });
+          await new Promise(r => setTimeout(r, 450));
+          scanPage();
+        }
+        renderBar('Page ' + pageLoop + ' scannée (' + window.__PARATEAMS_BAG.size + ' produits)');
+        const nextBtn = findNextPageButton();
+        if (!nextBtn) break;
+        nextBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        await new Promise(r => setTimeout(r, 350));
+        nextBtn.click();
+        await new Promise(r => setTimeout(r, 1400));
         scanPage();
-        renderBar();
       }
+      isAutoRunning = false;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      renderBar('✅ Terminé !');
     };
+
     const copyBtn = document.createElement('button');
-    copyBtn.textContent = '📋 COPIER ' + all.length + ' PRODUITS PALMAROSA';
-    copyBtn.style.cssText = 'padding:10px 18px;background:#16a34a;color:#fff;font-weight:bold;border:none;border-radius:10px;cursor:pointer;font-size:14px;';
+    copyBtn.textContent = '📋 COPIER ' + all.length + ' PRODUITS';
+    copyBtn.style.cssText = 'padding:10px 16px;background:#16a34a;color:#fff;font-weight:bold;border:none;border-radius:10px;cursor:pointer;font-size:14px;';
     copyBtn.onclick = () => {
-      const json = JSON.stringify(all, null, 2);
+      scanPage();
+      const finalItems = Array.from(window.__PARATEAMS_BAG.values());
+      const json = JSON.stringify(finalItems, null, 2);
       const ta = document.createElement('textarea');
       ta.value = json; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-      copyBtn.textContent = '✅ ' + all.length + ' PRODUITS COPIÉS !';
+      copyBtn.textContent = '✅ ' + finalItems.length + ' PRODUITS COPIÉS !';
       copyBtn.style.background = '#2563eb';
     };
-    bar.appendChild(scrollBtn);
+
+    const resetBtn = document.createElement('button');
+    resetBtn.textContent = '🗑️ 0';
+    resetBtn.title = 'Remettre le compteur à zéro';
+    resetBtn.style.cssText = 'padding:10px 12px;background:#334155;color:#fff;font-weight:bold;border:none;border-radius:10px;cursor:pointer;font-size:12px;';
+    resetBtn.onclick = () => {
+      window.__PARATEAMS_BAG.clear();
+      localStorage.removeItem(STORAGE_KEY);
+      scanPage();
+      renderBar();
+    };
+
+    bar.appendChild(autoAllBtn);
     bar.appendChild(copyBtn);
+    bar.appendChild(resetBtn);
   };
+
   renderBar();
 })();`;
-            copyTextWithFallback(snippet, "📋 Script Palmarosa copié ! Collez-le dans la Console de Palmarosa Shop.");
+            copyTextWithFallback(snippet, "📋 Script Auto-Pagination copié ! Collez-le dans la Console de Palmarosa Shop.");
         }
 
         function insertExtractedItemsDirectlyIntoTable(rawContent) {
