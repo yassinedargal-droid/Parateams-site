@@ -54,6 +54,7 @@
             background-size: 160px 160px;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
     <style id="pt-enhancements">
         /* --- Recherche : aperçu instantané --- */
         .pt-search-dd{position:absolute;left:0;right:0;top:calc(100% + 8px);background:#fff;border:1px solid #e2e8f0;border-radius:20px;box-shadow:0 24px 60px -14px rgba(13,19,16,.32);z-index:80;overflow:hidden;display:none}
@@ -10749,10 +10750,9 @@ La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps &amp; Hygiène | http
                                 </label>
                             </div>
                         </div>
-
-                        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[12px] leading-relaxed text-amber-900">
-                            <strong>⚠️ À savoir :</strong> la boutique est un site statique, sans serveur. Les commandes sont donc stockées dans le navigateur de l'appareil qui les a passées.
-                            Pour être sûr de recevoir <u>toutes</u> les commandes, le client doit aussi les envoyer sur WhatsApp (bouton proposé après chaque validation) : elles arrivent alors directement sur votre numéro.
+                        <div class="flex flex-wrap items-center gap-3 text-xs">
+                            <span id="cmsOrdersSyncStatus" class="font-bold text-slate-600"></span>
+                            <button type="button" onclick="fetchOrders()" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold cursor-pointer">↻ Actualiser</button>
                         </div>
 
                         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -61741,25 +61741,64 @@ La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps &amp; Hygiène | http
             renderProducts();
         }
 
-        // ---- COMMANDES (stockées à part du catalogue pour ne jamais être publiées sur GitHub) ----
-        const ORDERS_STORAGE_KEY = 'parateams_orders_v1';
+        // ---- COMMANDES : base de données Supabase (table "Orders") ----
+        const SUPABASE_URL = 'https://cnovkkilcvobthwjjkvr.supabase.co';
+        const SUPABASE_ANON_KEY = 'COLLER_ICI_VOTRE_CLE_ANON'; // Supabase > Project Settings > API > "anon public"
+        const ORDERS_TABLE = 'Orders';
+        const ORDERS_PENDING_KEY = 'parateams_orders_pending_v1'; // commandes à renvoyer si Supabase était injoignable
         const ORDER_STATUSES = ['Nouvelle', 'Confirmée', 'Expédiée', 'Livrée', 'Annulée'];
+        let ORDERS_CACHE = [];
+        let ordersLoadState = 'idle'; // idle | loading | ok | error
+        let ordersLoadError = '';
+        let _sbClient = null;
 
-        function loadOrders() {
-            try {
-                const raw = JSON.parse(localStorage.getItem(ORDERS_STORAGE_KEY) || '[]');
-                return Array.isArray(raw) ? raw : [];
-            } catch (err) { return []; }
+        function getSb() {
+            if (_sbClient) return _sbClient;
+            if (!window.supabase || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.indexOf('COLLER_ICI') === 0) return null;
+            _sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            return _sbClient;
         }
-        function saveOrders(list) {
-            try { localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(list)); }
-            catch (err) { console.warn('Impossible d\'enregistrer les commandes', err); }
+        function sbErrMsg(err) {
+            if (!getSb()) return "Clé Supabase non renseignée (constante SUPABASE_ANON_KEY) ou librairie non chargée.";
+            return (err && (err.message || err.details)) || 'Erreur inconnue';
+        }
+        function orderToRow(o) {
+            return { ref: o.id, status: o.status, source: o.source, customer: o.customer, phone: o.phone, address: o.address,
+                     city: o.city, items: o.items, subtotal: o.subtotal, shipping: o.shipping, total: o.total };
+        }
+        function rowToOrder(r) {
+            let items = r.items;
+            if (typeof items === 'string') { try { items = JSON.parse(items); } catch (e) { items = []; } }
+            return { id: r.ref || String(r.id), dbId: r.id, date: r.created_at || r.date, status: r.status || 'Nouvelle',
+                     source: r.source || 'Site', customer: r.customer || '', phone: r.phone || '', address: r.address || '',
+                     city: r.city || '', items: Array.isArray(items) ? items : [],
+                     subtotal: Number(r.subtotal) || 0, shipping: Number(r.shipping) || 0, total: Number(r.total) || 0 };
+        }
+        function readPendingOrders() {
+            try { const r = JSON.parse(localStorage.getItem(ORDERS_PENDING_KEY) || '[]'); return Array.isArray(r) ? r : []; } catch (e) { return []; }
+        }
+        function writePendingOrders(list) {
+            try { localStorage.setItem(ORDERS_PENDING_KEY, JSON.stringify(list)); } catch (e) { /* quota */ }
+        }
+        async function insertOrderRemote(order) {
+            const sb = getSb();
+            if (!sb) throw new Error(sbErrMsg());
+            const { error } = await sb.from(ORDERS_TABLE).insert(orderToRow(order));
+            if (error) throw error;
+        }
+        async function retryPendingOrders() {
+            const pending = readPendingOrders();
+            if (!pending.length || !getSb()) return;
+            const still = [];
+            for (const o of pending) { try { await insertOrderRemote(o); } catch (e) { still.push(o); } }
+            writePendingOrders(still);
         }
         function generateOrderId() {
             const d = new Date();
             const p = n => String(n).padStart(2, '0');
             return `CMD-${String(d.getFullYear()).slice(2)}${p(d.getMonth() + 1)}${p(d.getDate())}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
         }
+        // Enregistre la commande dans Supabase (en arrière-plan, le client voit sa confirmation tout de suite)
         function recordOrder({ customer, phone, address, source }) {
             const s = SITE_DATA.settings;
             const isCasa = state.selectedCity === 'Casablanca';
@@ -61768,21 +61807,27 @@ La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps &amp; Hygiène | http
             const subtotal = state.cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
             const shipping = subtotal >= threshold ? 0 : fee;
             const order = {
-                id: generateOrderId(),
-                date: new Date().toISOString(),
-                status: 'Nouvelle',
-                source: source || 'Site',
-                customer: customer || '',
-                phone: phone || '',
-                address: address || '',
-                city: state.selectedCity,
+                id: generateOrderId(), date: new Date().toISOString(), status: 'Nouvelle', source: source || 'Site',
+                customer: customer || '', phone: phone || '', address: address || '', city: state.selectedCity,
                 items: state.cart.map(i => ({ id: i.id, brand: i.brand, name: i.name, price: i.price, qty: i.qty })),
                 subtotal, shipping, total: subtotal + shipping
             };
-            const list = loadOrders();
-            list.unshift(order);
-            saveOrders(list);
+            insertOrderRemote(order)
+                .then(() => { if (typeof isCmsAuthenticated !== 'undefined' && isCmsAuthenticated) fetchOrders(); })
+                .catch(err => {
+                    console.warn('Commande non envoyée à Supabase, mise en file d\'attente', err);
+                    const q = readPendingOrders(); q.push(order); writePendingOrders(q);
+                });
             return order;
+        }
+        async function fetchOrders() {
+            const sb = getSb();
+            if (!sb) { ordersLoadState = 'error'; ordersLoadError = sbErrMsg(); renderCmsOrders(); return; }
+            ordersLoadState = 'loading'; renderCmsOrders();
+            const { data, error } = await sb.from(ORDERS_TABLE).select('*').order('created_at', { ascending: false });
+            if (error) { ordersLoadState = 'error'; ordersLoadError = sbErrMsg(error); }
+            else { ORDERS_CACHE = (data || []).map(rowToOrder); ordersLoadState = 'ok'; }
+            renderCmsOrders();
         }
         function buildOrderMessage(o) {
             const s = SITE_DATA.settings;
@@ -61795,7 +61840,7 @@ La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps &amp; Hygiène | http
 
         function renderCmsOrders() {
             const listEl = document.getElementById('cmsOrdersList');
-            const orders = loadOrders();
+            const orders = ORDERS_CACHE;
             const countEl = document.getElementById('cmsTabOrderCount');
             if (countEl) countEl.textContent = orders.length;
             const newCount = orders.filter(o => o.status === 'Nouvelle').length;
@@ -61819,9 +61864,21 @@ La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps &amp; Hygiène | http
                 return tokens.every(t => hay.includes(t));
             });
 
+            const syncEl = document.getElementById('cmsOrdersSyncStatus');
+            if (syncEl) syncEl.textContent = ordersLoadState === 'loading' ? '⏳ Chargement…'
+                : ordersLoadState === 'error' ? '⚠️ Supabase injoignable'
+                : ordersLoadState === 'ok' ? `🟢 Connecté à Supabase · ${orders.length} commande(s)` : '';
+            if (ordersLoadState === 'error' && orders.length === 0) {
+                listEl.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-2xl p-5 text-sm text-red-800"><strong>Impossible de charger les commandes.</strong><br><span class="text-xs">${escapeHtmlAttr(ordersLoadError)}</span></div>`;
+                return;
+            }
+            if (ordersLoadState === 'loading' && orders.length === 0) {
+                listEl.innerHTML = `<div class="bg-white rounded-2xl border border-slate-200 p-10 text-center text-sm text-slate-500">Chargement des commandes…</div>`;
+                return;
+            }
             if (shown.length === 0) {
                 listEl.innerHTML = `<div class="bg-white rounded-2xl border border-dashed border-slate-300 p-10 text-center text-sm text-slate-500">${orders.length === 0
-                    ? 'Aucune commande enregistrée sur cet appareil pour le moment.<br><span class="text-xs">Les commandes passées depuis d\'autres téléphones arrivent par WhatsApp, ou via « Importer ».</span>'
+                    ? 'Aucune commande pour le moment.'
                     : 'Aucune commande ne correspond à ce filtre.'}</div>`;
                 return;
             }
@@ -61863,24 +61920,33 @@ La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps &amp; Hygiène | http
                 </div>`;
             }).join('');
         }
-        function updateOrderStatus(id, status) {
-            const list = loadOrders();
-            const o = list.find(x => x.id === id);
-            if (!o) return;
+        async function updateOrderStatus(id, status) {
+            const o = ORDERS_CACHE.find(x => x.id === id);
+            const sb = getSb();
+            if (!o || !sb) return;
+            const { error } = await sb.from(ORDERS_TABLE).update({ status }).eq('id', o.dbId);
+            if (error) { showToast('Erreur Supabase : ' + sbErrMsg(error)); renderCmsOrders(); return; }
             o.status = status;
-            saveOrders(list);
             renderCmsOrders();
             showToast(`Commande ${id} : ${status}`);
         }
-        function deleteOrder(id) {
-            if (!confirm(`Supprimer la commande ${id} ?`)) return;
-            saveOrders(loadOrders().filter(x => x.id !== id));
+        async function deleteOrder(id) {
+            const o = ORDERS_CACHE.find(x => x.id === id);
+            const sb = getSb();
+            if (!o || !sb) return;
+            if (!confirm(`Supprimer définitivement la commande ${id} ?`)) return;
+            const { error } = await sb.from(ORDERS_TABLE).delete().eq('id', o.dbId);
+            if (error) { showToast('Erreur Supabase : ' + sbErrMsg(error)); return; }
+            ORDERS_CACHE = ORDERS_CACHE.filter(x => x.id !== id);
             renderCmsOrders();
         }
-        function clearAllOrders() {
-            if (loadOrders().length === 0) return;
-            if (!confirm('Supprimer TOUTES les commandes enregistrées sur cet appareil ? Pensez à exporter avant.')) return;
-            saveOrders([]);
+        async function clearAllOrders() {
+            const sb = getSb();
+            if (!sb || ORDERS_CACHE.length === 0) return;
+            if (!confirm('Supprimer DÉFINITIVEMENT toutes les commandes de la base Supabase ? Pensez à exporter avant.')) return;
+            const { error } = await sb.from(ORDERS_TABLE).delete().in('id', ORDERS_CACHE.map(o => o.dbId));
+            if (error) { showToast('Erreur Supabase : ' + sbErrMsg(error)); return; }
+            ORDERS_CACHE = [];
             renderCmsOrders();
         }
         function downloadTextFile(content, filename, mime) {
@@ -61891,7 +61957,7 @@ La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps &amp; Hygiène | http
             URL.revokeObjectURL(url);
         }
         function exportOrdersCsv() {
-            const orders = loadOrders();
+            const orders = ORDERS_CACHE;
             if (!orders.length) { showToast('Aucune commande à exporter.'); return; }
             const esc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
             const head = ['Réf', 'Date', 'Statut', 'Source', 'Client', 'Téléphone', 'Ville', 'Adresse', 'Articles', 'Sous-total', 'Livraison', 'Total'];
@@ -61900,28 +61966,41 @@ La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps &amp; Hygiène | http
             downloadTextFile('﻿' + [head.map(esc).join(';')].concat(rows).join('\r\n'), `commandes-parateams-${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv;charset=utf-8');
         }
         function exportOrdersJson() {
-            downloadTextFile(JSON.stringify(loadOrders(), null, 2), `commandes-parateams-${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
+            const clean = ORDERS_CACHE.map(o => { const c = { ...o }; delete c.dbId; return c; });
+            downloadTextFile(JSON.stringify(clean, null, 2), `commandes-parateams-${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
         }
         function importOrdersJson(event) {
             const file = event.target.files && event.target.files[0];
+            const input = event.target;
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = () => {
+            reader.onload = async () => {
                 try {
                     const incoming = JSON.parse(reader.result);
                     if (!Array.isArray(incoming)) throw new Error('format');
-                    const list = loadOrders();
-                    const known = new Set(list.map(o => o.id));
-                    let added = 0;
-                    incoming.forEach(o => { if (o && o.id && Array.isArray(o.items) && !known.has(o.id)) { list.push(o); known.add(o.id); added++; } });
-                    list.sort((a, b) => String(b.date).localeCompare(String(a.date)));
-                    saveOrders(list);
-                    renderCmsOrders();
-                    showToast(`${added} commande(s) importée(s).`);
-                } catch (err) { showToast('Fichier de commandes invalide.'); }
+                    const sb = getSb();
+                    if (!sb) throw new Error(sbErrMsg());
+                    const known = new Set(ORDERS_CACHE.map(o => o.id));
+                    const rows = [];
+                    incoming.forEach(o => {
+                        if (!o || !Array.isArray(o.items)) return;
+                        const ref = o.id || generateOrderId();
+                        if (known.has(ref)) return;
+                        known.add(ref);
+                        const row = orderToRow({ ...o, id: ref, status: o.status || 'Nouvelle', source: o.source || 'Import' });
+                        if (o.date && !isNaN(new Date(o.date))) row.created_at = new Date(o.date).toISOString();
+                        rows.push(row);
+                    });
+                    if (rows.length) {
+                        const { error } = await sb.from(ORDERS_TABLE).insert(rows);
+                        if (error) throw error;
+                    }
+                    await fetchOrders();
+                    showToast(`${rows.length} commande(s) importée(s).`);
+                } catch (err) { showToast('Import impossible : ' + sbErrMsg(err)); }
             };
             reader.readAsText(file);
-            event.target.value = '';
+            input.value = '';
         }
 
         // SIMULATEUR DE LIVRAISON
@@ -62675,6 +62754,7 @@ La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps &amp; Hygiène | http
                 refreshAllCmsPanels();
                 updateCmsHistoryButtons();
                 showToast("Bienvenue dans Parateams Studio CMS !");
+                fetchOrders();
             } else {
                 document.getElementById('cmsLoginError').classList.remove('hidden');
             }
@@ -62691,6 +62771,7 @@ La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps &amp; Hygiène | http
             document.querySelectorAll('.cms-panel').forEach(panel => {
                 panel.classList.toggle('hidden', panel.id !== `cmsPanel-${tabName}`);
             });
+            if (tabName === 'orders') fetchOrders();
         }
 
         function saveCmsToLocalPreview(silent = false) {
@@ -64469,6 +64550,7 @@ La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps &amp; Hygiène | http
             renderHeroSlides();
             renderProducts();
             renderCmsOrders();
+            retryPendingOrders();
             ptFixBrokenImages();
             setTimeout(ptFixBrokenImages, 2500);
             updateCartBadge();
