@@ -175,7 +175,7 @@
                 <div class="flex items-center justify-between py-2.5 md:h-20 gap-2 sm:gap-4 lg:gap-6">
                     
                     <!-- Logo Parateams + Mention Team Medical Service -->
-                    <a href="#" onclick="resetAllFilters(); window.scrollTo({top:0, behavior:'smooth'}); return false;" class="flex items-center gap-2.5 sm:gap-3 shrink-0 group">
+                    <a href="/" onclick="return goHomeFromLogo(event);" aria-label="Accueil Parateams" class="flex items-center gap-2.5 sm:gap-3 shrink-0 group">
                         <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-sage-50 border border-sage-200/80 flex items-center justify-center shadow-xs group-hover:bg-sage-100/70 transition p-1.5">
                             <svg class="w-full h-full" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Logo Parateams">
                                 <defs>
@@ -62024,6 +62024,20 @@ La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps &amp; Hygiène | http
         function clearSearch() {
             onSearchInput('');
             ptCloseDropdowns();
+        }
+
+        // Clic sur le logo : retour à l'accueil (réinitialise les filtres, remonte en haut ; si déjà en haut, actualise la page)
+        function goHomeFromLogo(e) {
+            if (e && (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1)) return true; // ouvrir dans un nouvel onglet
+            if (e) e.preventDefault();
+            const wasAtTop = (window.scrollY || document.documentElement.scrollTop || 0) < 30;
+            try { resetAllFilters(); } catch (err) { /* ignore */ }
+            if (window.location.hash && window.location.hash !== '#admin') {
+                history.replaceState(null, '', window.location.pathname + window.location.search);
+            }
+            if (wasAtTop) { window.location.reload(); return false; }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return false;
         }
 
         function resetAllFilters() {
