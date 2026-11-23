@@ -8467,6 +8467,7 @@ La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps &amp; Hygiène | http
                         </button>
                     </div>
 
+                    <p class="cms-live-status text-[11px] font-bold rounded-xl bg-slate-50 border border-slate-200 px-3 py-2"></p>
                     <div id="cmsSlidesList" class="space-y-4"></div>
                 </div>
 
@@ -9670,6 +9671,10 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
 
         function maybeShowWelcomePopup() {
             const p = getPopup();
+            // Test : ouvrir le site avec ?popup=1 force l'affichage (même si OFF ou déjà vu)
+            let forced = false;
+            try { forced = new URLSearchParams(window.location.search).get('popup') === '1'; } catch (e) {}
+            if (forced) { setTimeout(openWelcomePopup, 300); return; }
             if (!p.enabled) return;
             if (window.location.hash === '#admin') return;
             const sig = popupSignature(p);
@@ -9754,9 +9759,10 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                             <input type="number" min="0" max="30" value="${Number(p.delaySec) || 0}" onchange="updateCmsPopupField('delaySec', Math.max(0, Math.min(30, Number(this.value) || 0)))" class="${inp}">
                         </div>
                     </div>
-                    <p class="text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">⚠️ Ce réglage est d'abord enregistré uniquement sur cet appareil. Les visiteurs (mobile compris) le voient seulement après avoir cliqué sur « Publier » dans l'onglet « 🚀 Publication GitHub &amp; Sauvegarde ».</p>
+                    <p class="cms-live-status text-[11px] font-bold rounded-xl bg-slate-50 border border-slate-200 px-3 py-2"></p>
                     <p class="text-[11px] text-slate-500">Si vous modifiez le contenu, les visiteurs qui l'avaient déjà fermé reverront la nouvelle offre. Pensez à cliquer sur « Publier » pour l'envoyer sur le site public.</p>
                 </div>`;
+            updateLiveStatusUI();
         }
 
         function updateCmsPopupField(field, val) {
@@ -9770,6 +9776,84 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             const file = event.target.files && event.target.files[0];
             if (!file) return;
             compressImageToDataURL(file, 680, (dataUrl) => updateCmsPopupField('imageUrl', dataUrl));
+        }
+
+
+        // =====================================================================
+        // SYNCHRONISATION INSTANTANÉE PC ⇄ MOBILE ⇄ VISITEURS (Supabase, table "site_config")
+        // Pop-up d'accueil + carrousel (slides ON/OFF) : lus par tous les visiteurs,
+        // écrits uniquement par l'admin connecté au CMS.
+        // =====================================================================
+        const LIVE_TABLE = 'site_config';
+        const LIVE_KEY = 'live';
+        let LIVE_STATE = 'idle';   // idle | ok | empty | saving | error | noauth
+        let LIVE_MSG = '';
+        let _liveSig = '';
+        let _liveTimer = null;
+
+        function liveErrMsg(err) {
+            const msg = (err && (err.message || err.details)) || 'Erreur inconnue';
+            const code = err && err.code ? ` [${err.code}]` : '';
+            if (/PGRST205|42P01|relation|schema cache/i.test(msg + code)) return "Table « site_config » introuvable dans Supabase : exécutez le script SQL fourni (SQL Editor) puis réessayez.";
+            if (/row-level security|42501|permission denied/i.test(msg + code)) return "Droits refusés par Supabase : vérifiez les policies de la table site_config (script SQL fourni) et que vous êtes connecté au CMS.";
+            return msg + code;
+        }
+
+        function liveSnapshot() { return JSON.stringify({ popup: getPopup(), slides: SITE_DATA.slides }); }
+
+        async function loadLiveConfig() {
+            const sb = getSb();
+            if (!sb) { LIVE_STATE = 'error'; LIVE_MSG = "Supabase indisponible."; return false; }
+            try {
+                const { data, error } = await sb.from(LIVE_TABLE).select('value').eq('key', LIVE_KEY).maybeSingle();
+                if (error) throw error;
+                const v = data && data.value;
+                if (!v) { LIVE_STATE = 'empty'; return false; }
+                if (v.popup) SITE_DATA.popup = v.popup;
+                if (Array.isArray(v.slides) && v.slides.length) SITE_DATA.slides = v.slides;
+                _liveSig = liveSnapshot();
+                LIVE_STATE = 'ok'; LIVE_MSG = '';
+                return true;
+            } catch (e) {
+                LIVE_STATE = 'error'; LIVE_MSG = liveErrMsg(e);
+                console.warn('Config live indisponible', e);
+                return false;
+            }
+        }
+
+        function scheduleLivePush() {
+            if (typeof isCmsAuthenticated === 'undefined' || !isCmsAuthenticated) return;
+            if (liveSnapshot() === _liveSig) return;
+            clearTimeout(_liveTimer);
+            _liveTimer = setTimeout(pushLiveConfig, 500);
+        }
+
+        async function pushLiveConfig() {
+            const sb = getSb();
+            if (!sb) return;
+            LIVE_STATE = 'saving'; updateLiveStatusUI();
+            try {
+                const { data: s } = await sb.auth.getSession();
+                if (!s || !s.session) { LIVE_STATE = 'noauth'; LIVE_MSG = "Session expirée : reconnectez-vous au CMS."; updateLiveStatusUI(); return; }
+                const sig = liveSnapshot();
+                const value = { popup: getPopup(), slides: SITE_DATA.slides };
+                const { error } = await sb.from(LIVE_TABLE).upsert({ key: LIVE_KEY, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+                if (error) throw error;
+                _liveSig = sig; LIVE_STATE = 'ok'; LIVE_MSG = '';
+            } catch (e) {
+                LIVE_STATE = 'error'; LIVE_MSG = liveErrMsg(e);
+            }
+            updateLiveStatusUI();
+        }
+
+        function updateLiveStatusUI() {
+            let html;
+            if (LIVE_STATE === 'saving') html = '<span class="text-slate-600">⏳ Synchronisation en cours…</span>';
+            else if (LIVE_STATE === 'ok') html = '<span class="text-sage-800">☁️ Synchronisé : PC, mobile et visiteurs voient les mêmes réglages.</span>';
+            else if (LIVE_STATE === 'empty') html = '<span class="text-slate-600">☁️ Prêt : le premier changement sera envoyé à tous les appareils.</span>';
+            else if (LIVE_STATE === 'noauth' || LIVE_STATE === 'error') html = `<span class="text-coral-600">⚠️ ${escapeHtmlAttr(LIVE_MSG)}</span>`;
+            else html = '<span class="text-slate-500">☁️ Synchronisation en attente de connexion…</span>';
+            document.querySelectorAll('.cms-live-status').forEach(el => { el.innerHTML = html; });
         }
 
         // Slides ON/OFF : une slide sans "enabled" (anciennes données) reste active
@@ -11571,6 +11655,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             updateDeliverySimulator(state.selectedCity);
             refreshAllCmsPanels();
             updateCmsHistoryButtons();
+            scheduleLivePush();
             if (!silent) showToast("Modifications appliquées sur la boutique !");
         }
 
@@ -13411,7 +13496,12 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             renderHeroSlides();
             renderProducts();
             renderCmsOrders();
-            maybeShowWelcomePopup();
+            {
+                // Réglages partagés (pop-up + slides) lus depuis Supabase ; repli sur les données de la page après 3 s
+                const livePromise = loadLiveConfig();
+                Promise.race([livePromise, new Promise(r => setTimeout(() => r(false), 3000))]).then(() => maybeShowWelcomePopup());
+                livePromise.then(ok => { if (ok) { renderHeroSlides(); try { refreshAllCmsPanels(); } catch (e) {} } updateLiveStatusUI(); });
+            }
             retryPendingOrders();
             maybeShowConsentBanner();
             loadCatalogueRest();
