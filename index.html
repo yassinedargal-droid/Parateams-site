@@ -9649,12 +9649,12 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             renderWelcomePopup();
             const m = document.getElementById('welcomePopup');
             if (!m) return;
-            m.classList.remove('hidden'); m.classList.add('flex');
+            m.style.display = 'flex';
         }
 
         function closeWelcomePopup() {
             const m = document.getElementById('welcomePopup');
-            if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+            if (m) m.style.display = 'none';
             const p = getPopup(), sig = popupSignature(p);
             try {
                 if (p.frequency === 'session') sessionStorage.setItem(POPUP_SEEN_KEY, sig);
@@ -9684,7 +9684,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 const m = document.getElementById('welcomePopup');
-                if (m && !m.classList.contains('hidden')) closeWelcomePopup();
+                if (m && m.style.display !== 'none') closeWelcomePopup();
             }
         });
 
@@ -13455,9 +13455,9 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
 
 
     <!-- POP-UP D'ACCUEIL (INTERSTITIEL, PILOTÉ PAR CMS → Pop-up d'accueil) -->
-    <div id="welcomePopup" onclick="if(event.target===this) closeWelcomePopup()" class="hidden fixed inset-0 z-[60] bg-slate-900/70 backdrop-blur-xs items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="welcomePopupTitle">
-        <div class="relative bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl max-h-[92vh] overflow-y-auto">
-            <button onclick="closeWelcomePopup()" aria-label="Fermer" class="absolute right-3 top-3 z-10 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-slate-700 shadow flex items-center justify-center cursor-pointer">✕</button>
+    <div id="welcomePopup" onclick="if(event.target===this) closeWelcomePopup()" style="display:none;position:fixed;top:0;right:0;bottom:0;left:0;z-index:2147483000;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.72);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)" role="dialog" aria-modal="true" aria-labelledby="welcomePopupTitle">
+        <div style="position:relative;width:100%;max-width:28rem;max-height:92vh;overflow-y:auto;overflow-x:hidden;background:#fff;border-radius:24px;box-shadow:0 25px 50px -12px rgba(0,0,0,.4)">
+            <button onclick="closeWelcomePopup()" aria-label="Fermer" style="position:absolute;right:12px;top:12px;z-index:10;width:36px;height:36px;border-radius:9999px;background:rgba(255,255,255,.92);color:#334155;box-shadow:0 1px 4px rgba(0,0,0,.25);border:0;cursor:pointer;font-size:14px">✕</button>
             <div id="welcomePopupBody"></div>
         </div>
     </div>
