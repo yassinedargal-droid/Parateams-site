@@ -9784,7 +9784,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         // Pop-up d'accueil + carrousel (slides ON/OFF) : lus par tous les visiteurs,
         // écrits uniquement par l'admin connecté au CMS.
         // =====================================================================
-        const LIVE_TABLE = 'site_config';
+        const LIVE_TABLE = 'parateams_live';
         const LIVE_KEY = 'live';
         let LIVE_STATE = 'idle';   // idle | ok | empty | saving | error | noauth
         let LIVE_MSG = '';
@@ -9794,8 +9794,8 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         function liveErrMsg(err) {
             const msg = (err && (err.message || err.details)) || 'Erreur inconnue';
             const code = err && err.code ? ` [${err.code}]` : '';
-            if (/PGRST205|42P01|relation|schema cache/i.test(msg + code)) return "Table « site_config » introuvable dans Supabase : exécutez le script SQL fourni (SQL Editor) puis réessayez.";
-            if (/row-level security|42501|permission denied/i.test(msg + code)) return "Droits refusés par Supabase : vérifiez les policies de la table site_config (script SQL fourni) et que vous êtes connecté au CMS.";
+            if (/PGRST205|42P01|relation|schema cache/i.test(msg + code)) return "Table « parateams_live » introuvable dans Supabase : exécutez le script SQL fourni (SQL Editor) puis réessayez.";
+            if (/row-level security|42501|permission denied/i.test(msg + code)) return "Droits refusés par Supabase : vérifiez les policies de la table parateams_live (script SQL fourni) et que vous êtes connecté au CMS.";
             return msg + code;
         }
 
