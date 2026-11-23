@@ -9606,11 +9606,16 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             actionType: "promo",
             imageUrl: "",
             delaySec: 2,
-            frequency: "once"   // once = 1 seule fois par visiteur | session = 1 fois par visite | always = à chaque ouverture
+            frequency: "always"   // once = 1 seule fois par visiteur | session = 1 fois par visite | always = à chaque ouverture
         };
         const POPUP_SEEN_KEY = "parateams_popup_seen_v1";
 
-        function getPopup() { return { ...DEFAULT_POPUP, ...(SITE_DATA.popup || {}) }; }
+        function getPopup() {
+            const p = { ...DEFAULT_POPUP, ...(SITE_DATA.popup || {}) };
+            // Sans choix explicite dans le CMS, le pop-up s'affiche à chaque ouverture / actualisation
+            if (!p.freqSet) p.frequency = 'always';
+            return p;
+        }
 
         function popupSignature(p) {
             // Si vous changez le contenu, les anciens visiteurs revoient la nouvelle offre
@@ -9739,9 +9744,9 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                         <div>
                             <label class="${lbl}">Fréquence d'affichage</label>
                             <select onchange="updateCmsPopupField('frequency', this.value)" class="${inp} bg-white">
-                                <option value="once" ${p.frequency === 'once' ? 'selected' : ''}>Une seule fois par visiteur</option>
+                                <option value="always" ${p.frequency === 'always' ? 'selected' : ''}>À chaque ouverture et actualisation</option>
                                 <option value="session" ${p.frequency === 'session' ? 'selected' : ''}>Une fois par visite</option>
-                                <option value="always" ${p.frequency === 'always' ? 'selected' : ''}>À chaque ouverture du site</option>
+                                <option value="once" ${p.frequency === 'once' ? 'selected' : ''}>Une seule fois par visiteur</option>
                             </select>
                         </div>
                         <div>
@@ -9756,6 +9761,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         function updateCmsPopupField(field, val) {
             pushCmsUndoSnapshot();
             SITE_DATA.popup = { ...getPopup(), [field]: val };
+            if (field === 'frequency') SITE_DATA.popup.freqSet = true;
             saveCmsToLocalPreview();
         }
 
