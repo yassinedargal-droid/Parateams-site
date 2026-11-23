@@ -9754,6 +9754,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                             <input type="number" min="0" max="30" value="${Number(p.delaySec) || 0}" onchange="updateCmsPopupField('delaySec', Math.max(0, Math.min(30, Number(this.value) || 0)))" class="${inp}">
                         </div>
                     </div>
+                    <p class="text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">⚠️ Ce réglage est d'abord enregistré uniquement sur cet appareil. Les visiteurs (mobile compris) le voient seulement après avoir cliqué sur « Publier » dans l'onglet « 🚀 Publication GitHub &amp; Sauvegarde ».</p>
                     <p class="text-[11px] text-slate-500">Si vous modifiez le contenu, les visiteurs qui l'avaient déjà fermé reverront la nouvelle offre. Pensez à cliquer sur « Publier » pour l'envoyer sur le site public.</p>
                 </div>`;
         }
@@ -12342,11 +12343,13 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         function buildUpdatedFullHtmlDocument() {
             const docClone = document.documentElement.cloneNode(true);
             docClone.querySelectorAll('[data-pt-dyn]').forEach(n => n.remove());
-            ['cmsProductsList', 'cmsSlidesList', 'cmsOrdersList', 'cmsRayonsList'].forEach(id => { const el = docClone.querySelector('#' + id); if (el) el.innerHTML = ''; });
+            ['cmsProductsList', 'cmsSlidesList', 'cmsOrdersList', 'cmsRayonsList', 'cmsPopupBox', 'welcomePopupBody'].forEach(id => { const el = docClone.querySelector('#' + id); if (el) el.innerHTML = ''; });
             const adminOverlay = docClone.querySelector('#adminCmsOverlay');
             const aboutM = docClone.querySelector('#aboutModal');
             if (aboutM) { aboutM.classList.add('hidden'); aboutM.classList.remove('flex'); const ac = aboutM.querySelector('#aboutContent'); if (ac) ac.innerHTML = ''; }
             if (adminOverlay) adminOverlay.classList.add('hidden');
+            const wp = docClone.querySelector('#welcomePopup');
+            if (wp) wp.style.display = 'none';
             const previewBanner = docClone.querySelector('#cmsPreviewBanner');
             if (previewBanner) previewBanner.classList.add('hidden');
             const bodyEl = docClone.querySelector('body');
