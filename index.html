@@ -2452,6 +2452,9 @@
                     <button onclick="switchCmsTab('popup')" data-cmstab="popup" class="cms-tab-btn px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs sm:text-sm font-bold whitespace-nowrap cursor-pointer">
                         🎁 Pop-up d'accueil
                     </button>
+                    <button onclick="switchCmsTab('scratch')" data-cmstab="scratch" class="cms-tab-btn px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs sm:text-sm font-bold whitespace-nowrap cursor-pointer">
+                        🎟️ Carte à gratter
+                    </button>
                     <button onclick="switchCmsTab('rayons')" data-cmstab="rayons" class="cms-tab-btn px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs sm:text-sm font-bold whitespace-nowrap cursor-pointer">
                         📂 Rayons (<span id="cmsTabRayonCount">10</span>)
                     </button>
@@ -8480,6 +8483,15 @@ La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps &amp; Hygiène | http
                     <div id="cmsPopupBox" class="space-y-4"></div>
                 </div>
 
+                <!-- ONGLET : CARTE À GRATTER (POP-UP 2) -->
+                <div id="cmsPanel-scratch" class="cms-panel hidden space-y-5">
+                    <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200">
+                        <h3 class="font-display font-bold text-lg text-slate-900">Carte à gratter (pop-up 2)</h3>
+                        <p class="text-xs text-slate-500">Le visiteur gratte la carte avec le doigt et découvre son cadeau. Si le pop-up d'accueil est aussi activé, il s'affiche d'abord, puis la carte à gratter.</p>
+                    </div>
+                    <div id="cmsScratchBox" class="space-y-4"></div>
+                </div>
+
                 <!-- ONGLET 3 : RAYONS / CATÉGORIES -->
                 <div id="cmsPanel-orders" class="cms-panel hidden space-y-5">
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-4">
@@ -9656,6 +9668,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         function closeWelcomePopup() {
             const m = document.getElementById('welcomePopup');
             if (m) m.style.display = 'none';
+            if (_scratchAfterWelcome) { _scratchAfterWelcome = false; setTimeout(maybeShowScratchCard, 500); }
             const p = getPopup(), sig = popupSignature(p);
             try {
                 if (p.frequency === 'session') sessionStorage.setItem(POPUP_SEEN_KEY, sig);
@@ -9665,6 +9678,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
 
         function welcomePopupAction() {
             const p = getPopup();
+            _scratchAfterWelcome = false;
             closeWelcomePopup();
             handleHeroSlideAction(p.actionType || 'promo');
         }
@@ -9799,7 +9813,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             return msg + code;
         }
 
-        function liveSnapshot() { return JSON.stringify({ popup: getPopup(), slides: SITE_DATA.slides }); }
+        function liveSnapshot() { return JSON.stringify({ popup: getPopup(), scratch: getScratch(), slides: SITE_DATA.slides }); }
 
         async function loadLiveConfig() {
             const sb = getSb();
@@ -9810,6 +9824,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                 const v = data && data.value;
                 if (!v) { LIVE_STATE = 'empty'; return false; }
                 if (v.popup) SITE_DATA.popup = v.popup;
+                if (v.scratch) SITE_DATA.scratch = v.scratch;
                 if (Array.isArray(v.slides) && v.slides.length) SITE_DATA.slides = v.slides;
                 _liveSig = liveSnapshot();
                 LIVE_STATE = 'ok'; LIVE_MSG = '';
@@ -9836,7 +9851,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                 const { data: s } = await sb.auth.getSession();
                 if (!s || !s.session) { LIVE_STATE = 'noauth'; LIVE_MSG = "Session expirée : reconnectez-vous au CMS."; updateLiveStatusUI(); return; }
                 const sig = liveSnapshot();
-                const value = { popup: getPopup(), slides: SITE_DATA.slides };
+                const value = { popup: getPopup(), scratch: getScratch(), slides: SITE_DATA.slides };
                 const { error } = await sb.from(LIVE_TABLE).upsert({ key: LIVE_KEY, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
                 if (error) throw error;
                 _liveSig = sig; LIVE_STATE = 'ok'; LIVE_MSG = '';
@@ -9854,6 +9869,322 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             else if (LIVE_STATE === 'noauth' || LIVE_STATE === 'error') html = `<span class="text-coral-600">⚠️ ${escapeHtmlAttr(LIVE_MSG)}</span>`;
             else html = '<span class="text-slate-500">☁️ Synchronisation en attente de connexion…</span>';
             document.querySelectorAll('.cms-live-status').forEach(el => { el.innerHTML = html; });
+        }
+
+
+        // =====================================================================
+        // POP-UP 2 : CARTE À GRATTER — ON/OFF indépendant, synchronisé via Supabase
+        // =====================================================================
+        const DEFAULT_SCRATCH = {
+            enabled: false,
+            badge: "🎟️ Carte cadeau",
+            title: "Grattez et découvrez votre cadeau",
+            subtitle: "Une remise ou un soin offert vous attend sur votre commande.",
+            hint: "Grattez ici",
+            buttonText: "J'EN PROFITE",
+            actionType: "promo",
+            delaySec: 3,
+            frequency: "session",   // always | session | once
+            prizes: [
+                { label: "-5% sur votre commande", code: "GRATTE5", weight: 35 },
+                { label: "-10% sur votre commande", code: "GRATTE10", weight: 25 },
+                { label: "Livraison offerte", code: "LIVRAISON0", weight: 25 },
+                { label: "-15% sur votre commande", code: "GRATTE15", weight: 10 },
+                { label: "1 soin offert dès 300 DH", code: "SOINOFFERT", weight: 5 }
+            ]
+        };
+        const SCRATCH_SEEN_KEY = "parateams_scratch_seen_v1";
+        const SCRATCH_PRIZE_KEY = "parateams_scratch_prize_v1";
+        let _scratchPrize = null, _scratchRevealed = false, _scratchPreview = false, _scratchAfterWelcome = false;
+
+        function getScratch() {
+            const c = { ...DEFAULT_SCRATCH, ...(SITE_DATA.scratch || {}) };
+            if (!Array.isArray(c.prizes)) c.prizes = DEFAULT_SCRATCH.prizes;
+            return c;
+        }
+        function scratchSignature(c) {
+            const str = [c.title, c.subtitle, JSON.stringify(c.prizes)].join('|');
+            let h = 0;
+            for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
+            return String(h);
+        }
+        function pickScratchPrize(prizes) {
+            const list = (prizes || []).filter(p => p && p.label);
+            if (!list.length) return { label: "Cadeau surprise", code: "" };
+            const total = list.reduce((s, p) => s + (Number(p.weight) > 0 ? Number(p.weight) : 1), 0);
+            let r = Math.random() * total;
+            for (const p of list) { r -= (Number(p.weight) > 0 ? Number(p.weight) : 1); if (r <= 0) return p; }
+            return list[0];
+        }
+        // Cadeau gagné par ce visiteur (enregistré avec sa commande)
+        function getWonPrizeText() {
+            try {
+                const w = JSON.parse(localStorage.getItem(SCRATCH_PRIZE_KEY) || 'null');
+                if (w && w.label) return w.code ? `${w.label} (code ${w.code})` : w.label;
+            } catch (e) { /* ignore */ }
+            return '';
+        }
+
+        function renderScratchCard() {
+            const body = document.getElementById('scratchPopupBody');
+            if (!body) return;
+            const c = getScratch(), sig = scratchSignature(c);
+            let saved = null;
+            if (!_scratchPreview) {
+                try { saved = JSON.parse(localStorage.getItem(SCRATCH_PRIZE_KEY) || 'null'); } catch (e) {}
+                if (saved && saved.sig !== sig) saved = null;
+            }
+            _scratchPrize = saved ? { label: saved.label, code: saved.code } : pickScratchPrize(c.prizes);
+            _scratchRevealed = !!saved;
+            body.innerHTML = `
+                <div style="padding:26px 20px 20px;text-align:center">
+                    ${c.badge ? `<span style="display:inline-block;padding:4px 12px;border-radius:9999px;background:#FDF5F3;color:#C8563D;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase">${escapeHtmlAttr(c.badge)}</span>` : ''}
+                    <h2 id="scratchPopupTitle" class="font-display" style="margin:10px 0 0;font-size:24px;line-height:1.15;font-weight:800;color:#1D330C">${escapeHtmlAttr(c.title)}</h2>
+                    ${c.subtitle ? `<p style="margin:8px 0 0;font-size:14px;line-height:1.5;color:#475569">${escapeHtmlAttr(c.subtitle)}</p>` : ''}
+                    <div id="scratchStage" style="position:relative;width:100%;max-width:300px;height:150px;margin:18px auto 0;border-radius:18px;overflow:hidden;background:linear-gradient(135deg,#4E8422,#1D330C);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0 14px;box-shadow:0 8px 24px rgba(29,51,12,.25)">
+                        <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;opacity:.85">🎉 Vous avez gagné</div>
+                        <div class="font-display" style="font-size:22px;line-height:1.15;font-weight:800">${escapeHtmlAttr(_scratchPrize.label)}</div>
+                        <canvas id="scratchCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;touch-action:none;cursor:pointer;display:${_scratchRevealed ? 'none' : 'block'}"></canvas>
+                    </div>
+                    <div id="scratchActions"></div>
+                </div>`;
+            if (_scratchRevealed) showScratchActions();
+        }
+
+        function showScratchActions() {
+            const el = document.getElementById('scratchActions');
+            if (!el) return;
+            const c = getScratch(), code = _scratchPrize && _scratchPrize.code;
+            el.innerHTML = `
+                ${code ? `<div style="display:flex;gap:8px;justify-content:center;align-items:center;margin-top:16px">
+                    <code id="scratchCode" style="padding:9px 16px;border:2px dashed #5D9C2A;border-radius:12px;font-weight:800;letter-spacing:.1em;background:#F4F9F0;color:#1D330C;font-size:15px">${escapeHtmlAttr(code)}</code>
+                    <button onclick="copyScratchCode()" style="padding:9px 14px;border-radius:12px;border:0;background:#E5F2DB;color:#1D330C;font-weight:700;font-size:12px;cursor:pointer">Copier</button>
+                </div>` : ''}
+                <p style="margin:10px 0 0;font-size:11px;color:#64748b">${_scratchPreview ? "Aperçu : ce cadeau n'est pas enregistré." : "Votre cadeau sera enregistré avec votre commande."}</p>
+                <button onclick="scratchPopupAction()" style="margin-top:14px;width:100%;padding:14px;border-radius:12px;border:0;background:#3E6B1B;color:#fff;font-weight:800;font-size:14px;cursor:pointer">${escapeHtmlAttr(c.buttonText || 'J\'EN PROFITE')}</button>
+                <button onclick="closeScratchPopup()" style="margin-top:8px;border:0;background:none;color:#64748b;font-size:12px;font-weight:600;cursor:pointer">Fermer</button>`;
+        }
+
+        function copyScratchCode() {
+            const code = _scratchPrize && _scratchPrize.code;
+            if (!code) return;
+            const done = () => showToast("Code copié : " + code);
+            const fallback = () => {
+                const ta = document.createElement('textarea'); ta.value = code; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.select();
+                try { document.execCommand('copy'); done(); } catch (e) { showToast("Code : " + code); }
+                ta.remove();
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(done, fallback);
+            else fallback();
+        }
+
+        function initScratchCanvas() {
+            const cv = document.getElementById('scratchCanvas');
+            if (!cv) return;
+            const rect = cv.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            const W = rect.width, H = rect.height;
+            cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+            const ctx = cv.getContext('2d', { willReadFrequently: true });
+            ctx.scale(dpr, dpr);
+            const g = ctx.createLinearGradient(0, 0, W, H);
+            g.addColorStop(0, '#c4cbc7'); g.addColorStop(0.5, '#f3f5f4'); g.addColorStop(1, '#aeb7b2');
+            ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+            ctx.strokeStyle = 'rgba(0,0,0,.07)'; ctx.lineWidth = 1;
+            for (let x = -H; x < W; x += 12) { ctx.beginPath(); ctx.moveTo(x, H); ctx.lineTo(x + H, 0); ctx.stroke(); }
+            ctx.fillStyle = '#5b6661'; ctx.font = '700 17px Inter, system-ui, sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('✨ ' + (getScratch().hint || 'Grattez ici') + ' ✨', W / 2, H / 2);
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.strokeStyle = '#000'; ctx.fillStyle = '#000';   // trait opaque : efface complètement
+            let drawing = false, moves = 0, last = null;
+            const pos = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+            const scratch = e => {
+                const p = pos(e);
+                ctx.lineWidth = 38; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+                ctx.beginPath(); ctx.moveTo((last || p).x, (last || p).y); ctx.lineTo(p.x, p.y); ctx.stroke();
+                last = p;
+                if (++moves % 6 === 0) check();
+            };
+            const check = () => {
+                if (_scratchRevealed) return;
+                const w = cv.width, h = cv.height;
+                const d = ctx.getImageData(0, 0, w, h).data;
+                let clear = 0, total = 0;
+                const step = Math.max(4, Math.round(8 * dpr));
+                for (let y = 0; y < h; y += step) for (let x = 0; x < w; x += step) { total++; if (d[(y * w + x) * 4 + 3] === 0) clear++; }
+                if (total && clear / total >= 0.4) revealScratch(cv);
+            };
+            cv.addEventListener('pointerdown', e => { drawing = true; last = null; try { cv.setPointerCapture(e.pointerId); } catch (x) {} scratch(e); e.preventDefault(); });
+            cv.addEventListener('pointermove', e => { if (drawing) { scratch(e); e.preventDefault(); } });
+            const end = () => { drawing = false; last = null; check(); };
+            cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end); cv.addEventListener('pointerleave', () => { drawing = false; last = null; });
+        }
+
+        function revealScratch(cv) {
+            if (_scratchRevealed) return;
+            _scratchRevealed = true;
+            cv.style.transition = 'opacity .45s'; cv.style.opacity = '0';
+            setTimeout(() => { cv.style.display = 'none'; }, 480);
+            if (!_scratchPreview) {
+                try { localStorage.setItem(SCRATCH_PRIZE_KEY, JSON.stringify({ sig: scratchSignature(getScratch()), label: _scratchPrize.label, code: _scratchPrize.code, at: Date.now() })); } catch (e) {}
+            }
+            showScratchActions();
+        }
+
+        function openScratchCard(preview) {
+            _scratchPreview = !!preview;
+            renderScratchCard();
+            const m = document.getElementById('scratchPopup');
+            if (m) m.style.display = 'flex';
+            if (!_scratchRevealed) initScratchCanvas();
+        }
+
+        function closeScratchPopup() {
+            const m = document.getElementById('scratchPopup');
+            if (m) m.style.display = 'none';
+            if (_scratchPreview) return;
+            const c = getScratch(), sig = scratchSignature(c);
+            try {
+                if (c.frequency === 'session') sessionStorage.setItem(SCRATCH_SEEN_KEY, sig);
+                else if (c.frequency !== 'always') localStorage.setItem(SCRATCH_SEEN_KEY, sig);
+            } catch (e) { /* ignore */ }
+        }
+
+        function scratchPopupAction() {
+            const c = getScratch();
+            closeScratchPopup();
+            handleHeroSlideAction(c.actionType || 'promo');
+        }
+
+        function scratchAlreadySeen(c) {
+            const sig = scratchSignature(c);
+            try {
+                if (c.frequency === 'session' && sessionStorage.getItem(SCRATCH_SEEN_KEY) === sig) return true;
+                if (c.frequency === 'once' && localStorage.getItem(SCRATCH_SEEN_KEY) === sig) return true;
+            } catch (e) { /* stockage indisponible : on affiche */ }
+            return false;
+        }
+
+        function maybeShowScratchCard() {
+            const c = getScratch();
+            let forced = false;
+            try { forced = new URLSearchParams(window.location.search).get('scratch') === '1'; } catch (e) {}
+            if (forced) { setTimeout(() => openScratchCard(true), 300); return; }
+            if (!c.enabled || window.location.hash === '#admin' || scratchAlreadySeen(c)) return;
+            const delay = Math.max(0, Number(c.delaySec) || 0) * 1000;
+            setTimeout(() => { if (getScratch().enabled) openScratchCard(false); }, delay);
+        }
+
+        // Enchaînement : pop-up d'accueil d'abord, puis la carte à gratter (jamais les deux en même temps)
+        function startPopups() {
+            const p = getPopup();
+            let forcedW = false;
+            try { forcedW = new URLSearchParams(window.location.search).get('popup') === '1'; } catch (e) {}
+            let seenW = false;
+            const sig = popupSignature(p);
+            try {
+                if (p.frequency === 'session' && sessionStorage.getItem(POPUP_SEEN_KEY) === sig) seenW = true;
+                if ((p.frequency === 'once' || !p.frequency) && localStorage.getItem(POPUP_SEEN_KEY) === sig) seenW = true;
+            } catch (e) {}
+            const willWelcome = forcedW || (p.enabled && window.location.hash !== '#admin' && !seenW);
+            _scratchAfterWelcome = !!willWelcome;
+            maybeShowWelcomePopup();
+            if (!willWelcome) maybeShowScratchCard();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const m = document.getElementById('scratchPopup');
+                if (m && m.style.display !== 'none') closeScratchPopup();
+            }
+        });
+
+        // --- CMS : carte à gratter ---
+        function renderCmsScratchPanel() {
+            const box = document.getElementById('cmsScratchBox');
+            if (!box) return;
+            const c = getScratch(), on = !!c.enabled;
+            const inp = "w-full px-3 py-2 rounded-xl border border-slate-200 text-xs";
+            const lbl = "block text-[11px] font-bold text-slate-600 mb-1";
+            box.innerHTML = `
+                <div class="rounded-3xl border ${on ? 'border-slate-200 bg-white' : 'border-slate-300 bg-slate-50'} p-5 space-y-4 shadow-2xs">
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                        <label class="inline-flex items-center gap-2 cursor-pointer select-none" title="Afficher ou masquer la carte à gratter">
+                            <input type="checkbox" class="sr-only" ${on ? 'checked' : ''} onchange="updateCmsScratchField('enabled', this.checked)" aria-label="Activer la carte à gratter">
+                            <span class="relative w-10 h-6 rounded-full transition-colors ${on ? 'bg-sage-600' : 'bg-slate-300'}">
+                                <span class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${on ? 'translate-x-4' : ''}"></span>
+                            </span>
+                            <span class="text-xs font-extrabold ${on ? 'text-sage-800' : 'text-slate-500'}">${on ? 'ON · affichée aux visiteurs' : 'OFF · désactivée'}</span>
+                        </label>
+                        <button type="button" onclick="openScratchCard(true)" class="px-3 py-1.5 rounded-lg bg-[#0D1310] text-white text-xs font-bold cursor-pointer">👁️ Prévisualiser</button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div><label class="${lbl}">Badge étiquette</label><input type="text" value="${escapeHtmlAttr(c.badge)}" onchange="updateCmsScratchField('badge', this.value)" class="${inp}"></div>
+                        <div><label class="${lbl}">Texte sur la carte à gratter</label><input type="text" value="${escapeHtmlAttr(c.hint)}" onchange="updateCmsScratchField('hint', this.value)" class="${inp}"></div>
+                        <div class="sm:col-span-2"><label class="${lbl}">Titre principal</label><input type="text" value="${escapeHtmlAttr(c.title)}" onchange="updateCmsScratchField('title', this.value)" class="${inp} font-semibold"></div>
+                        <div class="sm:col-span-2"><label class="${lbl}">Description courte</label><input type="text" value="${escapeHtmlAttr(c.subtitle)}" onchange="updateCmsScratchField('subtitle', this.value)" class="${inp}"></div>
+                        <div><label class="${lbl}">Texte du bouton</label><input type="text" value="${escapeHtmlAttr(c.buttonText)}" onchange="updateCmsScratchField('buttonText', this.value)" class="${inp}"></div>
+                        <div>
+                            <label class="${lbl}">Action au clic</label>
+                            <select onchange="updateCmsScratchField('actionType', this.value)" class="${inp} bg-white">
+                                ${[['promo','Filtrer les Promos'],['new','Filtrer les Nouveautés'],['diagnostic','Ouvrir Diagnostic Peau'],['giveaway','Ouvrir Giveaway'],['whatsapp','Ouvrir WhatsApp']].map(([v, t]) => `<option value="${v}" ${c.actionType === v ? 'selected' : ''}>${t}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="${lbl}">Fréquence d'affichage</label>
+                            <select onchange="updateCmsScratchField('frequency', this.value)" class="${inp} bg-white">
+                                <option value="always" ${c.frequency === 'always' ? 'selected' : ''}>À chaque ouverture et actualisation</option>
+                                <option value="session" ${c.frequency === 'session' ? 'selected' : ''}>Une fois par visite</option>
+                                <option value="once" ${c.frequency === 'once' ? 'selected' : ''}>Une seule fois par visiteur</option>
+                            </select>
+                        </div>
+                        <div><label class="${lbl}">Délai avant affichage (secondes)</label><input type="number" min="0" max="60" value="${Number(c.delaySec) || 0}" onchange="updateCmsScratchField('delaySec', Math.max(0, Math.min(60, Number(this.value) || 0)))" class="${inp}"></div>
+                    </div>
+                    <div class="space-y-2 pt-1">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-display font-bold text-sm text-sage-900">🎁 Cadeaux possibles (tirage au sort)</h4>
+                            <button type="button" onclick="addCmsScratchPrize()" class="px-3 py-1.5 rounded-lg bg-sage-50 hover:bg-sage-100 text-sage-800 text-xs font-bold cursor-pointer">+ Ajouter un cadeau</button>
+                        </div>
+                        <p class="text-[11px] text-slate-500">La « chance » est un poids : plus il est grand, plus le cadeau tombe souvent (ex : 35 contre 5). Chaque visiteur gagne toujours un cadeau.</p>
+                        ${c.prizes.map((p, i) => `
+                            <div class="grid grid-cols-12 gap-2 items-center">
+                                <input type="text" value="${escapeHtmlAttr(p.label)}" placeholder="Cadeau (ex : -10% sur votre commande)" onchange="updateCmsScratchPrize(${i}, 'label', this.value)" class="col-span-12 sm:col-span-6 ${inp}">
+                                <input type="text" value="${escapeHtmlAttr(p.code)}" placeholder="CODE" onchange="updateCmsScratchPrize(${i}, 'code', this.value.trim().toUpperCase())" class="col-span-6 sm:col-span-3 ${inp} font-mono uppercase">
+                                <input type="number" min="1" max="100" value="${Number(p.weight) || 1}" title="Chance" onchange="updateCmsScratchPrize(${i}, 'weight', Math.max(1, Number(this.value) || 1))" class="col-span-4 sm:col-span-2 ${inp}">
+                                <button type="button" onclick="deleteCmsScratchPrize(${i})" aria-label="Supprimer ce cadeau" class="col-span-2 sm:col-span-1 px-2 py-2 rounded-lg bg-coral-50 text-coral-600 text-xs font-bold cursor-pointer">🗑️</button>
+                            </div>`).join('')}
+                    </div>
+                    <p class="cms-live-status text-[11px] font-bold rounded-xl bg-slate-50 border border-slate-200 px-3 py-2"></p>
+                    <p class="text-[11px] text-slate-500">Le cadeau gagné est enregistré avec la commande du client (visible dans « Commandes » et dans le message WhatsApp). Vous restez libre de l'honorer lors de la confirmation.</p>
+                </div>`;
+            updateLiveStatusUI();
+        }
+        function updateCmsScratchField(field, val) {
+            pushCmsUndoSnapshot();
+            SITE_DATA.scratch = { ...getScratch(), [field]: val };
+            saveCmsToLocalPreview();
+        }
+        function updateCmsScratchPrize(i, field, val) {
+            const prizes = getScratch().prizes.map(p => ({ ...p }));
+            if (!prizes[i]) return;
+            pushCmsUndoSnapshot();
+            prizes[i][field] = val;
+            SITE_DATA.scratch = { ...getScratch(), prizes };
+            saveCmsToLocalPreview();
+        }
+        function addCmsScratchPrize() {
+            pushCmsUndoSnapshot();
+            SITE_DATA.scratch = { ...getScratch(), prizes: [...getScratch().prizes, { label: "-5% sur votre commande", code: "NOUVEAU5", weight: 10 }] };
+            saveCmsToLocalPreview();
+        }
+        function deleteCmsScratchPrize(i) {
+            const prizes = getScratch().prizes.filter((_, k) => k !== i);
+            if (!prizes.length) { showToast("Gardez au moins un cadeau."); return; }
+            pushCmsUndoSnapshot();
+            SITE_DATA.scratch = { ...getScratch(), prizes };
+            saveCmsToLocalPreview();
         }
 
         // Slides ON/OFF : une slide sans "enabled" (anciennes données) reste active
@@ -10473,7 +10804,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             return msg + code + hint;
         }
         function orderToRow(o) {
-            const meta = { ref: o.id, statut: o.status, ville: o.city, source: o.source };
+            const meta = { ref: o.id, statut: o.status, ville: o.city, source: o.source, promo: o.promo };
             const row = { client: o.customer, telephone: o.phone, adresse: o.address, total: o.total };
             const payload = { lignes: o.items };
             Object.keys(meta).forEach(k => { if (ORDERS_OPTIONAL_COLUMNS[k]) row[k] = meta[k]; else payload[k] = meta[k]; });
@@ -10531,7 +10862,8 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                 id: generateOrderId(), date: new Date().toISOString(), status: 'Nouvelle', source: source || 'Site',
                 customer: customer || '', phone: phone || '', address: address || '', city: state.selectedCity,
                 items: state.cart.map(i => ({ id: i.id, brand: i.brand, name: i.name, price: i.price, qty: i.qty })),
-                subtotal, shipping, total: subtotal + shipping
+                subtotal, shipping, total: subtotal + shipping,
+                promo: getWonPrizeText()
             };
             insertOrderRemote(order)
                 .then(() => { if (typeof isCmsAuthenticated !== 'undefined' && isCmsAuthenticated) fetchOrders(); })
@@ -10558,7 +10890,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         function buildOrderMessage(o) {
             const s = SITE_DATA.settings;
             const lines = o.items.map(i => `• ${i.qty}x ${i.brand} ${i.name} = ${i.price * i.qty} DH`).join('\n');
-            return `Bonjour ${s.brandName} 👋,\nJe viens de passer la commande ${o.id} :\n\n${lines}\n\n• Nom : ${o.customer}\n• Téléphone : ${o.phone}\n• Adresse : ${o.address} (${o.city})\n• Livraison : ${o.shipping === 0 ? 'Offerte' : o.shipping + ' DH'}\n• Total à régler : ${o.total} DH`;
+            return `Bonjour ${s.brandName} 👋,\nJe viens de passer la commande ${o.id} :\n\n${lines}\n\n• Nom : ${o.customer}\n• Téléphone : ${o.phone}\n• Adresse : ${o.address} (${o.city})\n• Livraison : ${o.shipping === 0 ? 'Offerte' : o.shipping + ' DH'}\n• Total à régler : ${o.total} DH${(o.promo || (o.meta && o.meta.promo)) ? '\n• 🎁 Cadeau gagné : ' + (o.promo || o.meta.promo) : ''}`;
         }
         function sendOrderToWhatsApp() {
             if (state.lastOrder) openWhatsAppDirect(buildOrderMessage(state.lastOrder));
@@ -10640,6 +10972,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                                 <div class="flex justify-between text-slate-500"><span>Sous-total</span><span>${o.subtotal} DH</span></div>
                                 <div class="flex justify-between text-slate-500"><span>Livraison</span><span>${o.shipping === 0 ? 'Offerte' : o.shipping + ' DH'}</span></div>
                                 <div class="flex justify-between font-extrabold text-sm text-sage-900"><span>Total</span><span>${o.total} DH</span></div>
+                                ${(o.promo || (o.meta && o.meta.promo)) ? `<div class="mt-1 px-2 py-1 rounded-lg bg-amber-50 text-amber-900 font-bold">🎁 Cadeau gagné : ${escapeHtmlAttr(o.promo || o.meta.promo)}</div>` : ''}
                             </div>
                         </div>
                     </div>
@@ -12028,6 +12361,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             renderCmsProductsList();
             renderCmsSlidesList();
             renderCmsPopupPanel();
+            renderCmsScratchPanel();
             renderCmsRayonsList();
             populateCmsSettingsForm();
             loadSavedGitHubConfig();
@@ -12428,13 +12762,15 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         function buildUpdatedFullHtmlDocument() {
             const docClone = document.documentElement.cloneNode(true);
             docClone.querySelectorAll('[data-pt-dyn]').forEach(n => n.remove());
-            ['cmsProductsList', 'cmsSlidesList', 'cmsOrdersList', 'cmsRayonsList', 'cmsPopupBox', 'welcomePopupBody'].forEach(id => { const el = docClone.querySelector('#' + id); if (el) el.innerHTML = ''; });
+            ['cmsProductsList', 'cmsSlidesList', 'cmsOrdersList', 'cmsRayonsList', 'cmsPopupBox', 'welcomePopupBody', 'cmsScratchBox', 'scratchPopupBody'].forEach(id => { const el = docClone.querySelector('#' + id); if (el) el.innerHTML = ''; });
             const adminOverlay = docClone.querySelector('#adminCmsOverlay');
             const aboutM = docClone.querySelector('#aboutModal');
             if (aboutM) { aboutM.classList.add('hidden'); aboutM.classList.remove('flex'); const ac = aboutM.querySelector('#aboutContent'); if (ac) ac.innerHTML = ''; }
             if (adminOverlay) adminOverlay.classList.add('hidden');
             const wp = docClone.querySelector('#welcomePopup');
             if (wp) wp.style.display = 'none';
+            const sp = docClone.querySelector('#scratchPopup');
+            if (sp) sp.style.display = 'none';
             const previewBanner = docClone.querySelector('#cmsPreviewBanner');
             if (previewBanner) previewBanner.classList.add('hidden');
             const bodyEl = docClone.querySelector('body');
@@ -13499,7 +13835,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             {
                 // Réglages partagés (pop-up + slides) lus depuis Supabase ; repli sur les données de la page après 3 s
                 const livePromise = loadLiveConfig();
-                Promise.race([livePromise, new Promise(r => setTimeout(() => r(false), 3000))]).then(() => maybeShowWelcomePopup());
+                Promise.race([livePromise, new Promise(r => setTimeout(() => r(false), 3000))]).then(() => startPopups());
                 livePromise.then(ok => { if (ok) { renderHeroSlides(); try { refreshAllCmsPanels(); } catch (e) {} } updateLiveStatusUI(); });
             }
             retryPendingOrders();
@@ -13552,6 +13888,14 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         <div style="position:relative;width:100%;max-width:28rem;max-height:92vh;overflow-y:auto;overflow-x:hidden;background:#fff;border-radius:24px;box-shadow:0 25px 50px -12px rgba(0,0,0,.4)">
             <button onclick="closeWelcomePopup()" aria-label="Fermer" style="position:absolute;right:12px;top:12px;z-index:10;width:36px;height:36px;border-radius:9999px;background:rgba(255,255,255,.92);color:#334155;box-shadow:0 1px 4px rgba(0,0,0,.25);border:0;cursor:pointer;font-size:14px">✕</button>
             <div id="welcomePopupBody"></div>
+        </div>
+    </div>
+
+    <!-- POP-UP 2 : CARTE À GRATTER (piloté par CMS → Carte à gratter) -->
+    <div id="scratchPopup" onclick="if(event.target===this) closeScratchPopup()" style="display:none;position:fixed;top:0;right:0;bottom:0;left:0;z-index:2147483000;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.72);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)" role="dialog" aria-modal="true" aria-labelledby="scratchPopupTitle">
+        <div style="position:relative;width:100%;max-width:26rem;max-height:92vh;overflow-y:auto;overflow-x:hidden;background:#fff;border-radius:24px;box-shadow:0 25px 50px -12px rgba(0,0,0,.4)">
+            <button onclick="closeScratchPopup()" aria-label="Fermer" style="position:absolute;right:12px;top:12px;z-index:10;width:36px;height:36px;border-radius:9999px;background:rgba(241,245,249,.95);color:#334155;box-shadow:0 1px 4px rgba(0,0,0,.2);border:0;cursor:pointer;font-size:14px">✕</button>
+            <div id="scratchPopupBody"></div>
         </div>
     </div>
 
