@@ -9872,6 +9872,101 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         }
 
 
+
+        // =====================================================================
+        // CADEAU GAGNÉ → PANIER → COMMANDE : application automatique de la remise
+        // =====================================================================
+        function normalizePrize(p) {
+            const label = (p && p.label) || '';
+            let type = p && p.type, value = Number(p && p.value) || 0;
+            if (!type) {
+                const m = label.match(/-\s*(\d+)\s*%/);
+                if (m) { type = 'percent'; value = Number(m[1]); }
+                else if (/livraison/i.test(label)) type = 'shipping';
+                else type = 'gift';
+            }
+            if (type === 'percent') value = Math.max(1, Math.min(90, value || 5));
+            return { label, code: ((p && p.code) || '').toString().toUpperCase(), type, value };
+        }
+        function readWonPrize() {
+            try { const w = JSON.parse(localStorage.getItem(SCRATCH_PRIZE_KEY) || 'null'); return (w && w.label) ? w : null; } catch (e) { return null; }
+        }
+        function writeWonPrize(w) { try { localStorage.setItem(SCRATCH_PRIZE_KEY, JSON.stringify(w)); } catch (e) {} }
+        function prizeExpired(w) {
+            const days = Number(getScratch().validDays) || 7;
+            return Date.now() - (Number(w.at) || 0) > days * 86400000;
+        }
+        function getActiveCoupon() {
+            const w = readWonPrize();
+            if (!w || w.used || w.applied === false || prizeExpired(w)) return null;
+            return normalizePrize(w);
+        }
+        function couponText(c) { return c.code ? `${c.label} (code ${c.code})` : c.label; }
+        function markCouponUsed() {
+            const w = readWonPrize();
+            if (w) { w.used = true; writeWonPrize(w); }
+        }
+        function removeCoupon() {
+            const w = readWonPrize();
+            if (w) { w.applied = false; writeWonPrize(w); }
+            renderCart();
+        }
+        function applyCoupon(raw) {
+            const code = (raw || '').trim().toUpperCase();
+            const w = readWonPrize();
+            if (w && !w.used && !prizeExpired(w) && code && (w.code || '').toUpperCase() === code) {
+                w.applied = true; writeWonPrize(w); renderCart(); showToast("🎁 Cadeau appliqué à votre panier");
+                return { ok: true };
+            }
+            if (code && getScratch().prizes.some(p => (p.code || '').toUpperCase() === code)) return { ok: false, msg: "Ce code est réservé au gagnant de la carte à gratter." };
+            return { ok: false, msg: "Code invalide, déjà utilisé ou expiré." };
+        }
+        function submitCouponForm(e) {
+            e.preventDefault();
+            const inp = document.getElementById('couponInput');
+            const r = applyCoupon(inp ? inp.value : '');
+            const msg = document.getElementById('couponMsg');
+            if (!r.ok && msg) { msg.textContent = r.msg; msg.className = 'text-[11px] text-coral-600 font-semibold'; }
+            return false;
+        }
+        // Prix du panier : sous-total, remise, livraison, total (une seule source de vérité)
+        function getCartPricing() {
+            const s = SITE_DATA.settings;
+            const isCasa = state.selectedCity === 'Casablanca';
+            const threshold = isCasa ? Number(s.casaThreshold) : Number(s.otherThreshold);
+            const fee = isCasa ? Number(s.casaFee) : Number(s.otherFee);
+            const subtotal = state.cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+            let shipping = subtotal >= threshold ? 0 : fee;
+            let discount = 0;
+            const coupon = subtotal > 0 ? getActiveCoupon() : null;
+            if (coupon) {
+                if (coupon.type === 'percent') discount = Math.round(subtotal * coupon.value / 100);
+                else if (coupon.type === 'shipping') shipping = 0;
+            }
+            return { subtotal, discount, shipping, total: Math.max(0, subtotal - discount) + shipping, coupon, threshold, fee };
+        }
+        function couponBoxHtml(P, editable) {
+            const c = P.coupon;
+            if (c) {
+                return `<div class="flex items-center justify-between gap-2 bg-sage-50 border border-sage-100 rounded-xl px-3 py-2 text-xs">
+                    <span class="font-bold text-sage-800">🎁 ${escapeHtmlAttr(c.label)}${c.code ? ' · <code>' + escapeHtmlAttr(c.code) + '</code>' : ''}</span>
+                    ${editable ? `<button type="button" onclick="removeCoupon()" class="text-slate-500 underline cursor-pointer shrink-0">Retirer</button>` : ''}
+                </div>`;
+            }
+            if (!editable) return '';
+            return `<form onsubmit="return submitCouponForm(event)" class="flex gap-2">
+                    <input id="couponInput" type="text" autocomplete="off" placeholder="Code cadeau (ex : GRATTE5)" class="flex-1 min-w-0 px-3 py-2 rounded-xl border border-slate-200 text-xs uppercase">
+                    <button type="submit" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer">Appliquer</button>
+                </form><p id="couponMsg" class="text-[11px] text-slate-500"></p>`;
+        }
+        function discountLinesHtml(P) {
+            const c = P.coupon;
+            if (!c) return '';
+            if (c.type === 'percent') return `<div class="flex justify-between text-sage-700 font-semibold"><span>Remise ${c.value}%${c.code ? ' (' + escapeHtmlAttr(c.code) + ')' : ''}</span><span>-${P.discount} DH</span></div>`;
+            if (c.type === 'gift') return `<div class="flex justify-between text-sage-700 font-semibold"><span>🎁 ${escapeHtmlAttr(c.label)}</span><span>Ajouté à la commande</span></div>`;
+            return '';
+        }
+
         // =====================================================================
         // POP-UP 2 : CARTE À GRATTER — ON/OFF indépendant, synchronisé via Supabase
         // =====================================================================
@@ -9885,12 +9980,13 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             actionType: "promo",
             delaySec: 3,
             frequency: "session",   // always | session | once
+            validDays: 7,           // durée de validité du cadeau gagné
             prizes: [
-                { label: "-5% sur votre commande", code: "GRATTE5", weight: 35 },
-                { label: "-10% sur votre commande", code: "GRATTE10", weight: 25 },
-                { label: "Livraison offerte", code: "LIVRAISON0", weight: 25 },
-                { label: "-15% sur votre commande", code: "GRATTE15", weight: 10 },
-                { label: "1 soin offert dès 300 DH", code: "SOINOFFERT", weight: 5 }
+                { label: "-5% sur votre commande", code: "GRATTE5", type: "percent", value: 5, weight: 35 },
+                { label: "-10% sur votre commande", code: "GRATTE10", type: "percent", value: 10, weight: 25 },
+                { label: "Livraison offerte", code: "LIVRAISON0", type: "shipping", value: 0, weight: 25 },
+                { label: "-15% sur votre commande", code: "GRATTE15", type: "percent", value: 15, weight: 10 },
+                { label: "1 soin offert dès 300 DH", code: "SOINOFFERT", type: "gift", value: 0, weight: 5 }
             ]
         };
         const SCRATCH_SEEN_KEY = "parateams_scratch_seen_v1";
@@ -9918,11 +10014,8 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         }
         // Cadeau gagné par ce visiteur (enregistré avec sa commande)
         function getWonPrizeText() {
-            try {
-                const w = JSON.parse(localStorage.getItem(SCRATCH_PRIZE_KEY) || 'null');
-                if (w && w.label) return w.code ? `${w.label} (code ${w.code})` : w.label;
-            } catch (e) { /* ignore */ }
-            return '';
+            const c = getActiveCoupon();
+            return c ? couponText(c) : '';
         }
 
         function renderScratchCard() {
@@ -9960,7 +10053,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                     <code id="scratchCode" style="padding:9px 16px;border:2px dashed #5D9C2A;border-radius:12px;font-weight:800;letter-spacing:.1em;background:#F4F9F0;color:#1D330C;font-size:15px">${escapeHtmlAttr(code)}</code>
                     <button onclick="copyScratchCode()" style="padding:9px 14px;border-radius:12px;border:0;background:#E5F2DB;color:#1D330C;font-weight:700;font-size:12px;cursor:pointer">Copier</button>
                 </div>` : ''}
-                <p style="margin:10px 0 0;font-size:11px;color:#64748b">${_scratchPreview ? "Aperçu : ce cadeau n'est pas enregistré." : "Votre cadeau sera enregistré avec votre commande."}</p>
+                <p style="margin:10px 0 0;font-size:11px;color:#64748b">${_scratchPreview ? "Aperçu : ce cadeau n'est pas enregistré." : "Appliqué automatiquement à votre panier (valable " + (Number(c.validDays) || 7) + " jours)."}</p>
                 <button onclick="scratchPopupAction()" style="margin-top:14px;width:100%;padding:14px;border-radius:12px;border:0;background:#3E6B1B;color:#fff;font-weight:800;font-size:14px;cursor:pointer">${escapeHtmlAttr(c.buttonText || 'J\'EN PROFITE')}</button>
                 <button onclick="closeScratchPopup()" style="margin-top:8px;border:0;background:none;color:#64748b;font-size:12px;font-weight:600;cursor:pointer">Fermer</button>`;
         }
@@ -10028,7 +10121,10 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             cv.style.transition = 'opacity .45s'; cv.style.opacity = '0';
             setTimeout(() => { cv.style.display = 'none'; }, 480);
             if (!_scratchPreview) {
-                try { localStorage.setItem(SCRATCH_PRIZE_KEY, JSON.stringify({ sig: scratchSignature(getScratch()), label: _scratchPrize.label, code: _scratchPrize.code, at: Date.now() })); } catch (e) {}
+                const np = normalizePrize(_scratchPrize);
+                writeWonPrize({ sig: scratchSignature(getScratch()), label: np.label, code: np.code, type: np.type, value: np.value, at: Date.now(), used: false, applied: true });
+                try { renderCart(); updateCartBadge(); } catch (e) {}
+                showToast("🎁 Cadeau ajouté à votre panier !");
             }
             showScratchActions();
         }
@@ -10072,6 +10168,8 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             let forced = false;
             try { forced = new URLSearchParams(window.location.search).get('scratch') === '1'; } catch (e) {}
             if (forced) { setTimeout(() => openScratchCard(true), 300); return; }
+            const won = readWonPrize();
+            if (won && won.used) return;
             if (!c.enabled || window.location.hash === '#admin' || scratchAlreadySeen(c)) return;
             const delay = Math.max(0, Number(c.delaySec) || 0) * 1000;
             setTimeout(() => { if (getScratch().enabled) openScratchCard(false); }, delay);
@@ -10141,23 +10239,30 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                             </select>
                         </div>
                         <div><label class="${lbl}">Délai avant affichage (secondes)</label><input type="number" min="0" max="60" value="${Number(c.delaySec) || 0}" onchange="updateCmsScratchField('delaySec', Math.max(0, Math.min(60, Number(this.value) || 0)))" class="${inp}"></div>
+                        <div><label class="${lbl}">Validité du cadeau gagné (jours)</label><input type="number" min="1" max="90" value="${Number(c.validDays) || 7}" onchange="updateCmsScratchField('validDays', Math.max(1, Math.min(90, Number(this.value) || 7)))" class="${inp}"></div>
                     </div>
                     <div class="space-y-2 pt-1">
                         <div class="flex items-center justify-between">
                             <h4 class="font-display font-bold text-sm text-sage-900">🎁 Cadeaux possibles (tirage au sort)</h4>
                             <button type="button" onclick="addCmsScratchPrize()" class="px-3 py-1.5 rounded-lg bg-sage-50 hover:bg-sage-100 text-sage-800 text-xs font-bold cursor-pointer">+ Ajouter un cadeau</button>
                         </div>
-                        <p class="text-[11px] text-slate-500">La « chance » est un poids : plus il est grand, plus le cadeau tombe souvent (ex : 35 contre 5). Chaque visiteur gagne toujours un cadeau.</p>
-                        ${c.prizes.map((p, i) => `
+                        <p class="text-[11px] text-slate-500">Colonnes : cadeau, code, effet (remise %, livraison offerte ou cadeau), pourcentage, chance. La « chance » est un poids : plus il est grand, plus le cadeau tombe souvent (ex : 35 contre 5). Chaque visiteur gagne toujours un cadeau.</p>
+                        ${c.prizes.map((p, i) => { const np = normalizePrize(p); return `
                             <div class="grid grid-cols-12 gap-2 items-center">
-                                <input type="text" value="${escapeHtmlAttr(p.label)}" placeholder="Cadeau (ex : -10% sur votre commande)" onchange="updateCmsScratchPrize(${i}, 'label', this.value)" class="col-span-12 sm:col-span-6 ${inp}">
-                                <input type="text" value="${escapeHtmlAttr(p.code)}" placeholder="CODE" onchange="updateCmsScratchPrize(${i}, 'code', this.value.trim().toUpperCase())" class="col-span-6 sm:col-span-3 ${inp} font-mono uppercase">
-                                <input type="number" min="1" max="100" value="${Number(p.weight) || 1}" title="Chance" onchange="updateCmsScratchPrize(${i}, 'weight', Math.max(1, Number(this.value) || 1))" class="col-span-4 sm:col-span-2 ${inp}">
-                                <button type="button" onclick="deleteCmsScratchPrize(${i})" aria-label="Supprimer ce cadeau" class="col-span-2 sm:col-span-1 px-2 py-2 rounded-lg bg-coral-50 text-coral-600 text-xs font-bold cursor-pointer">🗑️</button>
-                            </div>`).join('')}
+                                <input type="text" value="${escapeHtmlAttr(p.label)}" placeholder="Cadeau affiché (ex : -10% sur votre commande)" onchange="updateCmsScratchPrize(${i}, 'label', this.value)" class="col-span-12 sm:col-span-4 ${inp}">
+                                <input type="text" value="${escapeHtmlAttr(p.code)}" placeholder="CODE" onchange="updateCmsScratchPrize(${i}, 'code', this.value.trim().toUpperCase())" class="col-span-4 sm:col-span-2 ${inp} font-mono uppercase">
+                                <select onchange="updateCmsScratchPrize(${i}, 'type', this.value)" class="col-span-8 sm:col-span-3 ${inp} bg-white" title="Effet appliqué au panier">
+                                    <option value="percent" ${np.type === 'percent' ? 'selected' : ''}>Remise en %</option>
+                                    <option value="shipping" ${np.type === 'shipping' ? 'selected' : ''}>Livraison offerte</option>
+                                    <option value="gift" ${np.type === 'gift' ? 'selected' : ''}>Cadeau (note commande)</option>
+                                </select>
+                                <input type="number" min="1" max="90" value="${np.type === 'percent' ? np.value : ''}" ${np.type === 'percent' ? '' : 'disabled'} title="Pourcentage" placeholder="%" onchange="updateCmsScratchPrize(${i}, 'value', Math.max(1, Math.min(90, Number(this.value) || 5)))" class="col-span-3 sm:col-span-1 ${inp}">
+                                <input type="number" min="1" max="100" value="${Number(p.weight) || 1}" title="Chance" onchange="updateCmsScratchPrize(${i}, 'weight', Math.max(1, Number(this.value) || 1))" class="col-span-3 sm:col-span-1 ${inp}">
+                                <button type="button" onclick="deleteCmsScratchPrize(${i})" aria-label="Supprimer ce cadeau" class="col-span-3 sm:col-span-1 px-2 py-2 rounded-lg bg-coral-50 text-coral-600 text-xs font-bold cursor-pointer">🗑️</button>
+                            </div>`; }).join('')}
                     </div>
                     <p class="cms-live-status text-[11px] font-bold rounded-xl bg-slate-50 border border-slate-200 px-3 py-2"></p>
-                    <p class="text-[11px] text-slate-500">Le cadeau gagné est enregistré avec la commande du client (visible dans « Commandes » et dans le message WhatsApp). Vous restez libre de l'honorer lors de la confirmation.</p>
+                    <p class="text-[11px] text-slate-500">Le cadeau gagné s'applique automatiquement au panier du visiteur (remise ou livraison offerte), puis il est enregistré avec la commande (« Commandes » et message WhatsApp). Un cadeau n'est utilisable qu'une seule fois.</p>
                 </div>`;
             updateLiveStatusUI();
         }
@@ -10804,7 +10909,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             return msg + code + hint;
         }
         function orderToRow(o) {
-            const meta = { ref: o.id, statut: o.status, ville: o.city, source: o.source, promo: o.promo };
+            const meta = { ref: o.id, statut: o.status, ville: o.city, source: o.source, promo: o.promo, discount: o.discount };
             const row = { client: o.customer, telephone: o.phone, adresse: o.address, total: o.total };
             const payload = { lignes: o.items };
             Object.keys(meta).forEach(k => { if (ORDERS_OPTIONAL_COLUMNS[k]) row[k] = meta[k]; else payload[k] = meta[k]; });
@@ -10824,7 +10929,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             return { id: r.ref || meta.ref || ('#' + r.id), dbId: r.id, date: r.created_at || r.date,
                      status: r.statut || meta.statut || 'Nouvelle', source: r.source || meta.source || 'Site',
                      customer: r.client || '', phone: r.telephone || '', address: r.adresse || '', city: r.ville || meta.ville || '',
-                     items: lignes, meta, subtotal, shipping: Math.max(0, total - subtotal), total };
+                     items: lignes, meta, subtotal, discount: Number(meta.discount) || 0, shipping: Math.max(0, total - subtotal + (Number(meta.discount) || 0)), total };
         }
         function readPendingOrders() {
             try { const r = JSON.parse(localStorage.getItem(ORDERS_PENDING_KEY) || '[]'); return Array.isArray(r) ? r : []; } catch (e) { return []; }
@@ -10852,19 +10957,16 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         }
         // Enregistre la commande dans Supabase (en arrière-plan, le client voit sa confirmation tout de suite)
         function recordOrder({ customer, phone, address, source }) {
-            const s = SITE_DATA.settings;
-            const isCasa = state.selectedCity === 'Casablanca';
-            const threshold = isCasa ? Number(s.casaThreshold) : Number(s.otherThreshold);
-            const fee = isCasa ? Number(s.casaFee) : Number(s.otherFee);
-            const subtotal = state.cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
-            const shipping = subtotal >= threshold ? 0 : fee;
+            const P = getCartPricing();
+            const subtotal = P.subtotal, shipping = P.shipping;
             const order = {
                 id: generateOrderId(), date: new Date().toISOString(), status: 'Nouvelle', source: source || 'Site',
                 customer: customer || '', phone: phone || '', address: address || '', city: state.selectedCity,
                 items: state.cart.map(i => ({ id: i.id, brand: i.brand, name: i.name, price: i.price, qty: i.qty })),
-                subtotal, shipping, total: subtotal + shipping,
-                promo: getWonPrizeText()
+                subtotal, shipping, discount: P.discount, total: P.total,
+                promo: P.coupon ? couponText(P.coupon) : ''
             };
+            if (P.coupon) markCouponUsed();   // un cadeau = une seule commande
             insertOrderRemote(order)
                 .then(() => { if (typeof isCmsAuthenticated !== 'undefined' && isCmsAuthenticated) fetchOrders(); })
                 .catch(err => {
@@ -10890,7 +10992,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         function buildOrderMessage(o) {
             const s = SITE_DATA.settings;
             const lines = o.items.map(i => `• ${i.qty}x ${i.brand} ${i.name} = ${i.price * i.qty} DH`).join('\n');
-            return `Bonjour ${s.brandName} 👋,\nJe viens de passer la commande ${o.id} :\n\n${lines}\n\n• Nom : ${o.customer}\n• Téléphone : ${o.phone}\n• Adresse : ${o.address} (${o.city})\n• Livraison : ${o.shipping === 0 ? 'Offerte' : o.shipping + ' DH'}\n• Total à régler : ${o.total} DH${(o.promo || (o.meta && o.meta.promo)) ? '\n• 🎁 Cadeau gagné : ' + (o.promo || o.meta.promo) : ''}`;
+            return `Bonjour ${s.brandName} 👋,\nJe viens de passer la commande ${o.id} :\n\n${lines}\n\n• Nom : ${o.customer}\n• Téléphone : ${o.phone}\n• Adresse : ${o.address} (${o.city})\n• Livraison : ${o.shipping === 0 ? 'Offerte' : o.shipping + ' DH'}\n• Total à régler : ${o.total} DH${o.discount ? '\n• Remise : -' + o.discount + ' DH' : ''}${(o.promo || (o.meta && o.meta.promo)) ? '\n• 🎁 Cadeau gagné : ' + (o.promo || o.meta.promo) : ''}`;
         }
         function sendOrderToWhatsApp() {
             if (state.lastOrder) openWhatsAppDirect(buildOrderMessage(state.lastOrder));
@@ -10970,6 +11072,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                             <ul class="text-xs text-slate-700 space-y-1">${items}</ul>
                             <div class="mt-2 pt-2 border-t border-slate-100 text-xs space-y-0.5">
                                 <div class="flex justify-between text-slate-500"><span>Sous-total</span><span>${o.subtotal} DH</span></div>
+                                ${o.discount ? `<div class="flex justify-between text-sage-700 font-semibold"><span>Remise</span><span>-${o.discount} DH</span></div>` : ''}
                                 <div class="flex justify-between text-slate-500"><span>Livraison</span><span>${o.shipping === 0 ? 'Offerte' : o.shipping + ' DH'}</span></div>
                                 <div class="flex justify-between font-extrabold text-sm text-sage-900"><span>Total</span><span>${o.total} DH</span></div>
                                 ${(o.promo || (o.meta && o.meta.promo)) ? `<div class="mt-1 px-2 py-1 rounded-lg bg-amber-50 text-amber-900 font-bold">🎁 Cadeau gagné : ${escapeHtmlAttr(o.promo || o.meta.promo)}</div>` : ''}
@@ -11385,8 +11488,9 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             }
 
             if (state.checkoutStep === 'form') {
-                const shippingCost = subtotal >= threshold ? 0 : baseShipping;
-                const grandTotal = subtotal + shippingCost;
+                const P = getCartPricing();
+                const shippingCost = P.shipping;
+                const grandTotal = P.total;
                 body.innerHTML = `
                     <div class="space-y-4">
                         <button onclick="state.checkoutStep='cart'; renderCart();" class="text-xs font-semibold text-sage-700 hover:underline cursor-pointer">← Modifier mon panier</button>
@@ -11397,6 +11501,8 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                             <input type="text" name="customerAddress" required placeholder="Adresse de livraison (${escapeHtmlAttr(state.selectedCity)}) *" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm">
                             <div class="bg-sand-50 p-3.5 rounded-2xl text-xs space-y-1 border border-slate-100">
                                 <div class="flex justify-between"><span>Sous-total</span><span>${subtotal} DH</span></div>
+                                ${couponBoxHtml(P, false)}
+                                ${discountLinesHtml(P)}
                                 <div class="flex justify-between"><span>Livraison (${escapeHtmlAttr(state.selectedCity)})</span><span>${shippingCost === 0 ? 'Gratuit' : shippingCost + ' DH'}</span></div>
                                 <div class="flex justify-between font-bold text-base text-sage-900 pt-1.5 border-t border-slate-200"><span>Total</span><span>${grandTotal} DH</span></div>
                             </div>
@@ -11424,11 +11530,14 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                 </div>
             `).join('');
 
-            const shippingCost = subtotal >= threshold ? 0 : baseShipping;
+            const P = getCartPricing();
+            const shippingCost = P.shipping;
             footer.innerHTML = `
                 <div class="space-y-1.5 text-sm">
+                    ${couponBoxHtml(P, true)}
+                    ${discountLinesHtml(P) ? `<div class="text-xs">${discountLinesHtml(P)}</div>` : ''}
                     <div class="flex justify-between text-slate-500 text-xs"><span>Livraison (${escapeHtmlAttr(state.selectedCity)})</span><span>${shippingCost === 0 ? '<strong class="text-sage-700">Offerte</strong>' : shippingCost + ' DH'}</span></div>
-                    <div class="flex justify-between items-baseline"><span class="font-semibold text-slate-700">Total panier</span><span class="font-display text-2xl font-extrabold text-sage-900">${subtotal + shippingCost} DH</span></div>
+                    <div class="flex justify-between items-baseline"><span class="font-semibold text-slate-700">Total panier</span><span class="font-display text-2xl font-extrabold text-sage-900">${P.total} DH</span></div>
                 </div>
                 <button onclick="state.checkoutStep='form'; renderCart();" class="w-full py-3.5 rounded-full bg-sage-700 hover:bg-sage-800 text-white font-semibold text-sm shadow-md cursor-pointer">Commander en 1 étape →</button>
                 <button onclick="sendCartToWhatsApp()" class="w-full py-3 rounded-full bg-[#25D366] hover:bg-[#1fb858] text-white font-bold text-xs sm:text-sm cursor-pointer">Valider ma commande via WhatsApp</button>
@@ -11630,12 +11739,13 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             const isCasa = state.selectedCity === 'Casablanca';
             const threshold = isCasa ? Number(s.casaThreshold) : Number(s.otherThreshold);
             const baseShipping = isCasa ? Number(s.casaFee) : Number(s.otherFee);
-            const subtotal = state.cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
-            const shippingCost = subtotal >= threshold ? 0 : baseShipping;
-            const total = subtotal + shippingCost;
+            const P = getCartPricing();
+            const shippingCost = P.shipping;
+            const total = P.total;
+            const discountLine = P.coupon ? (P.discount ? `\n• Remise : -${P.discount} DH (${couponText(P.coupon)})` : `\n• 🎁 Cadeau : ${couponText(P.coupon)}`) : '';
             const lines = state.cart.map(item => `• ${item.qty}x ${item.brand} ${item.name} = ${item.price * item.qty} DH`).join('\n');
             recordOrder({ customer: '', phone: '', address: '', source: 'WhatsApp' });
-            const msg = `Bonjour ${s.brandName} 👋,\nVoici ma commande depuis votre boutique en ligne :\n\n${lines}\n\n• Ville : ${state.selectedCity}\n• Livraison : ${shippingCost === 0 ? 'Offerte' : shippingCost + ' DH'}\n• Total à régler : ${total} DH`;
+            const msg = `Bonjour ${s.brandName} 👋,\nVoici ma commande depuis votre boutique en ligne :\n\n${lines}\n\n• Ville : ${state.selectedCity}\n• Livraison : ${shippingCost === 0 ? 'Offerte' : shippingCost + ' DH'}${discountLine}\n• Total à régler : ${total} DH`;
             openWhatsAppDirect(msg);
         }
 
