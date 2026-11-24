@@ -9979,7 +9979,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             buttonText: "J'EN PROFITE",
             actionType: "promo",
             delaySec: 3,
-            frequency: "session",   // always | session | once
+            frequency: "always",    // always | session | once
             validDays: 7,           // durée de validité du cadeau gagné
             prizes: [
                 { label: "-5% sur votre commande", code: "GRATTE5", type: "percent", value: 5, weight: 35 },
@@ -10143,12 +10143,29 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             } catch (e) { /* ignore */ }
         }
 
+        // Explique pourquoi la carte s'affiche (ou non) sur CET appareil
+        function scratchStatusHtml() {
+            const c = getScratch();
+            const box = (cls, txt) => `<div class="text-[12px] font-semibold rounded-xl border px-3 py-2 ${cls}">${txt}</div>`;
+            if (!c.enabled) return box('bg-slate-50 border-slate-200 text-slate-600', "La carte est sur OFF : les visiteurs ne la voient pas.");
+            const won = readWonPrize();
+            if (won && won.sig === scratchSignature(c) && !prizeExpired(won)) {
+                return box('bg-amber-50 border-amber-200 text-amber-900', `⚠️ Sur cet appareil, vous avez déjà gagné « ${escapeHtmlAttr(won.label)} » : la carte ne s'affiche plus (un seul cadeau par visiteur). Cliquez sur « 🔄 Refaire un test » pour la revoir.`);
+            }
+            let seen = false;
+            try { seen = scratchAlreadySeen(c); } catch (e) {}
+            if (seen) return box('bg-amber-50 border-amber-200 text-amber-900', "⚠️ Elle a déjà été fermée pendant cette visite (fréquence « une fois par visite » ou « une seule fois »). Choisissez « À chaque ouverture » ou cliquez sur « 🔄 Refaire un test ».");
+            const p = getPopup();
+            const first = p.enabled ? " Le pop-up d'accueil s'affiche d'abord : la carte arrive juste après sa fermeture (la croix ✕ ou « Non merci », pas le bouton d'action)." : '';
+            return box('bg-sage-50 border-sage-100 text-sage-800', `✅ Elle s'affichera au prochain chargement du site, ${Number(c.delaySec) || 0} s après l'ouverture.${first}`);
+        }
+
         function resetScratchTest() {
             try {
                 localStorage.removeItem(SCRATCH_PRIZE_KEY); localStorage.removeItem(SCRATCH_SEEN_KEY);
                 sessionStorage.removeItem(SCRATCH_SEEN_KEY); localStorage.removeItem(POPUP_SEEN_KEY); sessionStorage.removeItem(POPUP_SEEN_KEY);
             } catch (e) {}
-            try { renderCart(); } catch (e) {}
+            try { renderCart(); renderCmsScratchPanel(); } catch (e) {}
             showToast("Test réinitialisé sur cet appareil : rechargez le site pour revoir la carte.");
         }
 
@@ -10225,6 +10242,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                             <button type="button" onclick="openScratchCard(true)" class="px-3 py-1.5 rounded-lg bg-[#0D1310] text-white text-xs font-bold cursor-pointer">👁️ Prévisualiser</button>
                         </div>
                     </div>
+                    ${scratchStatusHtml()}
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div><label class="${lbl}">Badge étiquette</label><input type="text" value="${escapeHtmlAttr(c.badge)}" onchange="updateCmsScratchField('badge', this.value)" class="${inp}"></div>
                         <div><label class="${lbl}">Texte sur la carte à gratter</label><input type="text" value="${escapeHtmlAttr(c.hint)}" onchange="updateCmsScratchField('hint', this.value)" class="${inp}"></div>
