@@ -8477,8 +8477,8 @@ La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps &amp; Hygiène | http
                 <!-- ONGLET : POP-UP D'ACCUEIL (INTERSTITIEL) -->
                 <div id="cmsPanel-popup" class="cms-panel hidden space-y-5">
                     <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200">
-                        <h3 class="font-display font-bold text-lg text-slate-900">Pop-up d'accueil (offre exclusive)</h3>
-                        <p class="text-xs text-slate-500">Une bannière plein écran affichée dès l'ouverture du site : offre exclusive, code promo, annonce… Activez-la ou désactivez-la en un clic.</p>
+                        <h3 class="font-display font-bold text-lg text-slate-900">Pop-up d'accueil (annonce ou photo)</h3>
+                        <p class="text-xs text-slate-500">Une fenêtre affichée dès l'ouverture du site pour annoncer une nouveauté ou montrer une affiche (photo seule ou photo + texte). Les remises se gèrent dans « Carte à gratter ». Activez-la ou désactivez-la en un clic.</p>
                     </div>
                     <div id="cmsPopupBox" class="space-y-4"></div>
                 </div>
@@ -9612,11 +9612,13 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         // =====================================================================
         const DEFAULT_POPUP = {
             enabled: false,
-            badge: "🎁 Offre exclusive",
-            title: "-10% sur votre première commande",
-            subtitle: "Réservé aux nouveaux visiteurs Parateams. Soins 100% authentiques, livraison partout au Maroc.",
-            buttonText: "J'EN PROFITE",
-            actionType: "promo",
+            layout: "announce",      // announce = photo + texte | image = photo seule
+            badge: "📢 Nouveauté",
+            title: "Découvrez nos nouveautés",
+            subtitle: "Soins 100% authentiques, livraison partout au Maroc.",
+            buttonText: "DÉCOUVRIR",
+            actionType: "new",       // none | link | promo | new | diagnostic | giveaway | whatsapp
+            linkUrl: "",
             imageUrl: "",
             delaySec: 2,
             frequency: "always"   // once = 1 seule fois par visiteur | session = 1 fois par visite | always = à chaque ouverture
@@ -9625,6 +9627,11 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
 
         function getPopup() {
             const p = { ...DEFAULT_POPUP, ...(SITE_DATA.popup || {}) };
+            // Ancien texte par défaut "remise" jamais personnalisé : les remises vivent dans la carte à gratter
+            if (p.title === "-10% sur votre première commande" && !p.imageUrl) {
+                p.badge = DEFAULT_POPUP.badge; p.title = DEFAULT_POPUP.title; p.subtitle = DEFAULT_POPUP.subtitle;
+                p.buttonText = DEFAULT_POPUP.buttonText; p.actionType = DEFAULT_POPUP.actionType;
+            }
             // Sans choix explicite dans le CMS, le pop-up s'affiche à chaque ouverture / actualisation
             if (!p.freqSet) p.frequency = 'always';
             return p;
@@ -9632,7 +9639,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
 
         function popupSignature(p) {
             // Si vous changez le contenu, les anciens visiteurs revoient la nouvelle offre
-            const str = [p.badge, p.title, p.subtitle, p.buttonText, p.actionType, (p.imageUrl || '').length].join('|');
+            const str = [p.layout, p.badge, p.title, p.subtitle, p.buttonText, p.actionType, p.linkUrl, (p.imageUrl || '').length].join('|');
             let h = 0;
             for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
             return String(h);
@@ -9642,18 +9649,25 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             const p = getPopup();
             const body = document.getElementById('welcomePopupBody');
             if (!body) return;
+            const clickable = p.actionType && p.actionType !== 'none';
+            if (p.layout === 'image') {
+                body.innerHTML = p.imageUrl
+                    ? `<img src="${escapeHtmlAttr(p.imageUrl)}" alt="${escapeHtmlAttr(p.title || 'Annonce')}" onerror="handleImgError(this)" ${clickable ? 'onclick="welcomePopupAction()"' : ''} style="display:block;width:100%;height:auto;max-height:85vh;object-fit:contain;background:#fff;${clickable ? 'cursor:pointer' : ''}">`
+                    : '';
+                return;
+            }
             const visual = p.imageUrl
-                ? `<img src="${escapeHtmlAttr(p.imageUrl)}" alt="" onerror="handleImgError(this)" class="w-full h-44 sm:h-52 object-cover bg-sage-50">`
-                : `<div class="h-36 sm:h-40 bg-gradient-to-br from-sage-700 to-sage-900 flex items-center justify-center text-6xl" aria-hidden="true">🎁</div>`;
+                ? `<img src="${escapeHtmlAttr(p.imageUrl)}" alt="" onerror="handleImgError(this)" ${clickable ? 'onclick="welcomePopupAction()"' : ''} style="display:block;width:100%;height:auto;max-height:46vh;object-fit:cover;background:#f1f5f9;${clickable ? 'cursor:pointer' : ''}">`
+                : '';
             body.innerHTML = `
                 ${visual}
                 <div class="p-6 sm:p-7 text-center space-y-3">
                     ${p.badge ? `<span class="inline-block px-3 py-1 rounded-full bg-coral-50 text-coral-600 text-[11px] font-extrabold uppercase tracking-wider">${escapeHtmlAttr(p.badge)}</span>` : ''}
-                    <h2 id="welcomePopupTitle" class="font-display font-extrabold text-2xl sm:text-3xl leading-tight text-sage-900">${escapeHtmlAttr(p.title)}</h2>
+                    ${p.title ? `<h2 id="welcomePopupTitle" class="font-display font-extrabold text-2xl sm:text-3xl leading-tight text-sage-900">${escapeHtmlAttr(p.title)}</h2>` : ''}
                     ${p.subtitle ? `<p class="text-sm text-slate-600 leading-relaxed">${escapeHtmlAttr(p.subtitle)}</p>` : ''}
                     <div class="pt-2 space-y-2">
-                        <button onclick="welcomePopupAction()" class="w-full px-6 py-3.5 rounded-xl bg-sage-700 hover:bg-sage-800 text-white font-extrabold text-sm cursor-pointer">${escapeHtmlAttr(p.buttonText || 'DÉCOUVRIR')}</button>
-                        <button onclick="closeWelcomePopup()" class="text-xs font-semibold text-slate-500 hover:text-slate-700 cursor-pointer">Non merci, continuer</button>
+                        ${clickable && p.buttonText ? `<button onclick="welcomePopupAction()" class="w-full px-6 py-3.5 rounded-xl bg-sage-700 hover:bg-sage-800 text-white font-extrabold text-sm cursor-pointer">${escapeHtmlAttr(p.buttonText)}</button>` : ''}
+                        <button onclick="closeWelcomePopup()" class="text-xs font-semibold text-slate-500 hover:text-slate-700 cursor-pointer">${clickable && p.buttonText ? 'Non merci, continuer' : 'Fermer'}</button>
                     </div>
                 </div>`;
         }
@@ -9680,7 +9694,13 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             const p = getPopup();
             _scratchAfterWelcome = false;
             closeWelcomePopup();
-            handleHeroSlideAction(p.actionType || 'promo');
+            if (p.actionType === 'none') return;
+            if (p.actionType === 'link') {
+                const u = (p.linkUrl || '').trim();
+                if (/^https?:\/\//i.test(u)) window.open(u, '_blank', 'noopener');
+                return;
+            }
+            handleHeroSlideAction(p.actionType || 'new');
         }
 
         function maybeShowWelcomePopup() {
@@ -9690,6 +9710,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             try { forced = new URLSearchParams(window.location.search).get('popup') === '1'; } catch (e) {}
             if (forced) { setTimeout(openWelcomePopup, 300); return; }
             if (!p.enabled) return;
+            if (p.layout === 'image' && !p.imageUrl) return;
             if (window.location.hash === '#admin') return;
             const sig = popupSignature(p);
             try {
@@ -9711,9 +9732,10 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         function renderCmsPopupPanel() {
             const box = document.getElementById('cmsPopupBox');
             if (!box) return;
-            const p = getPopup(), on = !!p.enabled;
+            const p = getPopup(), on = !!p.enabled, imgMode = p.layout === 'image';
             const inp = "w-full px-3 py-2 rounded-xl border border-slate-200 text-xs";
             const lbl = "block text-[11px] font-bold text-slate-600 mb-1";
+            const actions = [['none','Aucune (juste fermer)'],['link','Ouvrir un lien'],['promo','Filtrer les Promos'],['new','Filtrer les Nouveautés'],['diagnostic','Ouvrir Diagnostic Peau'],['giveaway','Ouvrir Giveaway'],['whatsapp','Ouvrir WhatsApp']];
             box.innerHTML = `
                 <div class="rounded-3xl border ${on ? 'border-slate-200 bg-white' : 'border-slate-300 bg-slate-50'} p-5 space-y-4 shadow-2xs">
                     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
@@ -9726,7 +9748,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                         </label>
                         <div class="flex flex-wrap items-center gap-2">
                             <label class="px-3 py-1.5 rounded-lg bg-sage-50 hover:bg-sage-100 text-sage-800 text-xs font-bold cursor-pointer">
-                                📷 Changer la photo
+                                📷 ${p.imageUrl ? 'Changer la photo' : 'Ajouter une photo'}
                                 <input type="file" accept="image/*" class="hidden" onchange="handleCmsPopupImageUpload(event)">
                             </label>
                             ${p.imageUrl ? `<button type="button" onclick="updateCmsPopupField('imageUrl', '')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-600 text-xs font-bold cursor-pointer">Retirer photo</button>` : ''}
@@ -9734,12 +9756,21 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                         </div>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="sm:col-span-2">
+                            <label class="${lbl}">Type de pop-up</label>
+                            <select onchange="updateCmsPopupField('layout', this.value)" class="${inp} bg-white">
+                                <option value="announce" ${!imgMode ? 'selected' : ''}>Annonce : photo (facultative) + titre + texte + bouton</option>
+                                <option value="image" ${imgMode ? 'selected' : ''}>Photo seule : l'affiche s'affiche en grand, sans texte</option>
+                            </select>
+                        </div>
+                        ${imgMode && !p.imageUrl ? `<p class="sm:col-span-2 text-[11px] font-bold text-coral-600">Ajoutez une photo avec le bouton « 📷 » : sans photo, ce type de pop-up ne s'affiche pas.</p>` : ''}
+                        ${imgMode ? '' : `
                         <div>
-                            <label class="${lbl}">Badge étiquette</label>
+                            <label class="${lbl}">Badge étiquette (facultatif)</label>
                             <input type="text" value="${escapeHtmlAttr(p.badge)}" onchange="updateCmsPopupField('badge', this.value)" class="${inp}">
                         </div>
                         <div>
-                            <label class="${lbl}">Texte du bouton</label>
+                            <label class="${lbl}">Texte du bouton (facultatif)</label>
                             <input type="text" value="${escapeHtmlAttr(p.buttonText)}" onchange="updateCmsPopupField('buttonText', this.value)" class="${inp}">
                         </div>
                         <div class="sm:col-span-2">
@@ -9747,15 +9778,20 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                             <input type="text" value="${escapeHtmlAttr(p.title)}" onchange="updateCmsPopupField('title', this.value)" class="${inp} font-semibold">
                         </div>
                         <div class="sm:col-span-2">
-                            <label class="${lbl}">Description courte</label>
+                            <label class="${lbl}">Description courte (facultatif)</label>
                             <input type="text" value="${escapeHtmlAttr(p.subtitle)}" onchange="updateCmsPopupField('subtitle', this.value)" class="${inp}">
-                        </div>
+                        </div>`}
                         <div>
-                            <label class="${lbl}">Action au clic</label>
+                            <label class="${lbl}">${imgMode ? 'Au clic sur la photo' : 'Action au clic sur le bouton'}</label>
                             <select onchange="updateCmsPopupField('actionType', this.value)" class="${inp} bg-white">
-                                ${[['promo','Filtrer les Promos'],['new','Filtrer les Nouveautés'],['diagnostic','Ouvrir Diagnostic Peau'],['giveaway','Ouvrir Giveaway'],['whatsapp','Ouvrir WhatsApp']].map(([v, t]) => `<option value="${v}" ${p.actionType === v ? 'selected' : ''}>${t}</option>`).join('')}
+                                ${actions.map(([v, t]) => `<option value="${v}" ${p.actionType === v ? 'selected' : ''}>${t}</option>`).join('')}
                             </select>
                         </div>
+                        ${p.actionType === 'link' ? `
+                        <div>
+                            <label class="${lbl}">Lien à ouvrir (https://…)</label>
+                            <input type="text" value="${escapeHtmlAttr(p.linkUrl || '')}" placeholder="https://" onchange="updateCmsPopupField('linkUrl', this.value.trim())" class="${inp}">
+                        </div>` : '<div></div>'}
                         <div>
                             <label class="${lbl}">Lien image (ou importée)</label>
                             <input type="text" value="${p.imageUrl && p.imageUrl.startsWith('data:') ? '' : escapeHtmlAttr(p.imageUrl || '')}" placeholder="${p.imageUrl && p.imageUrl.startsWith('data:') ? 'Image importée' : 'URL image...'}" onchange="updateCmsPopupField('imageUrl', this.value)" class="${inp}">
@@ -9774,7 +9810,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                         </div>
                     </div>
                     <p class="cms-live-status text-[11px] font-bold rounded-xl bg-slate-50 border border-slate-200 px-3 py-2"></p>
-                    <p class="text-[11px] text-slate-500">Si vous modifiez le contenu, les visiteurs qui l'avaient déjà fermé reverront la nouvelle offre. Pensez à cliquer sur « Publier » pour l'envoyer sur le site public.</p>
+                    <p class="text-[11px] text-slate-500">Ce pop-up sert à annoncer une nouveauté, un événement ou à afficher une affiche. Les remises et cadeaux se gèrent dans l'onglet « 🎟️ Carte à gratter ».</p>
                 </div>`;
             updateLiveStatusUI();
         }
@@ -9789,7 +9825,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         function handleCmsPopupImageUpload(event) {
             const file = event.target.files && event.target.files[0];
             if (!file) return;
-            compressImageToDataURL(file, 680, (dataUrl) => updateCmsPopupField('imageUrl', dataUrl));
+            compressImageToDataURL(file, 900, (dataUrl) => updateCmsPopupField('imageUrl', dataUrl));
         }
 
 
@@ -10207,7 +10243,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                 if (p.frequency === 'session' && sessionStorage.getItem(POPUP_SEEN_KEY) === sig) seenW = true;
                 if ((p.frequency === 'once' || !p.frequency) && localStorage.getItem(POPUP_SEEN_KEY) === sig) seenW = true;
             } catch (e) {}
-            const willWelcome = forcedW || (p.enabled && window.location.hash !== '#admin' && !seenW);
+            const willWelcome = forcedW || (p.enabled && !(p.layout === 'image' && !p.imageUrl) && window.location.hash !== '#admin' && !seenW);
             _scratchAfterWelcome = !!willWelcome;
             maybeShowWelcomePopup();
             if (!willWelcome) maybeShowScratchCard();
