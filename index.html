@@ -10022,13 +10022,8 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             const body = document.getElementById('scratchPopupBody');
             if (!body) return;
             const c = getScratch(), sig = scratchSignature(c);
-            let saved = null;
-            if (!_scratchPreview) {
-                try { saved = JSON.parse(localStorage.getItem(SCRATCH_PRIZE_KEY) || 'null'); } catch (e) {}
-                if (saved && saved.sig !== sig) saved = null;
-            }
-            _scratchPrize = saved ? { label: saved.label, code: saved.code } : pickScratchPrize(c.prizes);
-            _scratchRevealed = !!saved;
+            _scratchPrize = pickScratchPrize(c.prizes);
+            _scratchRevealed = false;   // toujours recouverte : le cadeau n'apparaît qu'après avoir gratté
             body.innerHTML = `
                 <div style="padding:26px 20px 20px;text-align:center">
                     ${c.badge ? `<span style="display:inline-block;padding:4px 12px;border-radius:9999px;background:#FDF5F3;color:#C8563D;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase">${escapeHtmlAttr(c.badge)}</span>` : ''}
@@ -10148,6 +10143,15 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             } catch (e) { /* ignore */ }
         }
 
+        function resetScratchTest() {
+            try {
+                localStorage.removeItem(SCRATCH_PRIZE_KEY); localStorage.removeItem(SCRATCH_SEEN_KEY);
+                sessionStorage.removeItem(SCRATCH_SEEN_KEY); localStorage.removeItem(POPUP_SEEN_KEY); sessionStorage.removeItem(POPUP_SEEN_KEY);
+            } catch (e) {}
+            try { renderCart(); } catch (e) {}
+            showToast("Test réinitialisé sur cet appareil : rechargez le site pour revoir la carte.");
+        }
+
         function scratchPopupAction() {
             const c = getScratch();
             closeScratchPopup();
@@ -10169,7 +10173,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             try { forced = new URLSearchParams(window.location.search).get('scratch') === '1'; } catch (e) {}
             if (forced) { setTimeout(() => openScratchCard(true), 300); return; }
             const won = readWonPrize();
-            if (won && won.used) return;
+            if (won && won.sig === scratchSignature(c) && !prizeExpired(won)) return;   // cadeau déjà gagné et encore valable
             if (!c.enabled || window.location.hash === '#admin' || scratchAlreadySeen(c)) return;
             const delay = Math.max(0, Number(c.delaySec) || 0) * 1000;
             setTimeout(() => { if (getScratch().enabled) openScratchCard(false); }, delay);
@@ -10216,7 +10220,10 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                             </span>
                             <span class="text-xs font-extrabold ${on ? 'text-sage-800' : 'text-slate-500'}">${on ? 'ON · affichée aux visiteurs' : 'OFF · désactivée'}</span>
                         </label>
-                        <button type="button" onclick="openScratchCard(true)" class="px-3 py-1.5 rounded-lg bg-[#0D1310] text-white text-xs font-bold cursor-pointer">👁️ Prévisualiser</button>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button type="button" onclick="resetScratchTest()" title="Efface le cadeau gagné et les mémorisations sur CET appareil, pour refaire un test" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer">🔄 Refaire un test</button>
+                            <button type="button" onclick="openScratchCard(true)" class="px-3 py-1.5 rounded-lg bg-[#0D1310] text-white text-xs font-bold cursor-pointer">👁️ Prévisualiser</button>
+                        </div>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div><label class="${lbl}">Badge étiquette</label><input type="text" value="${escapeHtmlAttr(c.badge)}" onchange="updateCmsScratchField('badge', this.value)" class="${inp}"></div>
