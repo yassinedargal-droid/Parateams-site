@@ -9556,6 +9556,10 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         // RENDU DYNAMIQUE DU CARROUSEL HÉRO
         function getSlideVisualSVG(slide) {
             if (slide.imageUrl && slide.imageUrl.trim() !== "") {
+                if (slide.imageFit === 'cover') {
+                    // Mode « Remplir » : la photo occupe tout le cadre (bords rognés si le format diffère)
+                    return `<img onerror="handleImgError(this)" src="${escapeHtmlAttr(slide.imageUrl)}" alt="${escapeHtmlAttr(slide.title)}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105">`;
+                }
                 return `<img onerror="handleImgError(this)" src="${escapeHtmlAttr(slide.imageUrl)}" alt="${escapeHtmlAttr(slide.title)}" class="h-full max-h-[130px] sm:max-h-[290px] w-auto object-contain rounded-2xl drop-shadow-xl transition-transform duration-500 group-hover/card:scale-105">`;
             }
             if (slide.visualType === 'bottles') {
@@ -10394,7 +10398,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                     <div class="w-full h-full grid grid-cols-1 lg:grid-cols-12 items-center gap-4 lg:gap-4 px-5 sm:pl-12 lg:pl-14 sm:pr-10 lg:pr-0 pt-5 pb-14 lg:py-10">
                         <div class="order-1 lg:order-2 lg:col-span-5 flex justify-center lg:justify-end items-center">
                             <div onclick="handleHeroSlideAction('${action}')" class="w-full sm:w-[88%] lg:w-full h-[145px] sm:h-[240px] lg:h-[360px] bg-[#F4F5F4] rounded-[20px] sm:rounded-[28px] lg:rounded-l-[32px] lg:rounded-r-none p-3.5 sm:p-7 flex items-center justify-center relative overflow-hidden shadow-xl cursor-pointer group/card">
-                                <span style="background-color:${escapeHtmlAttr(slide.badgeBg || '#3E6B1B')}" class="absolute top-2.5 left-2.5 sm:top-4 sm:left-4 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider shadow-xs">
+                                <span style="background-color:${escapeHtmlAttr(slide.badgeBg || '#3E6B1B')}" class="z-10 absolute top-2.5 left-2.5 sm:top-4 sm:left-4 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider shadow-xs">
                                     ${escapeHtmlAttr(slide.badge)}
                                 </span>
                                 ${getSlideVisualSVG(slide)}
@@ -13325,6 +13329,13 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                             <label class="block text-[11px] font-bold text-slate-600 mb-1">Lien image (ou importée)</label>
                             <input type="text" value="${escapeHtmlAttr(s.imageUrl || '')}" placeholder="URL image..." onchange="updateCmsSlideField(${idx}, 'imageUrl', this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs">
                         </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Affichage de la photo</label>
+                            <select onchange="updateCmsSlideField(${idx}, 'imageFit', this.value); renderHeroSlides();" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white">
+                                <option value="contain" ${s.imageFit !== 'cover' ? 'selected' : ''}>Ajuster (photo entière)</option>
+                                <option value="cover" ${s.imageFit === 'cover' ? 'selected' : ''}>Remplir (plein cadre)</option>
+                            </select>
+                        </div>
                         <div class="sm:col-span-2">
                             <label class="block text-[11px] font-bold text-slate-600 mb-1">Titre principal</label>
                             <input type="text" value="${escapeHtmlAttr(s.title)}" onchange="updateCmsSlideField(${idx}, 'title', this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold">
@@ -13357,7 +13368,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         function handleCmsSlideImageUpload(event, idx) {
             const file = event.target.files && event.target.files[0];
             if (!file) return;
-            compressImageToDataURL(file, 680, (dataUrl) => {
+            compressImageToDataURL(file, 1000, (dataUrl) => {
                 pushCmsUndoSnapshot();
                 SITE_DATA.slides[idx].imageUrl = dataUrl;
                 saveCmsToLocalPreview();
