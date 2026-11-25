@@ -226,6 +226,10 @@
 
                     <!-- Actions Droite : Loupe Mobile, WhatsApp, Favoris & Panier -->
                     <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+                        <button id="accountHeaderBtn" onclick="openAccountModal()" class="flex items-center gap-1.5 px-2.5 sm:px-3.5 h-9 sm:h-auto sm:py-2.5 rounded-full bg-sand-50 border border-slate-200 text-slate-700 hover:border-sage-600 hover:text-sage-800 font-bold text-xs sm:text-sm transition cursor-pointer" aria-label="Mon compte" title="Mon compte">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                            <span id="accountHeaderLabel" class="hidden md:inline whitespace-nowrap">Se connecter</span>
+                        </button>
                         <button onclick="toggleMobileSearchBar()" class="md:hidden w-9 h-9 rounded-full bg-[#F4F6F5] border border-slate-200 text-slate-700 flex items-center justify-center transition cursor-pointer" aria-label="Rechercher un soin">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -2442,6 +2446,9 @@
                     </button>
                     <button onclick="switchCmsTab('orders')" data-cmstab="orders" class="cms-tab-btn px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs sm:text-sm font-bold whitespace-nowrap cursor-pointer">
                         📦 Commandes (<span id="cmsTabOrderCount">10</span>)<span id="cmsTabOrderNew" class="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-400 text-[#0D1310] text-[10px] font-extrabold">9</span>
+                    </button>
+                    <button onclick="switchCmsTab('clients')" data-cmstab="clients" class="cms-tab-btn px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs sm:text-sm font-bold whitespace-nowrap cursor-pointer">
+                        👥 Clients (<span id="cmsTabClientCount">–</span>)
                     </button>
                     <button onclick="switchCmsTab('bulk')" data-cmstab="bulk" class="cms-tab-btn px-4 py-2 rounded-xl bg-amber-100 text-amber-950 hover:bg-amber-200 text-xs sm:text-sm font-extrabold whitespace-nowrap cursor-pointer bg-slate-100 text-slate-700">
                         ⚡ Import en Masse &amp; Extraction Web
@@ -8492,6 +8499,15 @@ La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps &amp; Hygiène | http
                     <div id="cmsScratchBox" class="space-y-4"></div>
                 </div>
 
+                <!-- ONGLET CLIENTS : comptes, points de fidélité -->
+                <div id="cmsPanel-clients" class="cms-panel hidden space-y-5">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200">
+                        <h3 class="font-display font-bold text-lg text-slate-900">👥 Comptes clients &amp; fidélité</h3>
+                        <p class="text-xs text-slate-500 mt-1">Tous les comptes créés sur le site, leurs commandes et leurs points. Les points sont crédités automatiquement à la livraison.</p>
+                    </div>
+                    <div id="cmsClientsBox" class="space-y-4"></div>
+                </div>
+
                 <!-- ONGLET 3 : RAYONS / CATÉGORIES -->
                 <div id="cmsPanel-orders" class="cms-panel hidden space-y-5">
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-4">
@@ -9849,7 +9865,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             return msg + code;
         }
 
-        function liveSnapshot() { return JSON.stringify({ popup: getPopup(), scratch: getScratch(), slides: SITE_DATA.slides }); }
+        function liveSnapshot() { return JSON.stringify({ popup: getPopup(), scratch: getScratch(), loyalty: getLoyalty(), slides: SITE_DATA.slides }); }
 
         async function loadLiveConfig() {
             const sb = getSb();
@@ -9861,6 +9877,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                 if (!v) { LIVE_STATE = 'empty'; return false; }
                 if (v.popup) SITE_DATA.popup = v.popup;
                 if (v.scratch) SITE_DATA.scratch = v.scratch;
+                if (v.loyalty) SITE_DATA.loyalty = v.loyalty;
                 if (Array.isArray(v.slides) && v.slides.length) SITE_DATA.slides = v.slides;
                 _liveSig = liveSnapshot();
                 LIVE_STATE = 'ok'; LIVE_MSG = '';
@@ -9887,7 +9904,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                 const { data: s } = await sb.auth.getSession();
                 if (!s || !s.session) { LIVE_STATE = 'noauth'; LIVE_MSG = "Session expirée : reconnectez-vous au CMS."; updateLiveStatusUI(); return; }
                 const sig = liveSnapshot();
-                const value = { popup: getPopup(), scratch: getScratch(), slides: SITE_DATA.slides };
+                const value = { popup: getPopup(), scratch: getScratch(), loyalty: getLoyalty(), slides: SITE_DATA.slides };
                 const { error } = await sb.from(LIVE_TABLE).upsert({ key: LIVE_KEY, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
                 if (error) throw error;
                 _liveSig = sig; LIVE_STATE = 'ok'; LIVE_MSG = '';
@@ -10969,8 +10986,538 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             else if (/JWT|apikey|Invalid API key/i.test(msg)) hint = ' → Clé anon invalide.';
             return msg + code + hint;
         }
+        // =====================================================================
+        // COMPTES CLIENTS + POINTS DE FIDÉLITÉ (Supabase Auth + tables customers / loyalty_ledger / customer_orders)
+        // Les points ne peuvent être crédités que par l'administrateur (fonction SQL protégée).
+        // =====================================================================
+        const DEFAULT_LOYALTY = { enabled: true, earnPer10: 1, silverAt: 200, goldAt: 500 };
+        function getLoyalty() { return { ...DEFAULT_LOYALTY, ...(SITE_DATA.loyalty || {}) }; }
+        function loyaltyTier(points) {
+            const L = getLoyalty(), p = Number(points) || 0;
+            if (p >= L.goldAt) return { name: 'Or', icon: '🥇', next: null, nextAt: null, from: L.goldAt };
+            if (p >= L.silverAt) return { name: 'Argent', icon: '🥈', next: 'Or', nextAt: L.goldAt, from: L.silverAt };
+            return { name: 'Bronze', icon: '🥉', next: 'Argent', nextAt: L.silverAt, from: 0 };
+        }
+        function pointsForOrder(o) {
+            const base = Math.max(0, (Number(o.subtotal) || 0) - (Number(o.discount) || 0));
+            return Math.floor(base / 10 * (Number(getLoyalty().earnPer10) || 0));
+        }
+        const ACCOUNT = { user: null, profile: null, orders: [], ledger: [], view: 'login', tab: 'orders', busy: false, error: '', info: '', noTables: false };
+        const ACCT_TABLES = { customers: 'customers', orders: 'customer_orders', ledger: 'loyalty_ledger' };
+
+        function acctFirstName() {
+            const n = (ACCOUNT.profile && ACCOUNT.profile.full_name) || (ACCOUNT.user && ACCOUNT.user.user_metadata && ACCOUNT.user.user_metadata.full_name) || '';
+            return n.trim().split(/\s+/)[0] || 'vous';
+        }
+        function acctPrefill(field) {
+            if (!ACCOUNT.user) return '';
+            const m = (ACCOUNT.user.user_metadata) || {}, p = ACCOUNT.profile || {};
+            if (field === 'name') return p.full_name || m.full_name || '';
+            if (field === 'phone') return p.phone || m.phone || '';
+            return '';
+        }
+        function acctErr(err) {
+            const m = ((err && (err.message || err.error_description)) || '').toString();
+            if (/invalid login/i.test(m)) return "E-mail ou mot de passe incorrect.";
+            if (/already registered|already been registered|user already/i.test(m)) return "Un compte existe déjà avec cet e-mail. Connectez-vous.";
+            if (/email not confirmed/i.test(m)) return "Confirmez d'abord votre e-mail : un lien vous a été envoyé.";
+            if (/password.*(short|least|weak)|weak password/i.test(m)) return "Mot de passe trop court ou trop faible (8 caractères minimum).";
+            if (/rate limit|too many|over_email_send/i.test(m)) return "Trop de tentatives. Patientez quelques minutes puis réessayez.";
+            if (/invalid.*email|unable to validate email/i.test(m)) return "Adresse e-mail invalide.";
+            if (/network|fetch/i.test(m)) return "Connexion impossible. Vérifiez votre réseau.";
+            return m || "Une erreur est survenue. Réessayez.";
+        }
+        function acctSetSession(session) {
+            const u = session && session.user;
+            // le compte administrateur n'est pas un compte client
+            ACCOUNT.user = (u && (u.email || '').toLowerCase() !== CMS_ADMIN_EMAIL.toLowerCase()) ? u : null;
+            if (!ACCOUNT.user) { ACCOUNT.profile = null; ACCOUNT.orders = []; ACCOUNT.ledger = []; }
+        }
+        async function initAccount() {
+            const sb = getSb();
+            if (!sb) { renderAccountHeaderBtn(); return; }
+            try {
+                const { data } = await sb.auth.getSession();
+                acctSetSession(data && data.session);
+                if (ACCOUNT.user) loadAccountData();
+            } catch (e) { /* ignore */ }
+            renderAccountHeaderBtn();
+            sb.auth.onAuthStateChange((event, session) => {
+                if (event === 'PASSWORD_RECOVERY') return;
+                const before = ACCOUNT.user && ACCOUNT.user.id;
+                acctSetSession(session);
+                if (ACCOUNT.user && ACCOUNT.user.id !== before) loadAccountData();
+                renderAccountHeaderBtn();
+                if (document.getElementById('accountModal').style.display !== 'none') renderAccountModal();
+            });
+        }
+        async function loadAccountData() {
+            const sb = getSb(), u = ACCOUNT.user;
+            if (!sb || !u) return;
+            ACCOUNT.noTables = false;
+            try {
+                let { data: prof, error } = await sb.from(ACCT_TABLES.customers).select('*').eq('id', u.id).maybeSingle();
+                if (error) throw error;
+                if (!prof) {   // profil absent (compte créé avant le script SQL) : on le crée
+                    const m = u.user_metadata || {};
+                    const ins = await sb.from(ACCT_TABLES.customers).insert({ id: u.id, email: u.email, full_name: m.full_name || '', phone: m.phone || '', city: m.city || '' });
+                    if (!ins.error) { const again = await sb.from(ACCT_TABLES.customers).select('*').eq('id', u.id).maybeSingle(); prof = again.data; }
+                }
+                ACCOUNT.profile = prof || { id: u.id, email: u.email, full_name: (u.user_metadata || {}).full_name || '', phone: '', city: '', points: 0, lifetime_points: 0 };
+                const o = await sb.from(ACCT_TABLES.orders).select('*').order('created_at', { ascending: false }).limit(50);
+                ACCOUNT.orders = o.error ? [] : (o.data || []);
+                const l = await sb.from(ACCT_TABLES.ledger).select('*').order('created_at', { ascending: false }).limit(50);
+                ACCOUNT.ledger = l.error ? [] : (l.data || []);
+            } catch (e) {
+                ACCOUNT.noTables = true;
+                ACCOUNT.profile = { id: u.id, email: u.email, full_name: (u.user_metadata || {}).full_name || '', phone: '', city: '', points: 0, lifetime_points: 0 };
+                console.warn('Compte client : tables indisponibles', e);
+            }
+            renderAccountHeaderBtn();
+            if (document.getElementById('accountModal').style.display !== 'none') renderAccountModal();
+        }
+        function renderAccountHeaderBtn() {
+            const btn = document.getElementById('accountHeaderBtn');
+            if (!btn) return;
+            const lbl = document.getElementById('accountHeaderLabel');
+            if (ACCOUNT.user) {
+                const pts = ACCOUNT.profile ? Number(ACCOUNT.profile.points) || 0 : 0;
+                if (lbl) lbl.innerHTML = `${escapeHtmlAttr(acctFirstName())}${getLoyalty().enabled ? ` <span class="ml-1 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-extrabold">⭐ ${pts}</span>` : ''}`;
+            } else if (lbl) lbl.textContent = 'Se connecter';
+        }
+        function openAccountModal(view) {
+            ACCOUNT.error = ''; ACCOUNT.info = '';
+            ACCOUNT.view = view || (ACCOUNT.user ? 'home' : 'login');
+            if (ACCOUNT.user && ACCOUNT.view !== 'reset') ACCOUNT.view = 'home';
+            renderAccountModal();
+            const m = document.getElementById('accountModal');
+            if (m) m.style.display = 'flex';
+            if (ACCOUNT.user) loadAccountData();
+        }
+        function closeAccountModal() {
+            const m = document.getElementById('accountModal');
+            if (m) m.style.display = 'none';
+        }
+        function acctGo(view) { ACCOUNT.view = view; ACCOUNT.error = ''; ACCOUNT.info = ''; renderAccountModal(); }
+        function acctMsgHtml() {
+            return `${ACCOUNT.error ? `<div role="alert" class="text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">${escapeHtmlAttr(ACCOUNT.error)}</div>` : ''}
+                    ${ACCOUNT.info ? `<div class="text-xs font-semibold text-sage-800 bg-sage-50 border border-sage-100 rounded-xl px-3 py-2">${escapeHtmlAttr(ACCOUNT.info)}</div>` : ''}`;
+        }
+        function acctInput(name, label, type, extra) {
+            return `<label class="block text-[11px] font-bold text-slate-600">${label}
+                <input name="${name}" type="${type}" ${extra || ''} class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-normal text-slate-800 focus:outline-none focus:border-[#5D9C2A]"></label>`;
+        }
+        function renderAccountModal() {
+            const body = document.getElementById('accountBody');
+            if (!body) return;
+            const L = getLoyalty();
+            const brand = escapeHtmlAttr((SITE_DATA.settings && SITE_DATA.settings.brandName) || 'Parateams');
+            const perk = L.enabled ? `Gagnez <strong>${L.earnPer10} point${L.earnPer10 > 1 ? 's' : ''} par tranche de 10 DH</strong> dépensés, crédités à la livraison.` : '';
+            const head = (title, sub) => `<div class="px-6 pt-7 pb-2 text-center"><div class="w-12 h-12 mx-auto rounded-2xl bg-sage-50 border border-sage-100 flex items-center justify-center text-2xl">👤</div><h2 class="mt-3 font-display text-2xl font-extrabold text-sage-900">${title}</h2>${sub ? `<p class="mt-1 text-sm text-slate-500">${sub}</p>` : ''}</div>`;
+            const tabs = (active) => `<div class="mx-6 mt-3 grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-100 text-xs font-bold">
+                <button type="button" onclick="acctGo('login')" class="py-2 rounded-lg cursor-pointer ${active === 'login' ? 'bg-white text-sage-900 shadow-xs' : 'text-slate-500'}">Connexion</button>
+                <button type="button" onclick="acctGo('signup')" class="py-2 rounded-lg cursor-pointer ${active === 'signup' ? 'bg-white text-sage-900 shadow-xs' : 'text-slate-500'}">Créer un compte</button></div>`;
+            const btn = (txt) => `<button type="submit" id="acctSubmit" class="w-full py-3 rounded-xl bg-sage-700 hover:bg-sage-800 text-white font-extrabold text-sm cursor-pointer disabled:opacity-60">${txt}</button>`;
+            if (ACCOUNT.view === 'login') {
+                body.innerHTML = `${head('Mon compte ' + brand, perk)}${tabs('login')}
+                    <form onsubmit="return acctLogin(event)" class="px-6 pt-4 pb-6 space-y-3">
+                        ${acctMsgHtml()}
+                        ${acctInput('email', 'E-mail', 'email', 'required autocomplete="email" inputmode="email"')}
+                        ${acctInput('password', 'Mot de passe', 'password', 'required autocomplete="current-password"')}
+                        ${btn('Me connecter')}
+                        <button type="button" onclick="acctGo('forgot')" class="w-full text-xs font-semibold text-sage-700 hover:underline cursor-pointer">Mot de passe oublié ?</button>
+                    </form>`;
+            } else if (ACCOUNT.view === 'signup') {
+                body.innerHTML = `${head('Créer mon compte', perk || 'Suivez vos commandes et gardez vos avantages.')}${tabs('signup')}
+                    <form onsubmit="return acctSignup(event)" class="px-6 pt-4 pb-6 space-y-3">
+                        ${acctMsgHtml()}
+                        ${acctInput('full_name', 'Nom complet *', 'text', 'required autocomplete="name" maxlength="80"')}
+                        ${acctInput('phone', 'Téléphone (Maroc) *', 'tel', 'required autocomplete="tel" inputmode="tel" placeholder="06 12 34 56 78"')}
+                        <label class="block text-[11px] font-bold text-slate-600">Ville
+                            <select name="city" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-normal text-slate-800 bg-white">
+                                ${['Casablanca','Rabat','Marrakech','Tanger','Agadir','Fès','Autre'].map(c => `<option value="${c}" ${state.selectedCity === c ? 'selected' : ''}>${c === 'Autre' ? 'Autre ville' : c}</option>`).join('')}
+                            </select></label>
+                        ${acctInput('email', 'E-mail *', 'email', 'required autocomplete="email" inputmode="email"')}
+                        ${acctInput('password', 'Mot de passe * (8 caractères minimum)', 'password', 'required minlength="8" autocomplete="new-password"')}
+                        <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;opacity:0;height:0;width:0">
+                        <label class="flex items-start gap-2 text-[11px] text-slate-600 leading-snug cursor-pointer">
+                            <input type="checkbox" name="consent" required class="mt-0.5 accent-[#3E6B1B]">
+                            <span>J'accepte que mes informations soient utilisées pour gérer mon compte, mes commandes et mes points de fidélité.</span></label>
+                        ${btn('Créer mon compte')}
+                    </form>`;
+            } else if (ACCOUNT.view === 'forgot') {
+                body.innerHTML = `${head('Mot de passe oublié', "Nous vous envoyons un lien pour en choisir un nouveau.")}
+                    <form onsubmit="return acctForgot(event)" class="px-6 pt-4 pb-6 space-y-3">
+                        ${acctMsgHtml()}
+                        ${acctInput('email', 'E-mail du compte', 'email', 'required autocomplete="email" inputmode="email"')}
+                        ${btn('Envoyer le lien')}
+                        <button type="button" onclick="acctGo('login')" class="w-full text-xs font-semibold text-sage-700 hover:underline cursor-pointer">← Retour à la connexion</button>
+                    </form>`;
+            } else if (ACCOUNT.view === 'reset') {
+                body.innerHTML = `${head('Nouveau mot de passe', "Choisissez un mot de passe de 8 caractères minimum.")}
+                    <form onsubmit="return acctReset(event)" class="px-6 pt-4 pb-6 space-y-3">
+                        ${acctMsgHtml()}
+                        ${acctInput('password', 'Nouveau mot de passe', 'password', 'required minlength="8" autocomplete="new-password"')}
+                        ${btn('Enregistrer')}
+                    </form>`;
+            } else {
+                renderAccountHome(body, head);
+            }
+        }
+        function renderAccountHome(body, head) {
+            const L = getLoyalty(), p = ACCOUNT.profile || {}, pts = Number(p.points) || 0;
+            const tier = loyaltyTier(pts);
+            const pct = tier.nextAt ? Math.min(100, Math.round(((pts - tier.from) / (tier.nextAt - tier.from)) * 100)) : 100;
+            const fmtDate = d => { try { return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }); } catch (e) { return ''; } };
+            const stCls = { 'Nouvelle': 'bg-sky-100 text-sky-800', 'Confirmée': 'bg-amber-100 text-amber-800', 'Expédiée': 'bg-violet-100 text-violet-800', 'Livrée': 'bg-sage-100 text-sage-800', 'Annulée': 'bg-red-100 text-red-700' };
+            const tabBtn = (id, label) => `<button type="button" onclick="ACCOUNT.tab='${id}';renderAccountModal()" class="flex-1 py-2 rounded-lg text-xs font-bold cursor-pointer ${ACCOUNT.tab === id ? 'bg-white text-sage-900 shadow-xs' : 'text-slate-500'}">${label}</button>`;
+            let panel = '';
+            if (ACCOUNT.tab === 'orders') {
+                panel = ACCOUNT.orders.length ? ACCOUNT.orders.map(o => {
+                    const est = L.enabled && o.status !== 'Annulée' ? pointsForOrder({ subtotal: (Number(o.total) || 0), discount: 0 }) : 0;
+                    const lines = (Array.isArray(o.items) ? o.items : []).map(i => `${i.qty}× ${escapeHtmlAttr(i.name || '')}`).join(', ');
+                    return `<div class="border border-slate-200 rounded-2xl p-3 space-y-1.5">
+                        <div class="flex items-center justify-between gap-2"><span class="text-xs font-extrabold text-sage-900">${escapeHtmlAttr(o.order_ref)}</span><span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${stCls[o.status] || 'bg-slate-100 text-slate-700'}">${escapeHtmlAttr(o.status)}</span></div>
+                        <div class="text-[11px] text-slate-500">${fmtDate(o.created_at)} · <strong class="text-slate-800">${Number(o.total) || 0} DH</strong>${o.discount ? ` (remise -${Number(o.discount)} DH)` : ''}</div>
+                        ${lines ? `<div class="text-[11px] text-slate-600 leading-snug">${lines}</div>` : ''}
+                        ${o.status === 'Livrée' ? `<div class="text-[11px] font-bold text-sage-700">⭐ Points crédités</div>` : (est ? `<div class="text-[11px] font-semibold text-amber-700">⭐ ~${est} points à la livraison</div>` : '')}
+                    </div>`;
+                }).join('') : `<p class="text-sm text-slate-500 text-center py-6">Aucune commande pour le moment.<br>Vos prochaines commandes apparaîtront ici.</p>`;
+            } else if (ACCOUNT.tab === 'points') {
+                panel = ACCOUNT.ledger.length ? ACCOUNT.ledger.map(l => `<div class="flex items-center justify-between gap-3 border-b border-slate-100 py-2">
+                        <div class="min-w-0"><div class="text-xs font-bold text-slate-800 truncate">${l.reason === 'commande' ? 'Commande ' + escapeHtmlAttr(l.order_ref || '') : escapeHtmlAttr(l.reason || 'Ajustement')}</div><div class="text-[11px] text-slate-500">${fmtDate(l.created_at)}</div></div>
+                        <span class="text-sm font-extrabold ${l.points >= 0 ? 'text-sage-700' : 'text-red-600'}">${l.points >= 0 ? '+' : ''}${l.points}</span></div>`).join('')
+                    : `<p class="text-sm text-slate-500 text-center py-6">Pas encore de points.<br>Ils sont crédités une fois vos commandes livrées.</p>`;
+            } else {
+                panel = `<form onsubmit="return acctSaveProfile(event)" class="space-y-3">
+                        ${acctMsgHtml()}
+                        <label class="block text-[11px] font-bold text-slate-600">E-mail<input value="${escapeHtmlAttr(ACCOUNT.user.email || '')}" disabled class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-500"></label>
+                        <label class="block text-[11px] font-bold text-slate-600">Nom complet<input name="full_name" value="${escapeHtmlAttr(p.full_name || '')}" required maxlength="80" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-normal text-slate-800"></label>
+                        <label class="block text-[11px] font-bold text-slate-600">Téléphone<input name="phone" value="${escapeHtmlAttr(p.phone || '')}" type="tel" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-normal text-slate-800"></label>
+                        <label class="block text-[11px] font-bold text-slate-600">Ville<input name="city" value="${escapeHtmlAttr(p.city || '')}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-normal text-slate-800"></label>
+                        <button type="submit" id="acctSubmit" class="w-full py-3 rounded-xl bg-sage-700 hover:bg-sage-800 text-white font-extrabold text-sm cursor-pointer disabled:opacity-60">Enregistrer</button>
+                        <button type="button" onclick="acctPasswordMail()" class="w-full text-xs font-semibold text-sage-700 hover:underline cursor-pointer">Changer mon mot de passe (lien par e-mail)</button>
+                    </form>`;
+            }
+            body.innerHTML = `
+                <div class="px-6 pt-7 pb-3">
+                    <div class="flex items-start justify-between gap-3 pr-8">
+                        <div class="min-w-0"><h2 class="font-display text-xl font-extrabold text-sage-900 truncate">Bonjour ${escapeHtmlAttr(acctFirstName())} 👋</h2><p class="text-xs text-slate-500 truncate">${escapeHtmlAttr(ACCOUNT.user.email || '')}</p></div>
+                        <button type="button" onclick="acctLogout()" class="shrink-0 text-xs font-bold text-slate-500 hover:text-red-600 cursor-pointer">Se déconnecter</button>
+                    </div>
+                    ${ACCOUNT.noTables ? `<div class="mt-3 text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">Vos points et commandes seront disponibles très bientôt.</div>` : ''}
+                    ${L.enabled ? `<div class="mt-4 rounded-2xl p-4 text-white" style="background:linear-gradient(135deg,#4E8422,#1D330C)">
+                        <div class="flex items-end justify-between gap-3"><div><div class="text-[11px] uppercase tracking-widest opacity-80">Mes points</div><div class="font-display text-4xl font-extrabold leading-none mt-1">${pts}</div></div>
+                        <div class="px-3 py-1.5 rounded-full bg-white/15 text-xs font-extrabold">${tier.icon} Niveau ${tier.name}</div></div>
+                        <div class="mt-3 h-2 rounded-full bg-white/20 overflow-hidden"><div style="width:${pct}%" class="h-full rounded-full bg-amber-300"></div></div>
+                        <div class="mt-1.5 text-[11px] opacity-90">${tier.nextAt ? `Encore <strong>${Math.max(0, tier.nextAt - pts)} points</strong> pour le niveau ${tier.next}` : 'Niveau maximum atteint 🎉'}</div>
+                        <div class="mt-2 text-[11px] opacity-80">${L.earnPer10} point${L.earnPer10 > 1 ? 's' : ''} par tranche de 10 DH, crédités à la livraison.</div></div>` : ''}
+                    <div class="mt-4 flex gap-1 p-1 rounded-xl bg-slate-100">${tabBtn('orders', 'Mes commandes')}${tabBtn('points', 'Mes points')}${tabBtn('profile', 'Mon profil')}</div>
+                </div>
+                <div class="px-6 pb-6 space-y-2.5">${panel}</div>`;
+        }
+        async function acctBusy(fn) {
+            const b = document.getElementById('acctSubmit');
+            if (b) b.disabled = true;
+            ACCOUNT.error = ''; ACCOUNT.info = '';
+            try { await fn(); } catch (e) { ACCOUNT.error = acctErr(e); renderAccountModal(); }
+            const b2 = document.getElementById('acctSubmit'); if (b2) b2.disabled = false;
+        }
+        function acctLogin(e) {
+            e.preventDefault();
+            const f = e.target.elements, sb = getSb();
+            acctBusy(async () => {
+                if (!sb) throw new Error('Service indisponible. Rechargez la page.');
+                const { data, error } = await sb.auth.signInWithPassword({ email: f.email.value.trim(), password: f.password.value });
+                if (error) throw error;
+                acctSetSession(data.session);
+                if (!ACCOUNT.user) throw new Error('Ce compte est réservé à l\'administration.');
+                await loadAccountData();
+                ACCOUNT.view = 'home'; ACCOUNT.tab = 'orders'; renderAccountModal();
+                showToast('Bienvenue ' + acctFirstName() + ' 👋');
+            });
+            return false;
+        }
+        function acctSignup(e) {
+            e.preventDefault();
+            const f = e.target.elements, sb = getSb();
+            if (f.website && f.website.value) return false;   // anti-robot
+            const phone = f.phone.value.replace(/[\s.\-]/g, '');
+            if (!/^(\+212|00212|0)[5-7]\d{8}$/.test(phone)) { ACCOUNT.error = "Numéro de téléphone marocain invalide (ex : 06 12 34 56 78)."; renderAccountModal(); return false; }
+            acctBusy(async () => {
+                if (!sb) throw new Error('Service indisponible. Rechargez la page.');
+                const { data, error } = await sb.auth.signUp({
+                    email: f.email.value.trim(), password: f.password.value,
+                    options: { data: { full_name: f.full_name.value.trim(), phone, city: f.city.value }, emailRedirectTo: window.location.origin + window.location.pathname }
+                });
+                if (error) throw error;
+                if (data.user && data.user.identities && data.user.identities.length === 0) throw new Error('Un compte existe déjà avec cet e-mail.');
+                if (data.session) {
+                    acctSetSession(data.session);
+                    await loadAccountData();
+                    ACCOUNT.view = 'home'; ACCOUNT.tab = 'orders'; renderAccountModal();
+                    showToast('Compte créé. Bienvenue ' + acctFirstName() + ' 🎉');
+                } else {
+                    ACCOUNT.view = 'login';
+                    ACCOUNT.info = "Compte créé ! Un e-mail de confirmation vient de vous être envoyé : cliquez sur le lien puis connectez-vous.";
+                    renderAccountModal();
+                }
+            });
+            return false;
+        }
+        function acctForgot(e) {
+            e.preventDefault();
+            const f = e.target.elements, sb = getSb();
+            acctBusy(async () => {
+                if (!sb) throw new Error('Service indisponible. Rechargez la page.');
+                const { error } = await sb.auth.resetPasswordForEmail(f.email.value.trim(), { redirectTo: window.location.origin + window.location.pathname + '?compte=reset' });
+                if (error) throw error;
+                ACCOUNT.info = "Si un compte existe avec cet e-mail, un lien de réinitialisation vient d'être envoyé.";
+                renderAccountModal();
+            });
+            return false;
+        }
+        function acctReset(e) {
+            e.preventDefault();
+            const f = e.target.elements, sb = getSb();
+            acctBusy(async () => {
+                const { error } = await sb.auth.updateUser({ password: f.password.value });
+                if (error) throw error;
+                try { history.replaceState(null, '', window.location.pathname); } catch (x) {}
+                const { data } = await sb.auth.getSession();
+                acctSetSession(data && data.session);
+                if (ACCOUNT.user) { await loadAccountData(); ACCOUNT.view = 'home'; } else ACCOUNT.view = 'login';
+                ACCOUNT.info = ACCOUNT.user ? '' : 'Mot de passe changé. Connectez-vous.';
+                renderAccountModal();
+                showToast('✅ Mot de passe mis à jour');
+            });
+            return false;
+        }
+        function acctPasswordMail() {
+            const sb = getSb();
+            if (!sb || !ACCOUNT.user) return;
+            sb.auth.resetPasswordForEmail(ACCOUNT.user.email, { redirectTo: window.location.origin + window.location.pathname + '?compte=reset' })
+                .then(({ error }) => { ACCOUNT.error = error ? acctErr(error) : ''; ACCOUNT.info = error ? '' : 'Un lien de changement de mot de passe vous a été envoyé par e-mail.'; renderAccountModal(); });
+        }
+        function acctSaveProfile(e) {
+            e.preventDefault();
+            const f = e.target.elements, sb = getSb();
+            acctBusy(async () => {
+                const upd = { full_name: f.full_name.value.trim(), phone: f.phone.value.trim(), city: f.city.value.trim() };
+                const { error } = await sb.from(ACCT_TABLES.customers).update(upd).eq('id', ACCOUNT.user.id);
+                if (error) throw error;
+                ACCOUNT.profile = { ...ACCOUNT.profile, ...upd };
+                ACCOUNT.info = 'Informations enregistrées ✓';
+                renderAccountHeaderBtn(); renderAccountModal();
+            });
+            return false;
+        }
+        async function acctLogout() {
+            try { const sb = getSb(); if (sb) await sb.auth.signOut(); } catch (e) { /* ignore */ }
+            acctSetSession(null);
+            renderAccountHeaderBtn(); closeAccountModal();
+            showToast('Vous êtes déconnecté.');
+        }
+        // Enregistre la commande dans l'historique du compte (en plus de la table Orders)
+        async function insertCustomerOrderRemote(order) {
+            const sb = getSb();
+            if (!sb || !order.customerId) return;
+            try {
+                const { error } = await sb.from(ACCT_TABLES.orders).insert({ customer_id: order.customerId, order_ref: order.id, total: order.total, discount: order.discount || 0, promo: order.promo || '', city: order.city || '', items: order.items || [] });
+                if (!error && ACCOUNT.user && ACCOUNT.user.id === order.customerId) loadAccountData();
+            } catch (e) { /* l'historique est un confort : la commande reste enregistrée */ }
+        }
+        // Texte « points à gagner » dans le panier / la confirmation
+        function loyaltyHintHtml(o) {
+            const L = getLoyalty();
+            if (!L.enabled) return '';
+            const pts = pointsForOrder(o);
+            if (ACCOUNT.user) return pts > 0 ? `<div class="text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">⭐ Vous gagnerez <strong>${pts} points</strong> à la livraison de cette commande.</div>` : '';
+            return `<button type="button" onclick="toggleCart(false); openAccountModal('signup')" class="w-full text-left text-xs font-semibold text-sage-800 bg-sage-50 border border-sage-100 hover:bg-sage-100 rounded-xl px-3 py-2 cursor-pointer">⭐ Créez un compte pour gagner <strong>${pts > 0 ? pts + ' points' : 'des points'}</strong> sur cette commande →</button>`;
+        }
+
+        // =====================================================================
+        // CMS : ONGLET « CLIENTS » (comptes, points, historique, ajustements)
+        // =====================================================================
+        const CUSTOMERS = { loaded: false, loading: false, error: '', list: [], orders: [], selected: null, ledger: [], search: '', sort: 'recent' };
+        async function fetchCustomers() {
+            const sb = getSb();
+            if (!sb) { CUSTOMERS.error = sbErrMsg(); renderCmsCustomers(); return; }
+            CUSTOMERS.loading = true; CUSTOMERS.error = ''; renderCmsCustomers();
+            try {
+                const c = await sb.from(ACCT_TABLES.customers).select('*').order('created_at', { ascending: false }).limit(2000);
+                if (c.error) throw c.error;
+                const o = await sb.from(ACCT_TABLES.orders).select('customer_id,order_ref,total,status,created_at').order('created_at', { ascending: false }).limit(5000);
+                if (o.error) throw o.error;
+                CUSTOMERS.list = c.data || []; CUSTOMERS.orders = o.data || []; CUSTOMERS.loaded = true;
+            } catch (e) {
+                const m = (e && (e.message || e.details)) || 'Erreur inconnue';
+                CUSTOMERS.error = /PGRST205|42P01|relation|schema cache/i.test(m + (e.code || ''))
+                    ? "Les tables clients n'existent pas encore : exécutez le script SQL « supabase-comptes-clients.sql » (Supabase > SQL Editor)."
+                    : m;
+            }
+            CUSTOMERS.loading = false;
+            renderCmsCustomers();
+        }
+        function custStats(c) {
+            const mine = CUSTOMERS.orders.filter(o => o.customer_id === c.id && o.status !== 'Annulée');
+            const delivered = mine.filter(o => o.status === 'Livrée');
+            return { count: mine.length, spent: delivered.reduce((s, o) => s + (Number(o.total) || 0), 0) };
+        }
+        function updateCmsLoyalty(field, val) {
+            pushCmsUndoSnapshot();
+            SITE_DATA.loyalty = { ...getLoyalty(), [field]: val };
+            saveCmsToLocalPreview();
+        }
+        function renderCmsCustomers() {
+            const box = document.getElementById('cmsClientsBox');
+            if (!box) return;
+            const tc = document.getElementById('cmsTabClientCount'); if (tc && CUSTOMERS.loaded) tc.textContent = CUSTOMERS.list.length;
+            const L = getLoyalty();
+            const inp = "w-full px-3 py-2 rounded-xl border border-slate-200 text-xs";
+            const lbl = "block text-[11px] font-bold text-slate-600 mb-1";
+            const fmt = d => { try { return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' }); } catch (e) { return ''; } };
+            const settings = `<div class="bg-white rounded-3xl border border-slate-200 p-5 space-y-3 shadow-2xs">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <h4 class="font-display font-bold text-sm text-sage-900">⭐ Programme de fidélité</h4>
+                        <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" class="sr-only" ${L.enabled ? 'checked' : ''} onchange="updateCmsLoyalty('enabled', this.checked)" aria-label="Activer les points de fidélité">
+                            <span class="relative w-10 h-6 rounded-full transition-colors ${L.enabled ? 'bg-sage-600' : 'bg-slate-300'}"><span class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${L.enabled ? 'translate-x-4' : ''}"></span></span>
+                            <span class="text-xs font-extrabold ${L.enabled ? 'text-sage-800' : 'text-slate-500'}">${L.enabled ? 'ON' : 'OFF'}</span>
+                        </label>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div><label class="${lbl}">Points par tranche de 10 DH</label><input type="number" min="0.1" max="20" step="0.1" value="${L.earnPer10}" onchange="updateCmsLoyalty('earnPer10', Math.max(0.1, Math.min(20, Number(this.value) || 1)))" class="${inp}"></div>
+                        <div><label class="${lbl}">Niveau Argent dès (points)</label><input type="number" min="1" value="${L.silverAt}" onchange="updateCmsLoyalty('silverAt', Math.max(1, Number(this.value) || 200))" class="${inp}"></div>
+                        <div><label class="${lbl}">Niveau Or dès (points)</label><input type="number" min="2" value="${L.goldAt}" onchange="updateCmsLoyalty('goldAt', Math.max(2, Number(this.value) || 500))" class="${inp}"></div>
+                    </div>
+                    <p class="cms-live-status text-[11px] font-bold rounded-xl bg-slate-50 border border-slate-200 px-3 py-2"></p>
+                    <p class="text-[11px] text-slate-500">Les points sont calculés sur le montant des produits (hors livraison, remise déduite) et crédités automatiquement quand vous passez la commande sur « Livrée » dans l'onglet Commandes.</p>
+                </div>`;
+            if (CUSTOMERS.loading && !CUSTOMERS.loaded) { box.innerHTML = settings + `<div class="p-8 text-center text-sm text-slate-500">Chargement des comptes…</div>`; updateLiveStatusUI(); return; }
+            if (CUSTOMERS.error) { box.innerHTML = settings + `<div class="bg-red-50 border border-red-200 text-red-800 rounded-2xl p-4 text-xs font-semibold">⚠️ ${escapeHtmlAttr(CUSTOMERS.error)}<div class="mt-2"><button onclick="fetchCustomers()" class="px-3 py-1.5 rounded-lg bg-white border border-red-200 text-xs font-bold cursor-pointer">Réessayer</button></div></div>`; updateLiveStatusUI(); return; }
+            if (!CUSTOMERS.loaded) { box.innerHTML = settings + `<div class="p-8 text-center text-sm text-slate-500"><button onclick="fetchCustomers()" class="px-4 py-2 rounded-xl bg-sage-700 text-white text-xs font-bold cursor-pointer">Charger les comptes clients</button></div>`; updateLiveStatusUI(); return; }
+            const all = CUSTOMERS.list.map(c => ({ c, s: custStats(c) }));
+            const now = Date.now();
+            const kpi = {
+                total: all.length,
+                week: all.filter(x => now - new Date(x.c.created_at).getTime() < 7 * 86400000).length,
+                points: all.reduce((s, x) => s + (Number(x.c.points) || 0), 0),
+                buyers: all.filter(x => x.s.count > 0).length
+            };
+            const q = CUSTOMERS.search.trim().toLowerCase();
+            let rows = all.filter(x => !q || [x.c.full_name, x.c.email, x.c.phone, x.c.city].join(' ').toLowerCase().includes(q));
+            const sorters = { recent: (a, b) => new Date(b.c.created_at) - new Date(a.c.created_at), points: (a, b) => (b.c.points || 0) - (a.c.points || 0), spent: (a, b) => b.s.spent - a.s.spent, name: (a, b) => (a.c.full_name || '').localeCompare(b.c.full_name || '', 'fr') };
+            rows.sort(sorters[CUSTOMERS.sort] || sorters.recent);
+            const kpiCard = (label, val) => `<div class="bg-white border border-slate-200 rounded-2xl p-4"><div class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">${label}</div><div class="font-display text-2xl font-extrabold text-sage-900 mt-1">${val}</div></div>`;
+            const table = rows.length ? `<div class="overflow-x-auto border border-slate-200 rounded-2xl bg-white"><table class="w-full text-xs min-w-[760px]">
+                    <thead class="bg-slate-50 text-slate-500 text-[11px] uppercase tracking-wide"><tr><th class="text-left px-3 py-2.5">Client</th><th class="text-left px-3 py-2.5">Contact</th><th class="text-left px-3 py-2.5">Ville</th><th class="text-left px-3 py-2.5">Inscrit</th><th class="text-right px-3 py-2.5">Commandes</th><th class="text-right px-3 py-2.5">Dépensé</th><th class="text-right px-3 py-2.5">Points</th><th class="px-3 py-2.5"></th></tr></thead>
+                    <tbody>${rows.map(({ c, s }) => { const t = loyaltyTier(c.points); return `<tr class="border-t border-slate-100 hover:bg-slate-50">
+                        <td class="px-3 py-2.5"><div class="font-bold text-slate-900">${escapeHtmlAttr(c.full_name || '(sans nom)')}</div><div class="text-[11px] text-slate-500">${t.icon} ${t.name}</div></td>
+                        <td class="px-3 py-2.5"><div>${escapeHtmlAttr(c.email || '')}</div><div class="text-[11px] text-slate-500">${escapeHtmlAttr(c.phone || '')}</div></td>
+                        <td class="px-3 py-2.5">${escapeHtmlAttr(c.city || '')}</td><td class="px-3 py-2.5">${fmt(c.created_at)}</td>
+                        <td class="px-3 py-2.5 text-right font-semibold">${s.count}</td><td class="px-3 py-2.5 text-right font-semibold">${s.spent} DH</td>
+                        <td class="px-3 py-2.5 text-right"><span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-extrabold">⭐ ${Number(c.points) || 0}</span></td>
+                        <td class="px-3 py-2.5 text-right"><button onclick="openCustomerDetail('${c.id}')" class="px-2.5 py-1 rounded-lg bg-sage-50 hover:bg-sage-100 text-sage-800 font-bold cursor-pointer">Détails</button></td></tr>`; }).join('')}</tbody></table></div>`
+                : `<div class="p-8 text-center text-sm text-slate-500 bg-white border border-slate-200 rounded-2xl">${all.length ? 'Aucun compte ne correspond à la recherche.' : 'Aucun compte client pour le moment. Les comptes créés sur le site apparaîtront ici.'}</div>`;
+            box.innerHTML = `${settings}
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">${kpiCard('Comptes clients', kpi.total)}${kpiCard('Nouveaux (7 jours)', kpi.week)}${kpiCard('Clients ayant commandé', kpi.buyers)}${kpiCard('Points en circulation', kpi.points)}</div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <input type="search" id="custSearch" value="${escapeHtmlAttr(CUSTOMERS.search)}" placeholder="Rechercher nom, e-mail, téléphone, ville…" oninput="CUSTOMERS.search=this.value;renderCmsCustomers();document.getElementById('custSearch').focus()" class="${inp} flex-1 min-w-[200px]" aria-label="Rechercher un client">
+                    <select onchange="CUSTOMERS.sort=this.value;renderCmsCustomers()" class="${inp} bg-white w-auto" aria-label="Tri">
+                        ${[['recent','Plus récents'],['points','Plus de points'],['spent','Plus dépensé'],['name','Nom A-Z']].map(([v, t]) => `<option value="${v}" ${CUSTOMERS.sort === v ? 'selected' : ''}>${t}</option>`).join('')}
+                    </select>
+                    <button onclick="fetchCustomers()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer">↻ Actualiser</button>
+                    <button onclick="exportCustomersCsv()" class="px-3 py-2 rounded-xl bg-sage-700 hover:bg-sage-800 text-white text-xs font-bold cursor-pointer">⬇ Export CSV</button>
+                </div>
+                ${table}
+                <div id="custDetail"></div>`;
+            updateLiveStatusUI();
+            if (CUSTOMERS.selected) renderCustomerDetail();
+        }
+        async function openCustomerDetail(id) {
+            CUSTOMERS.selected = id; CUSTOMERS.ledger = [];
+            renderCustomerDetail();
+            const sb = getSb();
+            if (!sb) return;
+            const l = await sb.from(ACCT_TABLES.ledger).select('*').eq('customer_id', id).order('created_at', { ascending: false }).limit(100);
+            CUSTOMERS.ledger = l.error ? [] : (l.data || []);
+            renderCustomerDetail();
+            const el = document.getElementById('custDetail'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        function closeCustomerDetail() { CUSTOMERS.selected = null; const el = document.getElementById('custDetail'); if (el) el.innerHTML = ''; }
+        function renderCustomerDetail() {
+            const el = document.getElementById('custDetail');
+            const c = CUSTOMERS.list.find(x => x.id === CUSTOMERS.selected);
+            if (!el) return;
+            if (!c) { el.innerHTML = ''; return; }
+            const s = custStats(c), t = loyaltyTier(c.points);
+            const fmt = d => { try { return new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
+            const orders = CUSTOMERS.orders.filter(o => o.customer_id === c.id);
+            const inp = "px-3 py-2 rounded-xl border border-slate-200 text-xs";
+            el.innerHTML = `<div class="bg-white rounded-3xl border-2 border-sage-200 p-5 space-y-4 shadow-sm">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div><h4 class="font-display font-extrabold text-lg text-sage-900">${escapeHtmlAttr(c.full_name || '(sans nom)')}</h4>
+                        <div class="text-xs text-slate-600">${escapeHtmlAttr(c.email || '')} · ${escapeHtmlAttr(c.phone || '—')} · ${escapeHtmlAttr(c.city || '—')}</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">Inscrit le ${fmt(c.created_at)} · ${s.count} commande(s) · ${s.spent} DH livrés</div></div>
+                    <div class="flex items-center gap-2"><span class="px-3 py-1.5 rounded-full bg-amber-100 text-amber-900 text-sm font-extrabold">⭐ ${Number(c.points) || 0} pts · ${t.icon} ${t.name}</span>
+                        <button onclick="closeCustomerDetail()" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 text-xs font-bold cursor-pointer">Fermer</button></div>
+                </div>
+                <div class="rounded-2xl bg-slate-50 border border-slate-200 p-3 space-y-2">
+                    <div class="text-xs font-bold text-slate-700">Ajuster les points (geste commercial, correction…)</div>
+                    <div class="flex flex-wrap gap-2 items-center">
+                        <input id="cmsAdjPts" type="number" step="1" placeholder="+50 ou -20" class="${inp} w-28" aria-label="Points à ajouter ou retirer">
+                        <input id="cmsAdjReason" type="text" maxlength="80" placeholder="Motif (ex : cadeau anniversaire)" class="${inp} flex-1 min-w-[180px]" aria-label="Motif">
+                        <button onclick="adjustCustomerPoints('${c.id}')" class="px-3 py-2 rounded-xl bg-sage-700 hover:bg-sage-800 text-white text-xs font-bold cursor-pointer">Appliquer</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div><div class="text-xs font-bold text-slate-700 mb-1.5">Commandes (${orders.length})</div>
+                        <div class="max-h-64 overflow-y-auto space-y-1.5">${orders.length ? orders.map(o => `<div class="flex items-center justify-between gap-2 border border-slate-100 rounded-xl px-3 py-2 text-xs"><div><div class="font-bold">${escapeHtmlAttr(o.order_ref)}</div><div class="text-[11px] text-slate-500">${fmt(o.created_at)}</div></div><div class="text-right"><div class="font-bold">${Number(o.total) || 0} DH</div><div class="text-[11px] text-slate-500">${escapeHtmlAttr(o.status)}</div></div></div>`).join('') : '<div class="text-xs text-slate-500">Aucune commande liée à ce compte.</div>'}</div></div>
+                    <div><div class="text-xs font-bold text-slate-700 mb-1.5">Historique des points</div>
+                        <div class="max-h-64 overflow-y-auto space-y-1.5">${CUSTOMERS.ledger.length ? CUSTOMERS.ledger.map(l => `<div class="flex items-center justify-between gap-2 border border-slate-100 rounded-xl px-3 py-2 text-xs"><div class="min-w-0"><div class="font-semibold truncate">${l.reason === 'commande' ? 'Commande ' + escapeHtmlAttr(l.order_ref || '') : escapeHtmlAttr(l.reason || 'Ajustement')}</div><div class="text-[11px] text-slate-500">${fmt(l.created_at)}</div></div><span class="font-extrabold ${l.points >= 0 ? 'text-sage-700' : 'text-red-600'}">${l.points >= 0 ? '+' : ''}${l.points}</span></div>`).join('') : '<div class="text-xs text-slate-500">Aucun mouvement de points.</div>'}</div></div>
+                </div></div>`;
+        }
+        async function adjustCustomerPoints(id) {
+            const sb = getSb();
+            const pts = parseInt((document.getElementById('cmsAdjPts') || {}).value, 10);
+            const reason = ((document.getElementById('cmsAdjReason') || {}).value || '').trim() || 'Ajustement manuel';
+            if (!sb || !Number.isFinite(pts) || pts === 0) { showToast("Indiquez un nombre de points (ex : +50 ou -20)."); return; }
+            const { data, error } = await sb.rpc('admin_adjust_points', { p_customer: id, p_points: pts, p_reason: reason, p_order_ref: null });
+            if (error) { showToast('⚠️ ' + (error.message || 'Ajustement impossible')); return; }
+            showToast(`⭐ ${pts > 0 ? '+' : ''}${pts} points — nouveau solde : ${data}`);
+            await fetchCustomers();
+            openCustomerDetail(id);
+        }
+        function exportCustomersCsv() {
+            const esc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+            const head = ['Nom', 'E-mail', 'Téléphone', 'Ville', 'Inscrit le', 'Commandes', 'Dépensé (livré, DH)', 'Points', 'Niveau'];
+            const lines = CUSTOMERS.list.map(c => { const s = custStats(c); return [c.full_name, c.email, c.phone, c.city, (c.created_at || '').slice(0, 10), s.count, s.spent, c.points, loyaltyTier(c.points).name].map(esc).join(';'); });
+            const blob = new Blob(['﻿' + [head.map(esc).join(';'), ...lines].join('\n')], { type: 'text/csv;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob); a.download = 'clients-parateams-' + new Date().toISOString().slice(0, 10) + '.csv';
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+        }
+        // Statut de commande → historique client + crédit automatique des points à la livraison
+        async function syncCustomerOrderStatus(o, status) {
+            const sb = getSb(), cid = (o.meta && o.meta.customerId) || '';
+            if (!sb || !cid) return;
+            try { await sb.from(ACCT_TABLES.orders).update({ status }).eq('order_ref', o.id); } catch (e) { /* ignore */ }
+            if (status === 'Livrée' && getLoyalty().enabled) {
+                const pts = pointsForOrder(o);
+                if (pts > 0) {
+                    const { data, error } = await sb.rpc('admin_adjust_points', { p_customer: cid, p_points: pts, p_reason: 'commande', p_order_ref: o.id });
+                    if (error) showToast('⚠️ Points non crédités : ' + (error.message || ''));
+                    else if (data === -1) showToast('Points déjà crédités pour cette commande.');
+                    else showToast(`⭐ +${pts} points crédités au compte client (solde ${data}).`);
+                }
+            }
+            if (CUSTOMERS.loaded) fetchCustomers();
+        }
+
         function orderToRow(o) {
-            const meta = { ref: o.id, statut: o.status, ville: o.city, source: o.source, promo: o.promo, discount: o.discount };
+            const meta = { ref: o.id, statut: o.status, ville: o.city, source: o.source, promo: o.promo, discount: o.discount, customerId: o.customerId };
             const row = { client: o.customer, telephone: o.phone, adresse: o.address, total: o.total };
             const payload = { lignes: o.items };
             Object.keys(meta).forEach(k => { if (ORDERS_OPTIONAL_COLUMNS[k]) row[k] = meta[k]; else payload[k] = meta[k]; });
@@ -11003,6 +11550,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             if (!sb) throw new Error(sbErrMsg());
             const { error } = await sb.from(ORDERS_TABLE).insert(orderToRow(order));
             if (error) throw error;
+            insertCustomerOrderRemote(order);
         }
         async function retryPendingOrders() {
             const pending = readPendingOrders();
@@ -11025,7 +11573,8 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                 customer: customer || '', phone: phone || '', address: address || '', city: state.selectedCity,
                 items: state.cart.map(i => ({ id: i.id, brand: i.brand, name: i.name, price: i.price, qty: i.qty })),
                 subtotal, shipping, discount: P.discount, total: P.total,
-                promo: P.coupon ? couponText(P.coupon) : ''
+                promo: P.coupon ? couponText(P.coupon) : '',
+                customerId: ACCOUNT.user ? ACCOUNT.user.id : ''
             };
             if (P.coupon) markCouponUsed();   // un cadeau = une seule commande
             insertOrderRemote(order)
@@ -11156,6 +11705,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             if (!ORDERS_OPTIONAL_COLUMNS.statut) o.meta = { ...(o.meta || {}), statut: status };
             renderCmsOrders();
             showToast(`Commande ${id} : ${status}`);
+            syncCustomerOrderStatus(o, status);
         }
         async function deleteOrder(id) {
             const o = ORDERS_CACHE.find(x => x.id === id);
@@ -11539,6 +12089,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                         <h3 class="font-display text-2xl font-bold text-sage-900">Commande confirmée !</h3>
                         ${state.lastOrder ? `<p class="text-xs font-bold text-sage-700 bg-sage-50 border border-sage-100 rounded-full inline-block px-3 py-1">Réf. ${escapeHtmlAttr(state.lastOrder.id)}</p>` : ''}
                         ${state.lastOrder && state.lastOrder.syncError ? `<div role="alert" class="text-left bg-red-50 border-2 border-red-300 text-red-800 rounded-2xl p-3.5 text-xs leading-relaxed"><strong>⚠️ Votre commande n'a pas pu être enregistrée sur notre serveur.</strong><br>Envoyez-la maintenant sur WhatsApp avec le bouton ci-dessous pour qu'elle soit bien prise en compte.<br><span class="opacity-70 break-words">Détail technique : ${escapeHtmlAttr(state.lastOrder.syncError)}</span></div>` : ''}
+                        ${state.lastOrder ? loyaltyHintHtml(state.lastOrder) : ''}
                         <p class="text-sm text-slate-600 leading-relaxed">Merci pour votre confiance. Un conseiller <strong>${escapeHtmlAttr(s.brandName)}</strong> vous contactera par téléphone pour confirmer la livraison vers <strong>${escapeHtmlAttr(state.selectedCity)}</strong>.</p>
                     </div>
                 `;
@@ -11557,8 +12108,8 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                         <button onclick="state.checkoutStep='cart'; renderCart();" class="text-xs font-semibold text-sage-700 hover:underline cursor-pointer">← Modifier mon panier</button>
                         <h3 class="font-display text-lg font-bold text-sage-900">Livraison express en 1 étape</h3>
                         <form onsubmit="submitOrder(event)" class="space-y-3.5">
-                            <input type="text" name="customerName" required placeholder="Nom complet *" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm">
-                            <input type="tel" name="customerPhone" required placeholder="Téléphone (Maroc) *" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm">
+                            <input type="text" name="customerName" required value="${escapeHtmlAttr(acctPrefill('name'))}" placeholder="Nom complet *" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm">
+                            <input type="tel" name="customerPhone" required value="${escapeHtmlAttr(acctPrefill('phone'))}" placeholder="Téléphone (Maroc) *" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm">
                             <input type="text" name="customerAddress" required placeholder="Adresse de livraison (${escapeHtmlAttr(state.selectedCity)}) *" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm">
                             <div class="bg-sand-50 p-3.5 rounded-2xl text-xs space-y-1 border border-slate-100">
                                 <div class="flex justify-between"><span>Sous-total</span><span>${subtotal} DH</span></div>
@@ -11567,6 +12118,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                                 <div class="flex justify-between"><span>Livraison (${escapeHtmlAttr(state.selectedCity)})</span><span>${shippingCost === 0 ? 'Gratuit' : shippingCost + ' DH'}</span></div>
                                 <div class="flex justify-between font-bold text-base text-sage-900 pt-1.5 border-t border-slate-200"><span>Total</span><span>${grandTotal} DH</span></div>
                             </div>
+                            ${loyaltyHintHtml({ subtotal: P.subtotal, discount: P.discount })}
                             <button type="submit" class="w-full py-3.5 rounded-full bg-coral-500 hover:bg-coral-600 text-white font-bold text-sm shadow-md cursor-pointer">Valider ma commande (${grandTotal} DH)</button>
                             <button type="button" onclick="sendCartToWhatsApp()" class="w-full py-3 rounded-full bg-[#25D366] hover:bg-[#1fb858] text-white font-bold text-sm cursor-pointer">Valider via WhatsApp</button>
                         </form>
@@ -12009,6 +12561,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             updateCmsHistoryButtons();
             if (welcome) showToast("Bienvenue dans Parateams Studio CMS !");
             fetchOrders();
+            fetchCustomers();
         }
 
         async function cmsRestoreSession() {
@@ -12120,6 +12673,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         const CMS_URL_IS_RECOVERY = /type=recovery/.test(window.location.hash || '');
         (function initCmsRecoveryListener() {
             const showReset = () => {
+                if (/[?&]compte=reset/.test(window.location.search)) { openAccountModal('reset'); return; }   // mot de passe d'un CLIENT, pas de l'admin
                 cmsRecoveryMode = true;
                 isCmsAuthenticated = false;
                 document.getElementById('adminCmsOverlay').classList.remove('hidden');
@@ -12144,6 +12698,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                 panel.classList.toggle('hidden', panel.id !== `cmsPanel-${tabName}`);
             });
             if (tabName === 'orders') fetchOrders();
+            if (tabName === 'clients') fetchCustomers();
         }
 
         function saveCmsToLocalPreview(silent = false) {
@@ -12498,6 +13053,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
 
         function refreshAllCmsPanels() {
             try { renderCmsOrders(); } catch (err) { console.warn(err); }
+            try { renderCmsCustomers(); } catch (err) { console.warn(err); }
             document.getElementById('cmsTabProdCount').textContent = SITE_DATA.products.length;
             document.getElementById('cmsTabSlideCount').textContent = SITE_DATA.slides.length;
             document.getElementById('cmsTabRayonCount').textContent = SITE_DATA.rayons.length;
@@ -12933,11 +13489,12 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         function buildUpdatedFullHtmlDocument() {
             const docClone = document.documentElement.cloneNode(true);
             docClone.querySelectorAll('[data-pt-dyn]').forEach(n => n.remove());
-            ['cmsProductsList', 'cmsSlidesList', 'cmsOrdersList', 'cmsRayonsList', 'cmsPopupBox', 'welcomePopupBody', 'cmsScratchBox', 'scratchPopupBody'].forEach(id => { const el = docClone.querySelector('#' + id); if (el) el.innerHTML = ''; });
+            ['cmsProductsList', 'cmsSlidesList', 'cmsOrdersList', 'cmsRayonsList', 'cmsPopupBox', 'welcomePopupBody', 'cmsScratchBox', 'scratchPopupBody', 'accountBody', 'cmsClientsBox'].forEach(id => { const el = docClone.querySelector('#' + id); if (el) el.innerHTML = ''; });
             const adminOverlay = docClone.querySelector('#adminCmsOverlay');
             const aboutM = docClone.querySelector('#aboutModal');
             if (aboutM) { aboutM.classList.add('hidden'); aboutM.classList.remove('flex'); const ac = aboutM.querySelector('#aboutContent'); if (ac) ac.innerHTML = ''; }
             if (adminOverlay) adminOverlay.classList.add('hidden');
+            const acctM = docClone.querySelector('#accountModal'); if (acctM) acctM.style.display = 'none';
             const wp = docClone.querySelector('#welcomePopup');
             if (wp) wp.style.display = 'none';
             const sp = docClone.querySelector('#scratchPopup');
@@ -14009,6 +14566,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                 Promise.race([livePromise, new Promise(r => setTimeout(() => r(false), 3000))]).then(() => startPopups());
                 livePromise.then(ok => { if (ok) { renderHeroSlides(); try { refreshAllCmsPanels(); } catch (e) {} } updateLiveStatusUI(); });
             }
+            initAccount();
             retryPendingOrders();
             maybeShowConsentBanner();
             loadCatalogueRest();
@@ -14059,6 +14617,14 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         <div style="position:relative;width:100%;max-width:28rem;max-height:92vh;overflow-y:auto;overflow-x:hidden;background:#fff;border-radius:24px;box-shadow:0 25px 50px -12px rgba(0,0,0,.4)">
             <button onclick="closeWelcomePopup()" aria-label="Fermer" style="position:absolute;right:12px;top:12px;z-index:10;width:36px;height:36px;border-radius:9999px;background:rgba(255,255,255,.92);color:#334155;box-shadow:0 1px 4px rgba(0,0,0,.25);border:0;cursor:pointer;font-size:14px">✕</button>
             <div id="welcomePopupBody"></div>
+        </div>
+    </div>
+
+    <!-- MODALE : COMPTE CLIENT -->
+    <div id="accountModal" onclick="if(event.target===this) closeAccountModal()" style="display:none;position:fixed;top:0;right:0;bottom:0;left:0;z-index:2147482000;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.65);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)" role="dialog" aria-modal="true" aria-label="Mon compte">
+        <div style="position:relative;width:100%;max-width:26rem;max-height:92vh;overflow-y:auto;overflow-x:hidden;background:#fff;border-radius:24px;box-shadow:0 25px 50px -12px rgba(0,0,0,.4)">
+            <button onclick="closeAccountModal()" aria-label="Fermer" style="position:absolute;right:12px;top:12px;z-index:10;width:36px;height:36px;border-radius:9999px;background:rgba(241,245,249,.95);color:#334155;box-shadow:0 1px 4px rgba(0,0,0,.2);border:0;cursor:pointer;font-size:14px">✕</button>
+            <div id="accountBody"></div>
         </div>
     </div>
 
