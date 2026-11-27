@@ -8497,6 +8497,7 @@ La Roche-Posay | Cicaplast Baume B5+ 100ml | 179 | | Corps &amp; Hygiène | http
                         <p class="text-xs text-slate-500">Le visiteur gratte la carte avec le doigt et découvre son cadeau. Si le pop-up d'accueil est aussi activé, il s'affiche d'abord, puis la carte à gratter.</p>
                     </div>
                     <div id="cmsScratchBox" class="space-y-4"></div>
+                    <div id="cmsGamesBox" class="space-y-4 mt-5"></div>
                 </div>
 
                 <!-- ONGLET CLIENTS : comptes, points de fidélité -->
@@ -9869,7 +9870,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             return msg + code;
         }
 
-        function liveSnapshot() { return JSON.stringify({ popup: getPopup(), scratch: getScratch(), loyalty: getLoyalty(), slides: SITE_DATA.slides }); }
+        function liveSnapshot() { return JSON.stringify({ popup: getPopup(), scratch: getScratch(), loyalty: getLoyalty(), games: getGames(), slides: SITE_DATA.slides }); }
 
         async function loadLiveConfig() {
             const sb = getSb();
@@ -9882,8 +9883,10 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                 if (v.popup) SITE_DATA.popup = v.popup;
                 if (v.scratch) SITE_DATA.scratch = v.scratch;
                 if (v.loyalty) SITE_DATA.loyalty = v.loyalty;
+                if (v.games) SITE_DATA.games = v.games;
                 if (Array.isArray(v.slides) && v.slides.length) SITE_DATA.slides = v.slides;
                 _liveSig = liveSnapshot();
+                try { applyGamesVisibility(); } catch (e) {}
                 LIVE_STATE = 'ok'; LIVE_MSG = '';
                 return true;
             } catch (e) {
@@ -9908,7 +9911,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                 const { data: s } = await sb.auth.getSession();
                 if (!s || !s.session) { LIVE_STATE = 'noauth'; LIVE_MSG = "Session expirée : reconnectez-vous au CMS."; updateLiveStatusUI(); return; }
                 const sig = liveSnapshot();
-                const value = { popup: getPopup(), scratch: getScratch(), loyalty: getLoyalty(), slides: SITE_DATA.slides };
+                const value = { popup: getPopup(), scratch: getScratch(), loyalty: getLoyalty(), games: getGames(), slides: SITE_DATA.slides };
                 const { error } = await sb.from(LIVE_TABLE).upsert({ key: LIVE_KEY, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
                 if (error) throw error;
                 _liveSig = sig; LIVE_STATE = 'ok'; LIVE_MSG = '';
@@ -10050,6 +10053,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         const SCRATCH_PRIZE_KEY = "parateams_scratch_prize_v1";
         let _scratchPrize = null, _scratchRevealed = false, _scratchPreview = false, _scratchAfterWelcome = false;
 
+        function getGames() { return { enabled: true, bubbles: true, massage: true, ...(SITE_DATA.games || {}) }; }
         function getScratch() {
             const c = { ...DEFAULT_SCRATCH, ...(SITE_DATA.scratch || {}) };
             if (!Array.isArray(c.prizes)) c.prizes = DEFAULT_SCRATCH.prizes;
@@ -10347,6 +10351,19 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
                     <p class="text-[11px] text-slate-500">Le cadeau gagné s'applique automatiquement au panier du visiteur (remise ou livraison offerte), puis il est enregistré avec la commande (« Commandes » et message WhatsApp). Un cadeau n'est utilisable qu'une seule fois.</p>
                 </div>`;
             updateLiveStatusUI();
+        }
+        function renderCmsGamesPanel() {
+            const b = document.getElementById('cmsGamesBox'); if (!b) return;
+            const g = getGames();
+            const row = (k, l) => `<label class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer"><input type="checkbox" ${g[k] ? 'checked' : ''} onchange="updateCmsGamesField('${k}', this.checked)"> ${l}</label>`;
+            b.innerHTML = `<div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-3"><h3 class="font-display font-bold text-lg text-slate-900">Jeux détente</h3><p class="text-xs text-slate-500">Le bouton 🌿 Détente (en bas à gauche du site) ouvre les jeux. Désactive tout, ou jeu par jeu.</p>${row('enabled', 'Afficher les jeux sur le site')}<div class="pl-6 space-y-2 ${g.enabled ? '' : 'opacity-50'}">${row('bubbles', '🫧 Bulles de calme')}${row('massage', '💆 Massage du visage')}</div></div>`;
+        }
+        function updateCmsGamesField(k, v) {
+            pushCmsUndoSnapshot();
+            SITE_DATA.games = { ...getGames(), [k]: v };
+            saveCmsToLocalPreview();
+            renderCmsGamesPanel();
+            try { applyGamesVisibility(); } catch (e) {}
         }
         function updateCmsScratchField(field, val) {
             pushCmsUndoSnapshot();
@@ -13114,6 +13131,7 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
             renderCmsSlidesList();
             renderCmsPopupPanel();
             renderCmsScratchPanel();
+            renderCmsGamesPanel();
             renderCmsRayonsList();
             populateCmsSettingsForm();
             loadSavedGitHubConfig();
@@ -14685,68 +14703,124 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         </div>
     </div>
 
-<!-- ===== Jeu : Attrape les produits ===== -->
-<button id="ptgOpenBtn" onclick="ptgOpen()" aria-label="Jouer à Attrape les produits" class="fixed left-3 bottom-24 md:bottom-6 z-40 flex items-center gap-1.5 px-3 h-10 rounded-full bg-sage-900 text-white text-xs font-bold shadow-lg hover:scale-105 transition cursor-pointer">🎮 <span>Jeu</span></button>
-<div id="ptgModal" class="hidden fixed inset-0 z-[9999] bg-black/70 items-center justify-center p-3" onclick="if(event.target===this)ptgClose()">
-  <div class="relative bg-white rounded-3xl shadow-2xl p-3">
-    <div class="flex items-center justify-between gap-3 px-1 pb-2 text-sm font-bold text-sage-900">
-      <span id="ptgScore">Score 0</span><span id="ptgLevel">Niv. 1</span><span id="ptgLives">❤❤❤</span>
+<!-- ===== Jeux détente : Bulles de calme + Massage du visage ===== -->
+<button id="ptgOpenBtn" onclick="ptgOpen()" aria-label="Jeux détente" style="display:none" class="fixed left-3 bottom-24 md:bottom-6 z-40 items-center gap-1.5 px-3 h-10 rounded-full bg-sage-900 text-white text-xs font-bold shadow-lg hover:scale-105 transition cursor-pointer">🌿 <span>Détente</span></button>
+<div id="ptgModal" style="display:none" class="fixed inset-0 z-[9999] bg-black/70 items-center justify-center p-3" onclick="if(event.target===this)ptgClose()">
+  <div class="relative bg-white rounded-3xl shadow-2xl p-3 w-full max-w-[400px]">
+    <div class="flex items-center justify-between gap-2 px-1 pb-2">
+      <button id="ptgBack" onclick="ptgMenu()" style="visibility:hidden" class="text-xs font-bold text-sage-800 cursor-pointer">← Jeux</button>
+      <span id="ptgHead" class="text-sm font-extrabold text-sage-900">Moments détente</span>
       <button onclick="ptgClose()" aria-label="Fermer" class="w-8 h-8 rounded-full bg-slate-100 cursor-pointer">✕</button>
     </div>
-    <div class="relative">
-      <canvas id="ptgCanvas" width="360" height="520" class="rounded-2xl block" style="touch-action:none;background:linear-gradient(#dff1d3,#f6fbf2)"></canvas>
-      <div id="ptgOverlay" class="absolute inset-0 flex flex-col items-center justify-center text-center rounded-2xl bg-white/90 p-5">
-        <div id="ptgTitle" class="text-lg font-extrabold text-sage-900 mb-1">Attrape les produits !</div>
-        <p id="ptgMsg" class="text-xs text-slate-600 mb-4">Déplace le panier (doigt ou flèches) pour attraper les produits 🧴💊🧼. Évite les microbes 🦠 et les produits périmés : 3 vies seulement. Ça accélère à chaque niveau !</p>
-        <button id="ptgBtn" onclick="ptgStart()" class="px-6 py-2.5 rounded-full bg-sage-900 text-white font-bold text-sm cursor-pointer">Jouer</button>
-      </div>
+    <div id="ptgMenu" class="space-y-3 p-1 pb-3"></div>
+    <div id="ptgStage" style="display:none" class="relative">
+      <canvas id="ptgCanvas" width="360" height="520" class="rounded-2xl block mx-auto" style="touch-action:none"></canvas>
+      <button id="ptgSnd" onclick="ptgSound()" aria-label="Son" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 text-sm cursor-pointer">🔊</button>
+      <button id="ptgReset" onclick="ptgRestart()" class="absolute bottom-2 right-2 px-3 py-1 rounded-full bg-white/85 text-xs font-bold text-sage-800 cursor-pointer">↺ Recommencer</button>
     </div>
   </div>
 </div>
 <script>
 (function(){
   const cv=document.getElementById('ptgCanvas'),cx=cv.getContext('2d'),W=360,H=520,$=id=>document.getElementById(id);
-  const GOOD=['🧴','💊','🧼','🪥','🩹','💧'];
-  let run=false,raf=0,last=0,items=[],px=W/2,score=0,lives=3,level=1,caught=0,spawn=0,flash=0,flashTxt='',keys={};
-  function size(){const w=Math.min(376,innerWidth-48,innerHeight*0.66*W/H);cv.style.width=w+'px';cv.style.height=(w*H/W)+'px';}
-  function hud(){const l=Math.max(lives,0);$('ptgScore').textContent='Score '+score;$('ptgLevel').textContent='Niv. '+level;$('ptgLives').textContent='❤'.repeat(l)+'🖤'.repeat(3-l);}
-  function draw(){
-    cx.clearRect(0,0,W,H);cx.textAlign='center';cx.textBaseline='middle';
-    for(const it of items){cx.save();cx.translate(it.x,it.y);cx.rotate(Math.sin(it.r)*.3);cx.globalAlpha=it.exp?.55:1;cx.font='34px serif';cx.fillText(it.e,0,0);
-      if(it.exp){cx.globalAlpha=1;cx.fillStyle='#dc2626';cx.font='bold 9px sans-serif';cx.fillText('PÉRIMÉ',0,24);}cx.restore();}
-    cx.font='46px serif';cx.fillText('🧺',px,H-40);
-    if(flash>0){cx.globalAlpha=Math.min(flash,1);cx.fillStyle=flashTxt[0]==='N'?'#3E6B1B':'#dc2626';cx.font='bold 26px sans-serif';cx.fillText(flashTxt,W/2,H/2-60);cx.globalAlpha=1;}
+  const cfg=()=>{try{return getGames();}catch(e){return {enabled:true,bubbles:true,massage:true};}};
+  const GAMES=[{id:'bubbles',t:'🫧 Bulles de calme',d:'Éclate les bulles du bout du doigt et respire doucement. Sans score, sans limite de temps.'},{id:'massage',t:'💆 Massage du visage',d:'Étale la crème et fais rayonner la peau, geste après geste.'}];
+  let mode=null,raf=0,last=0,t0=0,down=false,lp=null,snd=true,ac=null;
+  let bubs=[],parts=[],spawn=0;
+  const mk=()=>{const c=document.createElement('canvas');c.width=W;c.height=H;return c;};
+  const fc=mk(),cc=mk(),gc=mk();let prog=0,hint=1,spk=[],fr=0;
+  function size(){const w=Math.min(376,innerWidth-48,innerHeight*0.7*W/H);cv.style.width=w+'px';cv.style.height=(w*H/W)+'px';}
+  function note(){if(!snd)return;try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const f=[523,587,659,784,880][Math.random()*5|0],o=ac.createOscillator(),g=ac.createGain(),n=ac.currentTime;o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(.0001,n);g.gain.exponentialRampToValueAtTime(.1,n+.03);g.gain.exponentialRampToValueAtTime(.0001,n+1.1);o.connect(g);g.connect(ac.destination);o.start(n);o.stop(n+1.2);}catch(e){}}
+  let phase=0,zones=[];
+  const ZN=[{x:180,y:194,r:28},{x:120,y:305,r:32},{x:240,y:305,r:32},{x:180,y:375,r:28},{x:180,y:445,r:34}],JAR={x:52,y:468};
+  function initMassage(){drawFace();cc.getContext('2d').clearRect(0,0,W,H);gc.getContext('2d').clearRect(0,0,W,H);zones=ZN.map(z=>({...z,p:0,done:false}));phase=0;spk=[];fr=0;}
+  function faceClip(c){c.beginPath();c.ellipse(180,258,108,142,0,0,7);c.rect(146,380,68,120);}
+  function drawFace(){
+    const c=fc.getContext('2d');let g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,'#eef6ea');g.addColorStop(1,'#f8efe6');c.fillStyle=g;c.fillRect(0,0,W,H);
+    c.fillStyle='rgba(120,170,100,.18)';[[30,60,-.5],[330,90,.6],[320,470,-.7],[40,300,.4]].forEach(a=>{c.beginPath();c.ellipse(a[0],a[1],12,34,a[2],0,7);c.fill();});
+    g=c.createLinearGradient(0,360,0,480);g.addColorStop(0,'#d99d78');g.addColorStop(1,'#eebf9c');c.fillStyle=g;c.fillRect(146,360,68,130);
+    c.fillStyle='#fff';c.beginPath();c.ellipse(180,540,170,80,0,Math.PI,7);c.fill();c.strokeStyle='#e7e1d9';c.lineWidth=2;c.stroke();
+    c.fillStyle='#3f2a20';c.beginPath();c.ellipse(180,235,118,152,0,Math.PI,7);c.fill();
+    c.fillStyle='#e0a984';[72,288].forEach(x=>{c.beginPath();c.ellipse(x,262,13,25,0,0,7);c.fill();});
+    g=c.createRadialGradient(160,210,15,180,260,165);g.addColorStop(0,'#f8dcc0');g.addColorStop(1,'#e2a982');c.fillStyle=g;c.beginPath();c.ellipse(180,258,108,142,0,0,7);c.fill();
+    g=c.createLinearGradient(0,350,0,400);g.addColorStop(0,'rgba(150,90,60,0)');g.addColorStop(1,'rgba(150,90,60,.2)');c.fillStyle=g;c.beginPath();c.ellipse(180,258,108,142,0,0,Math.PI);c.fill();
+    c.strokeStyle='#fff';c.lineWidth=24;c.lineCap='round';c.beginPath();c.moveTo(78,208);c.quadraticCurveTo(180,100,282,208);c.stroke();
+    c.strokeStyle='#e9e3da';c.lineWidth=2;c.beginPath();c.moveTo(80,198);c.quadraticCurveTo(180,90,280,198);c.stroke();
+    c.strokeStyle='#4a2f22';
+    [140,220].forEach(x=>{c.lineWidth=3.5;c.beginPath();c.moveTo(x-21,226);c.quadraticCurveTo(x,215,x+21,224);c.stroke();c.lineWidth=2.8;c.beginPath();c.arc(x,246,17,.18*Math.PI,.82*Math.PI);c.stroke();c.lineWidth=2;[.2,.5,.8].forEach(k=>{const a=Math.PI*(.18+.64*k);c.beginPath();c.moveTo(x+Math.cos(a)*17,246+Math.sin(a)*17);c.lineTo(x+Math.cos(a)*23,246+Math.sin(a)*23);c.stroke();});});
+    c.strokeStyle='rgba(170,110,80,.7)';c.lineWidth=2.5;c.beginPath();c.moveTo(180,262);c.quadraticCurveTo(168,300,180,308);c.quadraticCurveTo(190,311,198,306);c.stroke();
   }
-  function loop(t){
-    if(!run)return;const dt=Math.min((t-last)/1000,.05);last=t;flash-=dt;
-    if(keys.l)px-=380*dt;if(keys.r)px+=380*dt;px=Math.max(36,Math.min(W-36,px));
-    const sp=110+level*38;spawn-=dt;
-    if(spawn<=0){spawn=Math.max(.32,1-level*.07);const bad=Math.random()<Math.min(.18+level*.04,.42),exp=bad&&Math.random()<.45;
-      items.push({x:24+Math.random()*(W-48),y:-30,bad,exp,e:bad&&!exp?'🦠':GOOD[Math.random()*GOOD.length|0],v:sp*(.85+Math.random()*.4),r:0});}
-    items=items.filter(it=>{it.y+=it.v*dt;it.r+=dt*(it.bad?2:.8);
-      if(it.y>H-64&&it.y<H-18&&Math.abs(it.x-px)<46){
-        if(it.bad){lives--;flash=.8;flashTxt='Aïe !';}
-        else{score+=10;caught++;if(caught%8===0){level++;flash=1.4;flashTxt='Niveau '+level+' !';}}
-        hud();return false;}
-      return it.y<H+30;});
-    draw();
-    if(lives<=0){end();return;}
+  function brush(x,y){
+    const a=cc.getContext('2d');let r=a.createRadialGradient(x,y,2,x,y,24);r.addColorStop(0,'rgba(255,255,255,.5)');r.addColorStop(1,'rgba(255,255,255,0)');a.fillStyle=r;a.fillRect(x-24,y-24,48,48);
+    const b=gc.getContext('2d');b.globalCompositeOperation='lighter';r=b.createRadialGradient(x,y,4,x,y,60);r.addColorStop(0,'rgba(255,200,120,.08)');r.addColorStop(1,'rgba(255,200,120,0)');b.fillStyle=r;b.fillRect(x-60,y-60,120,120);
+    if(Math.random()<.2)spk.push({x:x+(Math.random()-.5)*50,y:y+(Math.random()-.5)*50,l:.9});
+  }
+  function fade(c,a){const q=c.getContext('2d');q.globalCompositeOperation='destination-out';q.fillStyle='rgba(0,0,0,'+a+')';q.fillRect(0,0,W,H);q.globalCompositeOperation='source-over';}
+  function takeCream(){const a=cc.getContext('2d');zones.forEach(z=>{const r=a.createRadialGradient(z.x,z.y,2,z.x,z.y,z.r*.9);r.addColorStop(0,'rgba(255,255,255,.95)');r.addColorStop(1,'rgba(255,255,255,0)');a.fillStyle=r;a.fillRect(z.x-40,z.y-40,80,80);});phase=1;note();}
+  function finishZone(z){
+    const a=cc.getContext('2d');a.globalCompositeOperation='destination-out';let r=a.createRadialGradient(z.x,z.y,2,z.x,z.y,z.r*1.4);r.addColorStop(0,'rgba(0,0,0,1)');r.addColorStop(1,'rgba(0,0,0,0)');a.fillStyle=r;a.fillRect(z.x-70,z.y-70,140,140);a.globalCompositeOperation='source-over';
+    const b=gc.getContext('2d');b.globalCompositeOperation='lighter';for(let k=0;k<2;k++){r=b.createRadialGradient(z.x,z.y,4,z.x,z.y,z.r*2.4);r.addColorStop(0,'rgba(255,205,130,.28)');r.addColorStop(1,'rgba(255,205,130,0)');b.fillStyle=r;b.fillRect(z.x-90,z.y-90,180,180);}
+    z.done=true;for(let i=0;i<14;i++)spk.push({x:z.x+(Math.random()-.5)*80,y:z.y+(Math.random()-.5)*80,l:1,vy:-.4});
+    note();try{navigator.vibrate&&navigator.vibrate(25);}catch(e){}
+    if(zones.every(q=>q.done)){phase=2;for(let i=0;i<45;i++)spk.push({x:Math.random()*W,y:-10-Math.random()*200,l:1.6,vy:1.5+Math.random()*2});}
+  }
+  function massDown(p){if(phase===0){if(Math.hypot(p.x-JAR.x,p.y-JAR.y)<48)takeCream();return;}brush(p.x,p.y);}
+  function massMove(p){
+    if(phase<1)return;const d=Math.hypot(p.x-lp.x,p.y-lp.y),n=Math.max(1,Math.ceil(d/8));
+    for(let i=1;i<=n;i++)brush(lp.x+(p.x-lp.x)*i/n,lp.y+(p.y-lp.y)*i/n);
+    if(phase===1)zones.forEach(z=>{if(!z.done&&Math.hypot(p.x-z.x,p.y-z.y)<z.r+14){z.p=Math.min(1,z.p+d/(z.r*13));if(z.p>=1)finishZone(z);}});
+  }
+  function drawMassage(t){
+    fr++;if(fr%(phase===2?2:5)===0)fade(cc,phase===2?.08:.012);if(fr%14===0)fade(gc,.008);
+    cx.clearRect(0,0,W,H);cx.drawImage(fc,0,0);cx.save();faceClip(cx);cx.clip();
+    cx.globalCompositeOperation='lighter';cx.globalAlpha=.22;cx.drawImage(gc,0,0);cx.globalAlpha=1;cx.globalCompositeOperation='source-over';cx.drawImage(cc,0,0);
+    if(phase===2){const pl=.16+.06*Math.sin(t*3);[[180,190,60],[135,300,45],[225,300,45],[180,275,26]].forEach(h=>{const r=cx.createRadialGradient(h[0],h[1],2,h[0],h[1],h[2]);r.addColorStop(0,'rgba(255,248,235,'+pl*2+')');r.addColorStop(1,'rgba(255,248,235,0)');cx.fillStyle=r;cx.fillRect(h[0]-h[2],h[1]-h[2],h[2]*2,h[2]*2);});}
+    cx.restore();
+    const nd=zones.filter(z=>z.done).length,ch=(zones[1].p+zones[2].p)/2;
+    [120,240].forEach(x=>{const r=cx.createRadialGradient(x,312,2,x,312,34);r.addColorStop(0,'rgba(240,120,120,'+(.2+.35*ch)+')');r.addColorStop(1,'rgba(240,120,120,0)');cx.fillStyle=r;cx.fillRect(x-36,276,72,72);});
+    cx.strokeStyle='#bf5a58';cx.lineWidth=4;cx.lineCap='round';cx.beginPath();cx.moveTo(152,346);cx.quadraticCurveTo(180,356+nd*3,208,346);cx.stroke();
+    if(phase===1)zones.forEach(z=>{if(z.done)return;const pu=1+.06*Math.sin(t*5);cx.strokeStyle='#b9774f';cx.lineWidth=2.5;cx.setLineDash([6,6]);cx.beginPath();cx.arc(z.x,z.y,z.r*pu,0,7);cx.stroke();cx.setLineDash([]);if(z.p>0){cx.strokeStyle='#e0a040';cx.lineWidth=5;cx.beginPath();cx.arc(z.x,z.y,z.r*pu+6,-Math.PI/2,-Math.PI/2+6.283*z.p);cx.stroke();}});
+    spk=spk.filter(s=>{s.l-=.012;s.y+=s.vy||0;return s.l>0;});cx.textAlign='center';cx.textBaseline='middle';cx.font='16px serif';spk.forEach(s=>{cx.globalAlpha=Math.min(s.l,1);cx.fillText('✨',s.x,s.y);});cx.globalAlpha=1;
+    if(phase===0){const pu=1+.12*Math.sin(t*5);cx.fillStyle='rgba(217,154,91,.3)';cx.beginPath();cx.arc(JAR.x,JAR.y,34*pu,0,7);cx.fill();cx.font='36px serif';cx.fillText('🧴',JAR.x,JAR.y);}
+    const msg=phase===0?'1 · Touche le flacon pour prendre de la crème':phase===1?'2 · Masse chaque zone en petits cercles':'✨ Peau radieuse ! Routine terminée';
+    cx.fillStyle='rgba(255,255,255,.9)';cx.beginPath();if(cx.roundRect)cx.roundRect(16,14,W-32,34,17);else cx.rect(16,14,W-32,34);cx.fill();cx.fillStyle='#7a4a2c';cx.font='bold 13px sans-serif';cx.fillText(msg,W/2,31);
+    for(let i=0;i<5;i++){cx.fillStyle=zones[i].done?'#e0a040':'rgba(122,90,72,.25)';cx.beginPath();cx.arc(160+i*10,H-18,4,0,7);cx.fill();}
+  }
+  function drawBubbles(t,dt){
+    const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#d9f0ee');g.addColorStop(1,'#e8e2f7');cx.fillStyle=g;cx.fillRect(0,0,W,H);
+    spawn-=dt;if(spawn<=0&&bubs.length<20){spawn=.42;bubs.push({x:30+Math.random()*(W-60),y:H+50,r:20+Math.random()*28,v:48+Math.random()*48,p:Math.random()*6.28,h:[170,200,260,300][Math.random()*4|0]});}
+    bubs=bubs.filter(b=>{b.y-=b.v*dt;b.x+=Math.sin(t*.9+b.p)*24*dt;return b.y>-80;});
+    bubs.forEach(b=>{const r=cx.createRadialGradient(b.x-b.r*.3,b.y-b.r*.3,b.r*.1,b.x,b.y,b.r);r.addColorStop(0,'hsla('+b.h+',70%,95%,.55)');r.addColorStop(1,'hsla('+b.h+',70%,75%,.18)');cx.fillStyle=r;cx.beginPath();cx.arc(b.x,b.y,b.r,0,7);cx.fill();cx.strokeStyle='rgba(255,255,255,.7)';cx.lineWidth=1.5;cx.stroke();cx.fillStyle='rgba(255,255,255,.7)';cx.beginPath();cx.ellipse(b.x-b.r*.35,b.y-b.r*.4,b.r*.18,b.r*.1,-.6,0,7);cx.fill();});
+    parts=parts.filter(p=>(p.l-=dt*1.4)>0);parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;cx.fillStyle='hsla('+p.h+',70%,85%,'+p.l+')';cx.beginPath();cx.arc(p.x,p.y,3,0,7);cx.fill();});
+    const c=t%10,k=c<4?c/4:1-(c-4)/6,s=.6+.4*k;
+    cx.fillStyle='rgba(255,255,255,.45)';cx.beginPath();cx.arc(W/2,85,58*s,0,7);cx.fill();cx.strokeStyle='rgba(60,120,120,.35)';cx.lineWidth=2;cx.stroke();
+    cx.textAlign='center';cx.textBaseline='middle';cx.fillStyle='#2f6b6b';cx.font='bold 15px sans-serif';cx.fillText(c<4?'Inspirez…':'Expirez…',W/2,85);
+  }
+  function hit(x,y){bubs=bubs.filter(b=>{if(Math.hypot(b.x-x,b.y-y)<b.r+6){for(let i=0;i<10;i++){const a=Math.random()*6.28,v=40+Math.random()*60;parts.push({x:b.x,y:b.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,h:b.h});}note();return false;}return true;});}
+  function loop(ts){
+    if(!mode)return;const t=(ts-t0)/1000,dt=Math.min((ts-last)/1000,.05);last=ts;
+    if(mode==='bubbles')drawBubbles(t,dt);else drawMassage(t);
     raf=requestAnimationFrame(loop);
   }
-  function end(){
-    run=false;let best=0;
-    try{best=+localStorage.getItem('pt_catch_best')||0;if(score>best){best=score;localStorage.setItem('pt_catch_best',best);}}catch(e){best=Math.max(best,score);}
-    $('ptgTitle').textContent='Partie terminée !';$('ptgMsg').textContent='Score : '+score+' · Niveau '+level+' · Record : '+Math.max(best,score);
-    $('ptgBtn').textContent='Rejouer';$('ptgOverlay').classList.remove('hidden');
-  }
-  window.ptgOpen=function(){size();$('ptgModal').classList.replace('hidden','flex');document.body.style.overflow='hidden';draw();};
-  window.ptgClose=function(){run=false;cancelAnimationFrame(raf);$('ptgModal').classList.replace('flex','hidden');document.body.style.overflow='';$('ptgOverlay').classList.remove('hidden');};
-  window.ptgStart=function(){items=[];score=0;lives=3;level=1;caught=0;spawn=0;flash=0;px=W/2;hud();$('ptgOverlay').classList.add('hidden');run=true;last=performance.now();raf=requestAnimationFrame(loop);};
-  function move(e){const r=cv.getBoundingClientRect();px=Math.max(36,Math.min(W-36,(e.clientX-r.left)/r.width*W));}
-  cv.addEventListener('pointerdown',move);cv.addEventListener('pointermove',move);
+  function pt(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H};}
+  cv.addEventListener('pointerdown',e=>{down=true;try{cv.setPointerCapture(e.pointerId);}catch(x){}const p=pt(e);lp=p;if(mode==='bubbles')hit(p.x,p.y);else massDown(p);e.preventDefault();});
+  cv.addEventListener('pointermove',e=>{if(!down)return;const p=pt(e);if(mode==='bubbles'){hit(p.x,p.y);}else massMove(p);lp=p;e.preventDefault();});
+  ['pointerup','pointercancel','pointerleave'].forEach(n=>cv.addEventListener(n,()=>{down=false;}));
+  function stop(){mode=null;cancelAnimationFrame(raf);}
+  window.ptgMenu=function(){stop();const g=cfg();$('ptgStage').style.display='none';$('ptgMenu').style.display='block';$('ptgBack').style.visibility='hidden';$('ptgHead').textContent='Moments détente';
+    $('ptgMenu').innerHTML=GAMES.filter(x=>g[x.id]).map(x=>'<button onclick="ptgStart(\''+x.id+'\')" class="w-full text-left p-4 rounded-2xl border border-slate-200 hover:bg-sage-50 transition cursor-pointer mb-3"><div class="font-extrabold text-sage-900 text-sm">'+x.t+'</div><div class="text-xs text-slate-500 mt-1">'+x.d+'</div></button>').join('');};
+  window.ptgStart=function(id){stop();size();mode=id;prog=0;hint=1;bubs=[];parts=[];spk=[];fr=0;
+    $('ptgMenu').style.display='none';$('ptgStage').style.display='block';$('ptgBack').style.visibility='visible';
+    $('ptgHead').textContent=id==='bubbles'?'Bulles de calme':'Massage du visage';$('ptgSnd').style.display=id==='bubbles'?'block':'none';$('ptgReset').style.display=id==='massage'?'block':'none';
+    if(id==='massage')initMassage();
+    t0=last=performance.now();raf=requestAnimationFrame(loop);};
+  window.ptgRestart=function(){if(mode==='massage')ptgStart('massage');};
+  window.ptgSound=function(){snd=!snd;$('ptgSnd').textContent=snd?'🔊':'🔇';};
+  window.ptgOpen=function(){size();$('ptgModal').style.display='flex';document.body.style.overflow='hidden';ptgMenu();};
+  window.ptgClose=function(){stop();$('ptgModal').style.display='none';document.body.style.overflow='';};
+  window.applyGamesVisibility=function(){const g=cfg(),on=!!(g.enabled&&(g.bubbles||g.massage));$('ptgOpenBtn').style.display=on?'flex':'none';if(!on&&$('ptgModal').style.display==='flex')ptgClose();};
   addEventListener('resize',size);
-  addEventListener('keydown',e=>{if(!run)return;const k=e.key.toLowerCase();if(k==='arrowleft'||k==='q'||k==='a'){keys.l=1;e.preventDefault();}if(k==='arrowright'||k==='d'){keys.r=1;e.preventDefault();}});
-  addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(k==='arrowleft'||k==='q'||k==='a')keys.l=0;if(k==='arrowright'||k==='d')keys.r=0;});
+  setTimeout(applyGamesVisibility,2500);
 })();
 </script>
 
