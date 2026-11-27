@@ -14685,6 +14685,70 @@ footer{max-width:860px;margin:0 auto;padding:10px 20px 40px;font-size:12px;color
         </div>
     </div>
 
+<!-- ===== Jeu : Attrape les produits ===== -->
+<button id="ptgOpenBtn" onclick="ptgOpen()" aria-label="Jouer à Attrape les produits" class="fixed left-3 bottom-24 md:bottom-6 z-40 flex items-center gap-1.5 px-3 h-10 rounded-full bg-sage-900 text-white text-xs font-bold shadow-lg hover:scale-105 transition cursor-pointer">🎮 <span>Jeu</span></button>
+<div id="ptgModal" class="hidden fixed inset-0 z-[9999] bg-black/70 items-center justify-center p-3" onclick="if(event.target===this)ptgClose()">
+  <div class="relative bg-white rounded-3xl shadow-2xl p-3">
+    <div class="flex items-center justify-between gap-3 px-1 pb-2 text-sm font-bold text-sage-900">
+      <span id="ptgScore">Score 0</span><span id="ptgLevel">Niv. 1</span><span id="ptgLives">❤❤❤</span>
+      <button onclick="ptgClose()" aria-label="Fermer" class="w-8 h-8 rounded-full bg-slate-100 cursor-pointer">✕</button>
+    </div>
+    <div class="relative">
+      <canvas id="ptgCanvas" width="360" height="520" class="rounded-2xl block" style="touch-action:none;background:linear-gradient(#dff1d3,#f6fbf2)"></canvas>
+      <div id="ptgOverlay" class="absolute inset-0 flex flex-col items-center justify-center text-center rounded-2xl bg-white/90 p-5">
+        <div id="ptgTitle" class="text-lg font-extrabold text-sage-900 mb-1">Attrape les produits !</div>
+        <p id="ptgMsg" class="text-xs text-slate-600 mb-4">Déplace le panier (doigt ou flèches) pour attraper les produits 🧴💊🧼. Évite les microbes 🦠 et les produits périmés : 3 vies seulement. Ça accélère à chaque niveau !</p>
+        <button id="ptgBtn" onclick="ptgStart()" class="px-6 py-2.5 rounded-full bg-sage-900 text-white font-bold text-sm cursor-pointer">Jouer</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  const cv=document.getElementById('ptgCanvas'),cx=cv.getContext('2d'),W=360,H=520,$=id=>document.getElementById(id);
+  const GOOD=['🧴','💊','🧼','🪥','🩹','💧'];
+  let run=false,raf=0,last=0,items=[],px=W/2,score=0,lives=3,level=1,caught=0,spawn=0,flash=0,flashTxt='',keys={};
+  function size(){const w=Math.min(376,innerWidth-48,innerHeight*0.66*W/H);cv.style.width=w+'px';cv.style.height=(w*H/W)+'px';}
+  function hud(){const l=Math.max(lives,0);$('ptgScore').textContent='Score '+score;$('ptgLevel').textContent='Niv. '+level;$('ptgLives').textContent='❤'.repeat(l)+'🖤'.repeat(3-l);}
+  function draw(){
+    cx.clearRect(0,0,W,H);cx.textAlign='center';cx.textBaseline='middle';
+    for(const it of items){cx.save();cx.translate(it.x,it.y);cx.rotate(Math.sin(it.r)*.3);cx.globalAlpha=it.exp?.55:1;cx.font='34px serif';cx.fillText(it.e,0,0);
+      if(it.exp){cx.globalAlpha=1;cx.fillStyle='#dc2626';cx.font='bold 9px sans-serif';cx.fillText('PÉRIMÉ',0,24);}cx.restore();}
+    cx.font='46px serif';cx.fillText('🧺',px,H-40);
+    if(flash>0){cx.globalAlpha=Math.min(flash,1);cx.fillStyle=flashTxt[0]==='N'?'#3E6B1B':'#dc2626';cx.font='bold 26px sans-serif';cx.fillText(flashTxt,W/2,H/2-60);cx.globalAlpha=1;}
+  }
+  function loop(t){
+    if(!run)return;const dt=Math.min((t-last)/1000,.05);last=t;flash-=dt;
+    if(keys.l)px-=380*dt;if(keys.r)px+=380*dt;px=Math.max(36,Math.min(W-36,px));
+    const sp=110+level*38;spawn-=dt;
+    if(spawn<=0){spawn=Math.max(.32,1-level*.07);const bad=Math.random()<Math.min(.18+level*.04,.42),exp=bad&&Math.random()<.45;
+      items.push({x:24+Math.random()*(W-48),y:-30,bad,exp,e:bad&&!exp?'🦠':GOOD[Math.random()*GOOD.length|0],v:sp*(.85+Math.random()*.4),r:0});}
+    items=items.filter(it=>{it.y+=it.v*dt;it.r+=dt*(it.bad?2:.8);
+      if(it.y>H-64&&it.y<H-18&&Math.abs(it.x-px)<46){
+        if(it.bad){lives--;flash=.8;flashTxt='Aïe !';}
+        else{score+=10;caught++;if(caught%8===0){level++;flash=1.4;flashTxt='Niveau '+level+' !';}}
+        hud();return false;}
+      return it.y<H+30;});
+    draw();
+    if(lives<=0){end();return;}
+    raf=requestAnimationFrame(loop);
+  }
+  function end(){
+    run=false;let best=0;
+    try{best=+localStorage.getItem('pt_catch_best')||0;if(score>best){best=score;localStorage.setItem('pt_catch_best',best);}}catch(e){best=Math.max(best,score);}
+    $('ptgTitle').textContent='Partie terminée !';$('ptgMsg').textContent='Score : '+score+' · Niveau '+level+' · Record : '+Math.max(best,score);
+    $('ptgBtn').textContent='Rejouer';$('ptgOverlay').classList.remove('hidden');
+  }
+  window.ptgOpen=function(){size();$('ptgModal').classList.replace('hidden','flex');document.body.style.overflow='hidden';draw();};
+  window.ptgClose=function(){run=false;cancelAnimationFrame(raf);$('ptgModal').classList.replace('flex','hidden');document.body.style.overflow='';$('ptgOverlay').classList.remove('hidden');};
+  window.ptgStart=function(){items=[];score=0;lives=3;level=1;caught=0;spawn=0;flash=0;px=W/2;hud();$('ptgOverlay').classList.add('hidden');run=true;last=performance.now();raf=requestAnimationFrame(loop);};
+  function move(e){const r=cv.getBoundingClientRect();px=Math.max(36,Math.min(W-36,(e.clientX-r.left)/r.width*W));}
+  cv.addEventListener('pointerdown',move);cv.addEventListener('pointermove',move);
+  addEventListener('resize',size);
+  addEventListener('keydown',e=>{if(!run)return;const k=e.key.toLowerCase();if(k==='arrowleft'||k==='q'||k==='a'){keys.l=1;e.preventDefault();}if(k==='arrowright'||k==='d'){keys.r=1;e.preventDefault();}});
+  addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(k==='arrowleft'||k==='q'||k==='a')keys.l=0;if(k==='arrowright'||k==='d')keys.r=0;});
+})();
+</script>
 
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;22d6c34353d64f56bc0a1c915aebdc2d&quot;,&quot;r&quot;:1,&quot;spa&quot;:2}" crossorigin="anonymous"></script>
 
